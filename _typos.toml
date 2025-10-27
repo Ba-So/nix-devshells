@@ -1,0 +1,15 @@
+[default]
+# Allow legitimate technical terms that might be flagged as typos
+
+[default.extend-words]
+# Linux kernel module names
+hda = "hda"  # High Definition Audio (snd_hda_intel module)
+# GitHub username components
+Ba = "Ba"  # Part of GitHub username Ba-So
+# US state abbreviations
+ND = "ND"  # North Dakota
+# HashiCorp
+Hashi = "Hashi"
+# File-Endings:
+fot = "fot"
+acn = "acn"

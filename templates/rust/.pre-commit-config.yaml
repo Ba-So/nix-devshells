@@ -1,0 +1,90 @@
+repos:
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --all --
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy --workspace --all-targets -- -A clippy::multiple_crate_versions -A clippy::upper_case_acronyms -A clippy::unused_async -A missing_docs
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cognitive-complexity
+        name: Check cognitive complexity
+        description: This hook loks through checks for functions with cognitive complexity higher than the Threshold
+        require_serial: true
+        entry: >-
+          bash -c '
+          THRESHOLD=15;
+          EXIT=0;
+          HEADER_SHOWN=0;
+          for file in "$@"; do
+            if [ -f "$file" ]; then
+              RESULT=$(rust-code-analysis-cli -m -p "$file" -O json 2>/dev/null |
+                jq -r ".spaces[]? |
+                  select(.metrics.cognitive.sum > $THRESHOLD) |
+                  \"
+                  \(.kind): \(.name):\n
+                  - Lines: \(.start_line)-\(.end_line)\n
+                  - Cognitive complexity: \(.metrics.cognitive.sum)\n
+                  exceeds threshold $THRESHOLD\"" 2>/dev/null);
+              if [ -n "$RESULT" ]; then
+                if [ "$HEADER_SHOWN" -eq 0 ]; then
+                  echo "";
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+                  echo "⚠️  Cognitive Complexity Threshold Exceeded";
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+                  echo "";
+                  echo "Functions exceed complexity threshold of $THRESHOLD.";
+                  echo "High complexity makes code harder to understand.";
+                  echo "";
+                  echo "Actions:";
+                  echo "  • Refactor into smaller functions";
+                  echo "  • Extract nested logic";
+                  echo "  • Simplify conditionals";
+                  echo "";
+                  echo "Violations:";
+                  echo "──────────────────────────────────────────────";
+                  echo "";
+                  HEADER_SHOWN=1;
+                fi;
+                echo "$file:";
+                echo "$RESULT";
+                EXIT=1;
+              fi;
+            fi;
+          done;
+          exit $EXIT
+          ' --
+        language: system
+        types: [rust]
+        pass_filenames: true
+
+      - id: cargo-check
+        name: cargo check
+        entry: cargo check --workspace
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-test
+        name: cargo test
+        entry: cargo test --workspace
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: cargo-audit
+        name: cargo audit
+        entry: cargo audit
+        language: system
+        types: [rust]
+        pass_filenames: false
+        stages: [pre-push]

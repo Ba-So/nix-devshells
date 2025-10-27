@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "shrimp": {
+      "type": "stdio",
+      "command": "mcp-shrimp-task-manager",
+      "args": [],
+      "env": {}
+    },
+    "serena": {
+      "type": "stdio",
+      "command": "serena-stdio",
+      "args": ["$(pwd)"],
+      "env": {}
+    },
+    "codanna": {
+      "type": "stdio",
+      "command": "codanna",
+      "args": ["serve", "--watch"],
+      "env": {}
+    }
+  }
+}

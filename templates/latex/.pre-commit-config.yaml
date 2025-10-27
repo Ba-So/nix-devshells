@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+
+  - repo: local
+    hooks:
+      # LaTeX formatting with latexindent
+      - id: latexindent
+        name: LaTeX Indent
+        entry: latexindent
+        args: ["-w", "-s", "-l"]
+        language: system
+        files: '\.tex$'
+        pass_filenames: true
+
+      # Spell check with aspell (English)
+      - id: aspell
+        name: Spell Check (aspell)
+        entry: aspell
+        args: ["--mode=tex", "--lang=en", "list"]
+        language: system
+        files: '\.tex$'
+        pass_filenames: true

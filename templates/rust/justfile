@@ -1,0 +1,148 @@
+# justfile for firefly-iii-mcp development
+# https://github.com/casey/just
+
+# Default recipe to display available commands
+default:
+    @just --list
+
+# Install development dependencies
+install:
+    cargo install cargo-watch cargo-tarpaulin cargo-audit cargo-udeps
+    @echo "Development dependencies installed!"
+
+# Build the project
+build:
+    cargo build
+
+# Build the project in release mode
+build-release:
+    cargo build --release
+
+# Run the project
+run:
+    cargo run
+
+# Run with config file
+run-config CONFIG="config.toml":
+    cargo run -- --config {{CONFIG}}
+
+# Run tests
+test:
+    cargo test
+
+# Run tests including contract tests
+test-contracts:
+    cargo test contract
+
+# Run live contract tests (requires real API configuration)
+test-live-contracts:
+    cargo test --ignored contract
+
+# Run tests with output
+test-verbose:
+    cargo test -- --nocapture
+
+# Run tests and generate coverage report
+coverage:
+    cargo tarpaulin --out Html --output-dir coverage/
+
+# Format code (matches pre-commit)
+fmt:
+    cargo fmt --all
+
+# Check formatting without making changes
+fmt-check:
+    cargo fmt -- --check
+
+# Run clippy lints
+lint:
+    cargo clippy -- -D warnings
+
+# Run clippy with all targets
+lint-all:
+    cargo clippy --all-targets --all-features -- -D warnings
+
+# Fix clippy issues automatically where possible
+lint-fix:
+    cargo clippy --fix --allow-dirty --allow-staged
+
+# Check for security vulnerabilities
+audit:
+    cargo audit
+
+# Check for unused dependencies
+check-deps:
+    cargo udeps --all-targets
+
+# Clean build artifacts
+clean:
+    cargo clean
+
+# Run all quality checks (CI equivalent, aligned with pre-commit hooks)
+check: fmt-check-all lint-workspace test-workspace audit
+    @echo "✅ All basic checks passed!"
+    @just test-contracts
+    @echo "✅ All checks including contract validation passed!"
+
+# Check formatting for all Rust files (matches pre-commit)
+fmt-check-all:
+    cargo fmt --all --check
+
+# Run clippy on entire workspace with all targets (matches pre-commit)
+lint-workspace:
+    cargo clippy --workspace --all-targets -- -D warnings
+
+# Run tests on entire workspace (matches pre-commit)
+test-workspace:
+    cargo test --workspace
+
+# Run workspace compilation check (matches pre-commit)
+check-workspace:
+    cargo check --workspace
+
+# Development workflow - watch for changes and run checks
+dev:
+    cargo watch -x "check" -x "test" -x "run"
+
+# Watch and run tests on file changes
+test-watch:
+    cargo watch -x test
+
+# Watch and run the application on file changes
+run-watch:
+    cargo watch -x run
+
+# Update dependencies
+update:
+    cargo update
+
+# Show outdated dependencies
+outdated:
+    cargo outdated
+
+# Generate documentation
+docs:
+    cargo doc --open
+
+# Run benchmarks (if any)
+bench:
+    cargo bench
+
+# Profile the application (requires additional setup)
+profile:
+    cargo build --release
+    @echo "Run your profiling tool of choice on target/release/firefly-iii-mcp"
+
+# Docker build (if using Docker)
+docker-build:
+    docker build -t firefly-iii-mcp .
+
+# Release preparation checklist
+release-check: check coverage
+    @echo "✅ All checks passed"
+    @echo "✅ Coverage report generated"
+    @echo "📋 Manual steps:"
+    @echo "   - Update version in Cargo.toml"
+    @echo "   - Update CHANGELOG.md"
+    @echo "   - Git tag the release"
+    @echo "   - Consider running 'just audit' for security review"

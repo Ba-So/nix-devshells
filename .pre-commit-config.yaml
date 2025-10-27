@@ -1,0 +1,124 @@
+repos:
+  # All hooks use local/system tools to avoid NixOS dynamic linking issues
+  - repo: local
+    hooks:
+      # Basic file quality checks
+      - id: trailing-whitespace
+        name: trim trailing whitespace
+        entry: sed -i 's/[[:space:]]*$//'
+        language: system
+        types: [text]
+
+      - id: end-of-file-fixer
+        name: fix end of files
+        entry: bash -c 'for file in "$@"; do if [ -s "$file" ] && [ "$(tail -c1 "$file")" != "" ]; then echo >> "$file"; fi; done' --
+        language: system
+        types: [text]
+
+      - id: check-yaml
+        name: check yaml syntax
+        entry: yamllint
+        language: system
+        files: \.(yaml|yml)$
+        args: ["-d", "relaxed"]
+
+      - id: check-added-large-files
+        name: check for added large files (git-tracked only)
+        entry: bash
+        language: system
+        pass_filenames: false
+        args:
+          - -c
+          - |
+            # Check only git-tracked files, excluding LFS files
+            for file in $(git ls-files); do
+              if [ -f "$file" ]; then
+                # Skip if file is managed by git-lfs (check .gitattributes)
+                if git check-attr filter "$file" | grep -q "filter: lfs"; then
+                  continue
+                fi
+                # Check file size
+                size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo 0)
+                if [ "$size" -gt 512000 ]; then  # 500KB
+                  echo "Large file detected: $file (${size} bytes)"
+                  echo "Consider using git-lfs for this file"
+                  exit 1
+                fi
+              fi
+            done
+
+      - id: check-case-conflict
+        name: check for case conflicts
+        entry: bash -c 'git ls-files | sort -f | uniq -i -d | grep -q . && echo "Case conflicts detected" && exit 1 || exit 0'
+        language: system
+        pass_filenames: false
+
+      - id: check-merge-conflict
+        name: check for merge conflicts
+        entry: bash -c 'grep -r "^<<<<<<< \|^=======$\|^>>>>>>> " . --exclude-dir=.git && exit 1 || exit 0'
+        language: system
+        types: [text]
+        pass_filenames: false
+
+      - id: check-symlinks
+        name: check for broken symlinks
+        entry: bash -c 'find . -type l ! -exec test -e {} \; -print | grep -q . && echo "Broken symlinks detected" && exit 1 || exit 0'
+        language: system
+        pass_filenames: false
+
+      # Nix formatting and linting
+      - id: alejandra
+        name: alejandra nix formatter
+        entry: alejandra
+        language: system
+        files: \.nix$
+        pass_filenames: true
+
+      - id: deadnix
+        name: deadnix - remove unused nix code
+        entry: deadnix
+        language: system
+        files: \.nix$
+        args: ["--edit", "--no-underscore"]
+
+      - id: statix
+        name: statix nix linter
+        entry: statix
+        language: system
+        files: \.nix$
+        args: ["check", "."]
+        pass_filenames: false
+
+      # Nix flake checks
+      - id: nix-flake-check
+        name: nix flake check
+        entry: nix
+        args: ["flake", "check", "--no-build"]
+        language: system
+        files: ^(flake\.(nix|lock)|.*\.nix)$
+        pass_filenames: false
+
+      # Shell script linting
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck
+        language: system
+        files: \.(sh|bash)$
+        args: ["-x"]
+
+      # Multi-language formatting
+      - id: prettier
+        name: prettier formatter
+        entry: prettier
+        language: system
+        files: \.(yaml|yml|json|md)$
+        exclude: flake\.lock$
+        args: ["--write"]
+
+      # Spell checking
+      - id: typos
+        name: typos spell checker
+        entry: typos
+        language: system
+        types: [text]
+        exclude: flake\.lock$

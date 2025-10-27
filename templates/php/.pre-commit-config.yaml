@@ -1,0 +1,48 @@
+repos:
+  - repo: local
+    hooks:
+      - id: php-syntax-check
+        name: PHP Syntax Check
+        entry: php-parallel-lint
+        language: system
+        types: [php]
+        args: [--exclude, vendor]
+
+      - id: php-cs-fixer
+        name: PHP CS Fixer
+        entry: php-cs-fixer
+        language: system
+        types: [php]
+        args: [fix, --dry-run, --diff]
+
+      - id: phpcs
+        name: PHP CodeSniffer
+        entry: phpcs
+        language: system
+        types: [php]
+        args: [--standard=PSR12, --exclude=vendor]
+
+      - id: composer-validate
+        name: Composer Validate
+        entry: composer
+        language: system
+        files: ^composer\.(json|lock)$
+        args: [validate, --strict]
+        pass_filenames: false
+
+      - id: phpstan
+        name: PHPStan Static Analysis
+        entry: vendor/bin/phpstan
+        language: system
+        types: [php]
+        args: [analyse, --no-progress]
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: phpunit
+        name: PHPUnit Tests
+        entry: vendor/bin/phpunit
+        language: system
+        types: [php]
+        pass_filenames: false
+        stages: [pre-push]

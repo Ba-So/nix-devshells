@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "shrimp": {
+      "type": "stdio",
+      "command": "mcp-shrimp-task-manager",
+      "args": [],
+      "env": {
+        "DATA_DIR": ".shrimp",
+        "TEMPLATES_USE": "en",
+        "ENABLE_GUI": "true",
+        "MCP_PROMPT_EXECUTE_TASK_APPEND": "Validation: Add that pre-commit hooks must pass and progress must be committed."
+      }
+    },
+    "codanna": {
+      "type": "stdio",
+      "command": "codanna",
+      "args": ["serve", "--watch", "--watch-interval", "5"]
+    },
+    "serena": {
+      "type": "stdio",
+      "command": "serena-stdio",
+      "args": ["/home/baso/.local/src/nixos-flakes"],
+      "env": {}
+    }
+  }
+}

@@ -1,0 +1,36 @@
+repos:
+  - repo: local
+    hooks:
+      - id: clang-format
+        name: clang-format
+        entry: clang-format -i
+        language: system
+        files: \.(cpp|hpp|cc|cxx|h|c)$
+
+      - id: clang-tidy
+        name: clang-tidy
+        entry: clang-tidy
+        language: system
+        files: \.(cpp|cc|cxx)$
+        require_serial: true
+
+      - id: cppcheck
+        name: cppcheck
+        entry: cppcheck --enable=warning,performance,portability --inline-suppr --error-exitcode=1
+        language: system
+        files: \.(cpp|hpp|cc|cxx|h|c)$
+        pass_filenames: true
+
+      - id: cmake-format
+        name: cmake-format
+        entry: cmake-format -i
+        language: system
+        files: (CMakeLists\.txt|\.cmake)$
+        pass_filenames: true
+
+      - id: build-test
+        name: Build and Test
+        entry: bash -c "if [ -d build ]; then cd build && make -j$(nproc) && ctest --output-on-failure; fi"
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

@@ -1,0 +1,143 @@
+# LaTeX auxiliary files
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb
+
+# LaTeX intermediate files
+*.dvi
+*.xdv
+*-converted-to.*
+
+# Bibliography files
+*.bbl
+*.bcf
+*.blg
+*-blx.aux
+*-blx.bib
+*.run.xml
+
+# Build tool files
+*.fdb_latexmk
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync
+
+# Build directories
+*.auxlock
+*.dpth
+*.md5
+*.auxlock
+
+# Beamer
+*.nav
+*.pre
+*.snm
+*.vrb
+
+# Changes
+*.soc
+
+# Comment
+*.cut
+
+# Cprotect
+*.cpt
+
+# Glossaries
+*.acn
+*.acr
+*.glg
+*.glo
+*.gls
+*.glsdefs
+*.lzo
+*.lzs
+*.slg
+*.slo
+*.sls
+
+# Gnuplot
+*.gnuplot
+*.table
+
+# Hyperref
+*.brf
+
+# Knitr
+*-concordance.tex
+
+# Listings
+*.lol
+
+# Makeidx
+*.idx
+*.ilg
+*.ind
+
+# Minitoc
+*.maf
+*.mlf
+*.mlt
+*.mtc[0-9]*
+*.slf[0-9]*
+*.slt[0-9]*
+*.stc[0-9]*
+
+# Minted
+_minted*
+*.pyg
+
+# Morewrites
+*.mw
+
+# Nomencl
+*.nlg
+*.nlo
+*.nls
+
+# Pax
+*.pax
+
+# PdfTeX
+*.pdf
+
+# SageMath
+*.sagetex.sage
+*.sagetex.py
+*.sagetex.scmd
+
+# SyncTeX
+*.synctex.gz
+
+# TikZ & PGF
+*.dpth
+*.md5
+*.auxlock
+
+# Todonotes
+*.tdo
+
+# Vhistory
+*.hst
+*.ver
+
+# XY-pic
+*.xyc
+
+# Tectonic
+*.pdf_tex
+
+# Operating System Files
+.DS_Store
+Thumbs.db
