@@ -7,6 +7,8 @@
 
   mcp-shrimp-task-manager = pkgs.callPackage ../base/shrimp.nix {};
 
+  mcp-gitlab = pkgs.callPackage ../base/gitlab.nix {};
+
   codanna = pkgs.callPackage ../base/codanna.nix {};
 
   cratedocs-mcp = pkgs.callPackage ./cratedocs-mcp.nix {};

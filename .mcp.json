@@ -21,6 +21,15 @@
       "command": "serena-stdio",
       "args": ["/home/baso/.local/src/nixos-flakes"],
       "env": {}
+    },
+    "gitlab": {
+      "type": "stdio",
+      "command": "mcp-gitlab",
+      "args": [],
+      "env": {
+        "GITLAB_PERSONAL_ACCESS_TOKEN": "",
+        "GITLAB_API_URL": "https://gitlab.com/api/v4"
+      }
     }
   }
 }
