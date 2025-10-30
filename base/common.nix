@@ -38,4 +38,5 @@
   # AI Development Tools
   devPkgs.mcp-shrimp-task-manager # AI-powered task management system
   devPkgs.codanna # Code intelligence and semantic search for LLMs
+  devPkgs.mcp-gitlab
 ]
