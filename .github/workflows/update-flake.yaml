@@ -1,0 +1,84 @@
+---
+name: Update Flake Inputs
+
+on:
+  schedule:
+    # Run every Monday at 9:00 UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-flake:
+    name: Update Flake Inputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      - name: Update flake inputs
+        run: |
+          nix flake update --commit-lock-file
+          echo "FLAKE_UPDATED=true" >> $GITHUB_ENV
+
+      - name: Check if updates were made
+        id: check-updates
+        run: |
+          if git diff --quiet HEAD~1; then
+            echo "No updates available"
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          else
+            echo "Updates available"
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get update summary
+        if: steps.check-updates.outputs.has_updates == 'true'
+        id: summary
+        run: |
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          git show --stat HEAD | tail -n +4 >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.check-updates.outputs.has_updates == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(deps): update flake inputs"
+          title: "chore(deps): Update flake inputs"
+          body: |
+            ## Automated Flake Update
+
+            This PR updates the flake inputs to their latest versions.
+
+            ### Changes
+            ```
+            ${{ steps.summary.outputs.summary }}
+            ```
+
+            ### Testing
+            - [ ] CI passes
+            - [ ] All devshells work correctly
+            - [ ] All packages build successfully
+            - [ ] Templates initialize correctly
+
+            ---
+            *This PR was automatically created by the update-flake workflow*
+          branch: automated/update-flake-inputs
+          delete-branch: true
+          labels: |
+            dependencies
+            flake
+            automated

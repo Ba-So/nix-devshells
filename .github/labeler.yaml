@@ -1,0 +1,77 @@
+---
+# Auto-label PRs based on changed files
+
+"nix":
+  - changed-files:
+      - any-glob-to-any-file: "**/*.nix"
+
+"flake":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "flake.nix"
+          - "flake.lock"
+
+"ci":
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/workflows/**"
+          - ".github/dependabot.yaml"
+
+"pre-commit":
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".pre-commit-config.yaml"
+          - "**/.pre-commit-config.yaml"
+
+"templates":
+  - changed-files:
+      - any-glob-to-any-file: "templates/**"
+
+"packages":
+  - changed-files:
+      - any-glob-to-any-file: "pkgs/**"
+
+"documentation":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - "README.md"
+
+"devshells":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "languages/**"
+          - "base/**"
+          - "default.nix"
+
+"rust":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "templates/rust/**"
+          - "languages/rust.nix"
+
+"php":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "templates/php/**"
+          - "languages/php.nix"
+
+"cpp":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "templates/cpp/**"
+          - "languages/cpp.nix"
+
+"latex":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "templates/latex/**"
+          - "languages/latex.nix"
+
+"python":
+  - changed-files:
+      - any-glob-to-any-file: "languages/python.nix"
+
+"ansible":
+  - changed-files:
+      - any-glob-to-any-file: "languages/ansible.nix"

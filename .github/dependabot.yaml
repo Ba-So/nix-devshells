@@ -1,0 +1,23 @@
+---
+version: 2
+
+updates:
+  # Monitor GitHub Actions for updates
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: "chore(deps)"
+      include: scope
+# Note: Nix flakes don't have native Dependabot support yet
+# Flake inputs should be updated manually using:
+#   nix flake update
+# Or selectively:
+#   nix flake lock --update-input <input-name>
