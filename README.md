@@ -5,78 +5,88 @@ Development shells and project templates for Nix flake-based workflows.
 ## Outputs
 
 ### Packages
-- `cargo-mcp` - MCP server for cargo documentation (default package)
-- `cratedocs-mcp` - MCP server for Rust crate documentation
-- `codanna` - Code intelligence and semantic search for LLMs
-- `mcp-shrimp-task-manager` - AI-powered task management for development workflows
-- `mcp-gitlab` - MCP server for GitLab API integration
+
+**MCP Servers**
+- `cargo-mcp` - Cargo documentation and project operations (default)
+- `cratedocs-mcp` - Rust crate documentation search
+- `codanna` - Code intelligence and semantic search
+- `mcp-shrimp-task-manager` - AI task management
+- `mcp-gitlab` - GitLab API integration
 
 ### DevShells
-- `rust` - Rust toolchain with cargo, clippy, rust-analyzer
-- `php` - PHP with composer and development tools
-- `nix` - Nix development tools (default shell)
-- `cpp` - C++ toolchain with CMake and build tools
-- `python` - Python with uv package manager
-- `py-cpp` - Combined Python and C++ environment
-- `latex` - LaTeX distribution with document preparation tools
-- `ansible` - Ansible with configuration management tools
 
-Each devshell includes common development tools (git, pre-commit, direnv integration).
+- `rust` - Rust 1.90.0, cargo tools, sccache, analysis tools
+- `php` - PHP with Xdebug, composer, Symfony CLI, database clients
+- `nix` - nixos-rebuild, formatters, linters, cachix (default)
+- `cpp` - GCC 14, Clang 18, CMake, Ninja, static analysis, profiling tools
+- `python` - Python 3.12, uv, ruff, mypy, pytest
+- `py-cpp` - Combined Python and C++ toolchain
+- `latex` - TeXLive full, tectonic, texlab LSP, PDF viewers
+- `ansible` - Ansible, molecule, lint tools, vault
+
+Common tools: git, pre-commit, direnv, helix, just, jq, ripgrep, fd, nixfmt, nil LSP.
 
 ### Templates
-- `rust` - Rust project with package definition and build configuration
-- `php` - PHP project with package definition
-- `latex` - LaTeX document with build setup
-- `cpp` - C++ project with CMake configuration
 
-Templates include `.envrc`, `.mcp.json`, `.pre-commit-config.yaml`, and `flake.nix`.
+- `rust` - Cargo project with flake.nix
+- `php` - PHP project with composer
+- `latex` - LaTeX document
+- `cpp` - CMake project
+
+Each includes `.envrc`, `.mcp.json`, `.pre-commit-config.yaml`, flake.nix.
 
 ### Overlays
-- `overlays.default` - Provides `cargo-mcp`, `cratedocs-mcp`, `codanna`, `mcp-shrimp-task-manager`, and `mcp-gitlab` packages
+
+`overlays.default` exports all packages for use in other Nix configurations.
 
 ## Usage
 
 ### With direnv
 
-Create `.envrc` in your project:
-
 ```bash
-use flake github:Ba-So/nix-devshells#rust
-```
-
-Allow direnv to load:
-
-```bash
+echo "use flake github:Ba-So/nix-devshells#rust" > .envrc
 direnv allow
 ```
 
-The shell activates on directory entry and deactivates on exit.
+Shell activates on directory entry, deactivates on exit.
 
-### Initialize from template
+### From template
 
 ```bash
-mkdir project-name
-cd project-name
 nix flake init -t github:Ba-So/nix-devshells#rust
 direnv allow
 ```
 
-Local repository:
+Local: `nix flake init -t /path/to/nix-devshells#rust`
 
-```bash
-nix flake init -t /path/to/nix-devshells#rust
-```
-
-### Direct shell activation
+### Direct activation
 
 ```bash
 nix develop github:Ba-So/nix-devshells#python
 ```
 
+### Install packages
+
+```bash
+nix profile install github:Ba-So/nix-devshells#cargo-mcp
+```
+
+### Use overlay
+
+```nix
+{
+  inputs.nix-devshells.url = "github:Ba-So/nix-devshells";
+
+  outputs = { nixpkgs, nix-devshells, ... }: {
+    nixpkgs.overlays = [ nix-devshells.overlays.default ];
+  };
+}
+```
+
 ## Structure
 
-- `languages/` - Language-specific package sets
-- `templates/` - Project templates
-- `pkgs/` - Custom package definitions and common tool configurations
-- `default.nix` - Shell composition
-- `flake.nix` - Flake outputs
+- `languages/` - Language-specific package sets and shell hooks
+- `templates/` - Project scaffolding
+- `pkgs/` - Package definitions and common tools list
+- `default.nix` - Shell composition logic
+- `flake.nix` - Flake outputs and overlay
