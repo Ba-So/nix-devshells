@@ -18,8 +18,12 @@
     },
     "serena": {
       "type": "stdio",
-      "command": "serena-stdio",
-      "args": ["/home/baso/.local/src/nixos-flakes"],
+      "command": "serena",
+      "args": [
+        "start-mcp-server",
+        "--transport", "stdio",
+        "--project", "."
+      ],
       "env": {}
     },
     "gitlab": {

@@ -8,8 +8,12 @@
     },
     "serena": {
       "type": "stdio",
-      "command": "serena-stdio",
-      "args": ["/home/baso/dev/php-project"],
+      "command": "serena",
+      "args": [
+        "start-mcp-server",
+        "--transport", "stdio",
+        "--project", "."
+      ],
       "env": {}
     },
     "codanna": {

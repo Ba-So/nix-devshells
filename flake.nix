@@ -23,6 +23,12 @@
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
+        # Create pkgs with rust overlay for cargo-mcp
+        pkgs-with-rust = import nixpkgs {
+          inherit system;
+          overlays = [ rust-overlay.overlays.default ];
+        };
+
         pkgs = nixpkgs.legacyPackages.${system};
 
         # Import our shell definitions
@@ -35,24 +41,50 @@
         # Standard flake structure: devShells.<name>
         devShells = {
           inherit (shells) rust php nix cpp python py-cpp latex ansible;
-          default = shells.nix; # Default to rust shell
+          default = shells.nix; # Default to nix shell
+        };
+
+        # Expose custom packages
+        packages = {
+          cargo-mcp = pkgs-with-rust.callPackage ./pkgs/cargo-mcp.nix {
+            inherit (pkgs-with-rust) rust-bin;
+          };
+          cratedocs-mcp = pkgs.callPackage ./pkgs/cratedocs-mcp.nix {};
+
+          # Default to cargo-mcp as it's most generally useful
+          default = pkgs-with-rust.callPackage ./pkgs/cargo-mcp.nix {
+            inherit (pkgs-with-rust) rust-bin;
+          };
         };
       }
     )
     // {
+      # Non-system-specific outputs
       templates = {
         rust = {
           path = ./templates/rust;
-          description = "Rust development environment using central devshells";
+          description = "Rust project template with complete package definition";
         };
         php = {
           path = ./templates/php;
-          description = "php development environment using central devshells";
+          description = "PHP project template with complete package definition";
         };
         latex = {
           path = ./templates/latex;
-          description = "LaTeX development environment using central devshells";
+          description = "LaTeX document template with build configuration";
         };
+        cpp = {
+          path = ./templates/cpp;
+          description = "C++ project template with CMake and complete package definition";
+        };
+      };
+
+      # Overlay for easy integration into other configurations
+      overlays.default = final: prev: {
+        cargo-mcp = final.callPackage ./pkgs/cargo-mcp.nix {
+          inherit (final) rust-bin;
+        };
+        cratedocs-mcp = final.callPackage ./pkgs/cratedocs-mcp.nix {};
       };
     };
 }

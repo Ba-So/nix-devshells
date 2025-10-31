@@ -8,8 +8,12 @@
     },
     "serena": {
       "type": "stdio",
-      "command": "serena-stdio",
-      "args": ["$(pwd)"],
+      "command": "serena",
+      "args": [
+        "start-mcp-server",
+        "--transport", "stdio",
+        "--project", "."
+      ],
       "env": {}
     },
     "codanna": {
