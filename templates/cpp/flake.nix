@@ -11,9 +11,15 @@
     # devshells.url = "github:Ba-So/nix-devshells?ref=v1.0.0";
   };
 
-  outputs = { self, nixpkgs, flake-utils, devshells, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
+  outputs = {
+    self,
+    nixpkgs,
+    flake-utils,
+    devshells,
+    ...
+  }:
+    flake-utils.lib.eachDefaultSystem (
+      system: let
         pkgs = nixpkgs.legacyPackages.${system};
       in {
         # The actual project package
@@ -50,7 +56,7 @@
             description = "My C++ project";
             homepage = "https://github.com/yourusername/my-cpp-project";
             license = licenses.mit;
-            maintainers = [ ];
+            maintainers = [];
             platforms = platforms.linux ++ platforms.darwin;
           };
         };

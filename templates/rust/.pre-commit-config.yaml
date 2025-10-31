@@ -10,10 +10,23 @@ repos:
 
       - id: cargo-clippy
         name: cargo clippy
-        entry: cargo clippy --workspace --all-targets -- -A clippy::multiple_crate_versions -A clippy::upper_case_acronyms -A clippy::unused_async -A missing_docs
+        entry: cargo
         language: system
         types: [rust]
         pass_filenames: false
+        args:
+          - clippy
+          - --workspace
+          - --all-targets
+          - --
+          - -A
+          - clippy::multiple_crate_versions
+          - -A
+          - clippy::upper_case_acronyms
+          - -A
+          - clippy::unused_async
+          - -A
+          - missing_docs
 
       - id: cognitive-complexity
         name: Check cognitive complexity

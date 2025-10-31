@@ -11,9 +11,15 @@
     # devshells.url = "github:Ba-So/nix-devshells?ref=v1.0.0";
   };
 
-  outputs = { self, nixpkgs, flake-utils, devshells, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
+  outputs = {
+    self,
+    nixpkgs,
+    flake-utils,
+    devshells,
+    ...
+  }:
+    flake-utils.lib.eachDefaultSystem (
+      system: let
         pkgs = nixpkgs.legacyPackages.${system};
 
         # Define your main LaTeX document
@@ -29,7 +35,8 @@
 
           buildInputs = with pkgs; [
             (texlive.combine {
-              inherit (texlive)
+              inherit
+                (texlive)
                 scheme-basic
                 latexmk
                 # Add your required LaTeX packages here
@@ -39,7 +46,7 @@
                 hyperref
                 # bibtex  # For bibliography
                 # biblatex  # Modern bibliography system
-              ;
+                ;
             })
           ];
 
@@ -56,7 +63,7 @@
           meta = with pkgs.lib; {
             description = "My LaTeX document";
             license = licenses.cc-by-40;
-            maintainers = [ ];
+            maintainers = [];
           };
         };
 

@@ -26,7 +26,7 @@
         # Create pkgs with rust overlay for cargo-mcp
         pkgs-with-rust = import nixpkgs {
           inherit system;
-          overlays = [ rust-overlay.overlays.default ];
+          overlays = [rust-overlay.overlays.default];
         };
 
         pkgs = nixpkgs.legacyPackages.${system};
@@ -80,7 +80,7 @@
       };
 
       # Overlay for easy integration into other configurations
-      overlays.default = final: prev: {
+      overlays.default = final: _prev: {
         cargo-mcp = final.callPackage ./pkgs/cargo-mcp.nix {
           inherit (final) rust-bin;
         };
