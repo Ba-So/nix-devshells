@@ -246,6 +246,7 @@ jobs:
           mkdir -p test-${{ matrix.template }}
           cd test-${{ matrix.template }}
           nix flake init -t ..#${{ matrix.template }}
+          git init && git add .
           echo "✓ Template initialized successfully"
 
       - name: Verify template structure
