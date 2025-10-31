@@ -5,38 +5,37 @@
 # LaTeX development tools and environment
 # Provides everything needed for LaTeX document development
 {
-  packages =
-    [
-      # Full TeXLive distribution with most packages (includes latexindent)
-      pkgs.texliveFull
+  packages = [
+    # Full TeXLive distribution with most packages (includes latexindent)
+    pkgs.texliveFull
 
-      # LaTeX development tools
-      pkgs.texlab # LSP server for LaTeX
+    # LaTeX development tools
+    pkgs.texlab # LSP server for LaTeX
 
-      # Modern LaTeX compilation and automation
-      pkgs.tectonic # Modern, self-contained TeX/LaTeX engine
-      # Note: latexmk is included in texliveFull
+    # Modern LaTeX compilation and automation
+    pkgs.tectonic # Modern, self-contained TeX/LaTeX engine
+    # Note: latexmk is included in texliveFull
 
-      # PDF viewing and manipulation
-      pkgs.zathura # Lightweight PDF viewer
-      pkgs.evince # GNOME PDF viewer
-      pkgs.poppler_utils # PDF manipulation utilities (pdfinfo, pdftoppm, etc.)
+    # PDF viewing and manipulation
+    pkgs.zathura # Lightweight PDF viewer
+    pkgs.evince # GNOME PDF viewer
+    pkgs.poppler_utils # PDF manipulation utilities (pdfinfo, pdftoppm, etc.)
 
-      # Image conversion and manipulation (often needed for LaTeX)
-      pkgs.imagemagick
-      pkgs.ghostscript # PostScript and PDF interpreter
+    # Image conversion and manipulation (often needed for LaTeX)
+    pkgs.imagemagick
+    pkgs.ghostscript # PostScript and PDF interpreter
 
-      # Bibliography management
-      pkgs.biber # Backend for biblatex
+    # Bibliography management
+    pkgs.biber # Backend for biblatex
 
-      # Spell checking
-      pkgs.aspell
-      pkgs.aspellDicts.en
-      pkgs.aspellDicts.de
+    # Spell checking
+    pkgs.aspell
+    pkgs.aspellDicts.en
+    pkgs.aspellDicts.de
 
-      # Live preview and watch tools
-      pkgs.watchexec # Generic file watcher for auto-recompilation
-    ];
+    # Live preview and watch tools
+    pkgs.watchexec # Generic file watcher for auto-recompilation
+  ];
 
   shellHook = ''
     echo "📄 LaTeX toolchain ready!"

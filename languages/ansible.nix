@@ -5,47 +5,46 @@
 # Ansible automation and configuration management environment
 # Provides a complete Ansible development setup with Python and essential tools
 {
-  packages =
-    [
-      # Core Python runtime
-      pkgs.python312
+  packages = [
+    # Core Python runtime
+    pkgs.python312
 
-      # Ansible and related tools
-      pkgs.ansible
-      pkgs.ansible-lint # Best practices checker for Ansible
-      pkgs.ansible-language-server # LSP for Ansible YAML files
+    # Ansible and related tools
+    pkgs.ansible
+    pkgs.ansible-lint # Best practices checker for Ansible
+    pkgs.ansible-language-server # LSP for Ansible YAML files
 
-      # Python development tools (minimal set for Ansible work)
-      pkgs.python312Packages.pytest # Testing framework
-      pkgs.python312Packages.pytest-ansible # Ansible-specific pytest plugin
-      pkgs.python312Packages.molecule # Ansible role testing framework
-      pkgs.python312Packages.molecule-plugins # Additional providers for molecule
+    # Python development tools (minimal set for Ansible work)
+    pkgs.python312Packages.pytest # Testing framework
+    pkgs.python312Packages.pytest-ansible # Ansible-specific pytest plugin
+    pkgs.python312Packages.molecule # Ansible role testing framework
+    pkgs.python312Packages.molecule-plugins # Additional providers for molecule
 
-      # YAML tools
-      pkgs.yamllint # YAML linter
-      pkgs.yq-go # YAML/JSON processor
+    # YAML tools
+    pkgs.yamllint # YAML linter
+    pkgs.yq-go # YAML/JSON processor
 
-      # Jinja2 tools (Ansible's templating engine)
-      pkgs.python312Packages.jinja2 # Template engine
+    # Jinja2 tools (Ansible's templating engine)
+    pkgs.python312Packages.jinja2 # Template engine
 
-      # SSH and connection tools
-      pkgs.openssh
-      pkgs.sshpass # For password-based SSH (non-key authentication)
+    # SSH and connection tools
+    pkgs.openssh
+    pkgs.sshpass # For password-based SSH (non-key authentication)
 
-      # Common Ansible dependencies
-      pkgs.python312Packages.netaddr # IP address manipulation
-      pkgs.python312Packages.dnspython # DNS toolkit
-      pkgs.python312Packages.pywinrm # Windows Remote Management
-      pkgs.python312Packages.requests # HTTP library
-      pkgs.python312Packages.pyyaml # YAML parser
+    # Common Ansible dependencies
+    pkgs.python312Packages.netaddr # IP address manipulation
+    pkgs.python312Packages.dnspython # DNS toolkit
+    pkgs.python312Packages.pywinrm # Windows Remote Management
+    pkgs.python312Packages.requests # HTTP library
+    pkgs.python312Packages.pyyaml # YAML parser
 
-      # Vault and secrets management
-      pkgs.python312Packages.hvac # HashiCorp Vault client
+    # Vault and secrets management
+    pkgs.python312Packages.hvac # HashiCorp Vault client
 
-      # System dependencies
-      pkgs.git
-      pkgs.gnumake
-    ];
+    # System dependencies
+    pkgs.git
+    pkgs.gnumake
+  ];
 
   shellHook = ''
     echo "🔧 Ansible development environment ready!"

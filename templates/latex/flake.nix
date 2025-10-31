@@ -18,76 +18,77 @@
     devshells,
     ...
   }:
-    flake-utils.lib.eachDefaultSystem (
-      system: let
-        pkgs = nixpkgs.legacyPackages.${system};
+    flake-utils.lib.eachDefaultSystem (system: {
+      # Uncomment to build your LaTeX document
+      # packages.default = let
+      #   pkgs = nixpkgs.legacyPackages.${system};
+      #   mainDocument = "main.tex";
+      #   documentName = "my-document";
+      # in pkgs.stdenvNoCC.mkDerivation {
+      #   pname = documentName;
+      #   version = "0.1.0";
+      #
+      #   src = ./.;
+      #
+      #   buildInputs = with pkgs; [
+      #     (texlive.combine {
+      #       inherit
+      #         (texlive)
+      #         scheme-basic
+      #         latexmk
+      #         # Add your required LaTeX packages here
+      #         amsmath
+      #         amsfonts
+      #         graphics
+      #         hyperref
+      #         # bibtex  # For bibliography
+      #         # biblatex  # Modern bibliography system
+      #         ;
+      #     })
+      #   ];
+      #
+      #   buildPhase = ''
+      #     # Compile the LaTeX document
+      #     latexmk -pdf -interaction=nonstopmode ${mainDocument}
+      #   '';
+      #
+      #   installPhase = ''
+      #     mkdir -p $out
+      #     cp *.pdf $out/
+      #   '';
+      #
+      #   meta = with pkgs.lib; {
+      #     description = "My LaTeX document";
+      #     license = licenses.cc-by-40;
+      #     maintainers = [];
+      #   };
+      # };
 
-        # Define your main LaTeX document
-        mainDocument = "main.tex";
-        documentName = "my-document";
-      in {
-        # Uncomment to build your LaTeX document
-        # packages.default = pkgs.stdenvNoCC.mkDerivation {
-        #   pname = documentName;
-        #   version = "0.1.0";
-        #
-        #   src = ./.;
-        #
-        #   buildInputs = with pkgs; [
-        #     (texlive.combine {
-        #       inherit
-        #         (texlive)
-        #         scheme-basic
-        #         latexmk
-        #         # Add your required LaTeX packages here
-        #         amsmath
-        #         amsfonts
-        #         graphics
-        #         hyperref
-        #         # bibtex  # For bibliography
-        #         # biblatex  # Modern bibliography system
-        #         ;
-        #     })
-        #   ];
-        #
-        #   buildPhase = ''
-        #     # Compile the LaTeX document
-        #     latexmk -pdf -interaction=nonstopmode ${mainDocument}
-        #   '';
-        #
-        #   installPhase = ''
-        #     mkdir -p $out
-        #     cp *.pdf $out/
-        #   '';
-        #
-        #   meta = with pkgs.lib; {
-        #     description = "My LaTeX document";
-        #     license = licenses.cc-by-40;
-        #     maintainers = [];
-        #   };
-        # };
+      # Development environment from nix-devshells
+      # This provides: texlive, latexmk, and editor support
+      devShells.default = devshells.devShells.${system}.latex;
 
-        # Development environment from nix-devshells
-        # This provides: texlive, latexmk, and editor support
-        devShells.default = devshells.devShells.${system}.latex;
+      # Optional: Extend the devshell with additional packages
+      # devShells.default = let
+      #   pkgs = nixpkgs.legacyPackages.${system};
+      # in pkgs.mkShell {
+      #   inputsFrom = [ devshells.devShells.${system}.latex ];
+      #   packages = with pkgs; [
+      #     # Add document-specific tools here
+      #     # inkscape  # For SVG to PDF conversion
+      #     # imagemagick  # For image processing
+      #     # python3  # For build scripts
+      #   ];
+      # };
 
-        # Optional: Extend the devshell with additional packages
-        # devShells.default = pkgs.mkShell {
-        #   inputsFrom = [ devshells.devShells.${system}.latex ];
-        #   packages = with pkgs; [
-        #     # Add document-specific tools here
-        #     # inkscape  # For SVG to PDF conversion
-        #     # imagemagick  # For image processing
-        #     # python3  # For build scripts
-        #   ];
-        # };
-
-        # Optional: Define an app to open the PDF
-        # apps.default = {
-        #   type = "app";
-        #   program = "${pkgs.zathura}/bin/zathura";
-        #   args = [ "${self.packages.${system}.default}/${documentName}.pdf" ];
-        # };
-      }
-    );
+      # Optional: Define an app to open the PDF
+      # apps.default = let
+      #   pkgs = nixpkgs.legacyPackages.${system};
+      #   documentName = "my-document";
+      # in {
+      #   type = "app";
+      #   program = "${pkgs.zathura}/bin/zathura";
+      #   args = [ "${self.packages.${system}.default}/${documentName}.pdf" ];
+      # };
+    });
 }

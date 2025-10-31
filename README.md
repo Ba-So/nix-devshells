@@ -7,6 +7,7 @@ Development shells and project templates for Nix flake-based workflows.
 ### Packages
 
 **MCP Servers**
+
 - `cargo-mcp` - Cargo documentation and project operations (default)
 - `cratedocs-mcp` - Rust crate documentation search
 - `codanna` - Code intelligence and semantic search

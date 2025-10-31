@@ -5,64 +5,63 @@
 # C++ development tools and environment
 # Provides everything needed for modern C++ development including compilers, build systems, and analysis tools
 {
-  packages =
-    [
-      # Core C++ toolchain - both GCC and Clang for flexibility
-      pkgs.gcc14
-      pkgs.clang_18
-      pkgs.llvmPackages_18.bintools # LLVM tools like lld linker
+  packages = [
+    # Core C++ toolchain - both GCC and Clang for flexibility
+    pkgs.gcc14
+    pkgs.clang_18
+    pkgs.llvmPackages_18.bintools # LLVM tools like lld linker
 
-      # Build systems
-      pkgs.cmake
-      pkgs.cmakeWithGui # CMake GUI for visual configuration
-      pkgs.ninja # Fast build system
-      pkgs.meson # Alternative modern build system
-      pkgs.gnumake # Traditional make
+    # Build systems
+    pkgs.cmake
+    pkgs.cmakeWithGui # CMake GUI for visual configuration
+    pkgs.ninja # Fast build system
+    pkgs.meson # Alternative modern build system
+    pkgs.gnumake # Traditional make
 
-      # Package managers for C++
-      pkgs.conan # C++ package manager
-      pkgs.vcpkg # Microsoft's C++ package manager
-      pkgs.pkg-config # Library discovery tool
+    # Package managers for C++
+    pkgs.conan # C++ package manager
+    pkgs.vcpkg # Microsoft's C++ package manager
+    pkgs.pkg-config # Library discovery tool
 
-      # Development tools
-      pkgs.clang-tools_18 # Includes clangd, clang-format, clang-tidy
-      pkgs.ccache # Compilation cache for faster rebuilds
-      pkgs.distcc # Distributed compilation (optional)
+    # Development tools
+    pkgs.clang-tools_18 # Includes clangd, clang-format, clang-tidy
+    pkgs.ccache # Compilation cache for faster rebuilds
+    pkgs.distcc # Distributed compilation (optional)
 
-      # Debugging and profiling
-      pkgs.gdb # GNU debugger
-      pkgs.lldb_18 # LLVM debugger
-      pkgs.valgrind # Memory analysis
-      pkgs.heaptrack # Heap memory profiler
-      pkgs.hotspot # GUI for performance analysis
-      pkgs.perf-tools # Performance analysis tools
+    # Debugging and profiling
+    pkgs.gdb # GNU debugger
+    pkgs.lldb_18 # LLVM debugger
+    pkgs.valgrind # Memory analysis
+    pkgs.heaptrack # Heap memory profiler
+    pkgs.hotspot # GUI for performance analysis
+    pkgs.perf-tools # Performance analysis tools
 
-      # Static analysis and code quality
-      pkgs.cppcheck # Static analysis tool
-      pkgs.include-what-you-use # Include optimization
-      pkgs.cpplint # Google's C++ style checker
-      pkgs.bear # Build command database generator
+    # Static analysis and code quality
+    pkgs.cppcheck # Static analysis tool
+    pkgs.include-what-you-use # Include optimization
+    pkgs.cpplint # Google's C++ style checker
+    pkgs.bear # Build command database generator
 
-      # Documentation generation
-      pkgs.doxygen # Documentation generator
-      pkgs.graphviz # For dependency graphs in docs
+    # Documentation generation
+    pkgs.doxygen # Documentation generator
+    pkgs.graphviz # For dependency graphs in docs
 
-      # Testing frameworks (header-only, for reference)
-      pkgs.catch2 # Modern C++ testing framework
-      pkgs.gtest # Google Test framework
-      pkgs.gbenchmark # Google's microbenchmark library
+    # Testing frameworks (header-only, for reference)
+    pkgs.catch2 # Modern C++ testing framework
+    pkgs.gtest # Google Test framework
+    pkgs.gbenchmark # Google's microbenchmark library
 
-      # Common libraries often needed
-      pkgs.boost # Boost C++ libraries
-      pkgs.fmt # Modern formatting library
-      pkgs.spdlog # Fast C++ logging library
-      pkgs.eigen # Linear algebra library
-      pkgs.nlohmann_json # JSON for Modern C++
+    # Common libraries often needed
+    pkgs.boost # Boost C++ libraries
+    pkgs.fmt # Modern formatting library
+    pkgs.spdlog # Fast C++ logging library
+    pkgs.eigen # Linear algebra library
+    pkgs.nlohmann_json # JSON for Modern C++
 
-      # Build optimization
-      pkgs.lld_18 # Fast LLVM linker
-      pkgs.mold # Even faster modern linker
-    ];
+    # Build optimization
+    pkgs.lld_18 # Fast LLVM linker
+    pkgs.mold # Even faster modern linker
+  ];
 
   shellHook = ''
     echo "🚀 C++ development environment ready!"

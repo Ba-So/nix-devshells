@@ -14,51 +14,50 @@ let
     extensions = ["rust-src" "rust-analyzer" "clippy" "rustfmt"];
   };
 in {
-  packages =
-    [
-      # Core Rust toolchain (unified from rust-overlay)
-      rustToolchain
+  packages = [
+    # Core Rust toolchain (unified from rust-overlay)
+    rustToolchain
 
-      # Common Rust development utilities
-      pkgs.cargo-watch # Auto-rebuild on file changes
-      pkgs.cargo-edit # cargo add/rm commands
-      pkgs.cargo-outdated # Check for outdated dependencies
-      pkgs.cargo-audit # Security audit
+    # Common Rust development utilities
+    pkgs.cargo-watch # Auto-rebuild on file changes
+    pkgs.cargo-edit # cargo add/rm commands
+    pkgs.cargo-outdated # Check for outdated dependencies
+    pkgs.cargo-audit # Security audit
 
-      # Testing and benchmarking
-      pkgs.cargo-nextest # Fast test runner
-      pkgs.cargo-criterion # Benchmarking
+    # Testing and benchmarking
+    pkgs.cargo-nextest # Fast test runner
+    pkgs.cargo-criterion # Benchmarking
 
-      # Cross-compilation and platforms
-      pkgs.cargo-cross # Cross-compilation made easy
+    # Cross-compilation and platforms
+    pkgs.cargo-cross # Cross-compilation made easy
 
-      # Performance and optimization tools
-      pkgs.sccache # Compilation cache for faster builds
-      pkgs.cargo-machete # Find unused dependencies
-      pkgs.cargo-bloat # Analyze binary size and identify bloat
-      pkgs.cargo-llvm-lines # Count LLVM IR lines for compile-time analysis
+    # Performance and optimization tools
+    pkgs.sccache # Compilation cache for faster builds
+    pkgs.cargo-machete # Find unused dependencies
+    pkgs.cargo-bloat # Analyze binary size and identify bloat
+    pkgs.cargo-llvm-lines # Count LLVM IR lines for compile-time analysis
 
-      # Code analysis tools
-      pkgs.cargo-modules
-      pkgs.graphviz
-      pkgs.cargo-depgraph
-      pkgs.cargo-tarpaulin
-      pkgs.rust-code-analysis # Metrics and complexity analysis
-      pkgs.jq # JSON processor for parsing analysis output
+    # Code analysis tools
+    pkgs.cargo-modules
+    pkgs.graphviz
+    pkgs.cargo-depgraph
+    pkgs.cargo-tarpaulin
+    pkgs.rust-code-analysis # Metrics and complexity analysis
+    pkgs.jq # JSON processor for parsing analysis output
 
-      # MCP (Model Context Protocol) tools
-      devPkgs.cargo-mcp # MCP server for Cargo operations
-      devPkgs.cratedocs-mcp # Rust documentation MCP server
+    # MCP (Model Context Protocol) tools
+    devPkgs.cargo-mcp # MCP server for Cargo operations
+    devPkgs.cratedocs-mcp # Rust documentation MCP server
 
-      # Build optimization dependencies
-      pkgs.lld # Fast linker
-      pkgs.clang # C compiler (needed for lld and some builds)
-      pkgs.gcc # Provides 'cc' for ring and other crates
+    # Build optimization dependencies
+    pkgs.lld # Fast linker
+    pkgs.clang # C compiler (needed for lld and some builds)
+    pkgs.gcc # Provides 'cc' for ring and other crates
 
-      # dependencies for rust
-      pkgs.pkg-config
-      pkgs.openssl.dev
-    ];
+    # dependencies for rust
+    pkgs.pkg-config
+    pkgs.openssl.dev
+  ];
 
   shellHook = ''
     echo "🦀 Rust toolchain ready!"

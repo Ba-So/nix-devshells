@@ -5,25 +5,24 @@
 # Nix development tools and environment
 # Provides everything needed for NixOS configuration development including formatters and analysis tools
 {
-  packages =
-    [
-      # NixOS specific tools
-      pkgs.nixos-rebuild
+  packages = [
+    # NixOS specific tools
+    pkgs.nixos-rebuild
 
-      # Nix development tools
-      pkgs.alejandra # Nix formatter
-      pkgs.deadnix # Dead code detection
-      pkgs.statix # Nix linter
-      pkgs.cachix # Binary cache management
-      pkgs.nix-tree # Analyze dependency trees
-      pkgs.nix-diff # Compare derivations
+    # Nix development tools
+    pkgs.alejandra # Nix formatter
+    pkgs.deadnix # Dead code detection
+    pkgs.statix # Nix linter
+    pkgs.cachix # Binary cache management
+    pkgs.nix-tree # Analyze dependency trees
+    pkgs.nix-diff # Compare derivations
 
-      # Pre-commit hook tools
-      pkgs.nodePackages.prettier # Multi-language formatter
-      pkgs.yamllint # YAML linting
-      pkgs.typos # Spell checker
-      pkgs.shellcheck # Shell script linter
-    ];
+    # Pre-commit hook tools
+    pkgs.nodePackages.prettier # Multi-language formatter
+    pkgs.yamllint # YAML linting
+    pkgs.typos # Spell checker
+    pkgs.shellcheck # Shell script linter
+  ];
 
   shellHook = ''
     echo "🏗️  NixOS configuration development environment"

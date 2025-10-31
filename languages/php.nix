@@ -66,34 +66,33 @@ let
     '';
   };
 in {
-  packages =
-    [
-      # Core PHP with extensions
-      phpEnv
+  packages = [
+    # Core PHP with extensions
+    phpEnv
 
-      # Package management
-      phpEnv.packages.composer
+    # Package management
+    phpEnv.packages.composer
 
-      # Framework tools
-      pkgs.symfony-cli
+    # Framework tools
+    pkgs.symfony-cli
 
-      # Code quality and analysis
-      # Note: php-cs-fixer and other tools are best installed via composer
-      # as they are marked broken or unavailable in nixpkgs
-      phpEnv.packages.php-codesniffer # PHP_CodeSniffer for style checking
+    # Code quality and analysis
+    # Note: php-cs-fixer and other tools are best installed via composer
+    # as they are marked broken or unavailable in nixpkgs
+    phpEnv.packages.php-codesniffer # PHP_CodeSniffer for style checking
 
-      # Development utilities
-      pkgs.nodejs # For frontend asset compilation
-      pkgs.nodePackages.npm # Package manager for JS dependencies
+    # Development utilities
+    pkgs.nodejs # For frontend asset compilation
+    pkgs.nodePackages.npm # Package manager for JS dependencies
 
-      # Database tools
-      pkgs.mysql80 # MySQL client
-      pkgs.postgresql # PostgreSQL client
-      pkgs.sqlite # SQLite client
+    # Database tools
+    pkgs.mysql80 # MySQL client
+    pkgs.postgresql # PostgreSQL client
+    pkgs.sqlite # SQLite client
 
-      # Web server for development
-      pkgs.caddy # Modern web server with automatic HTTPS
-    ];
+    # Web server for development
+    pkgs.caddy # Modern web server with automatic HTTPS
+  ];
 
   shellHook = ''
     echo "🐘 PHP development environment ready!"

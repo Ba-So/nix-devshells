@@ -5,54 +5,53 @@
 # Python development tools and environment with UV package manager
 # Provides a modern Python development setup with fast dependency management and quality tools
 {
-  packages =
-    [
-      # Core Python runtime
-      pkgs.python312
+  packages = [
+    # Core Python runtime
+    pkgs.python312
 
-      # UV - Modern, fast Python package and project manager
-      pkgs.uv
+    # UV - Modern, fast Python package and project manager
+    pkgs.uv
 
-      # Development tools
-      pkgs.ruff # Extremely fast Python linter and formatter (replaces black, isort, flake8, pylint)
-      pkgs.mypy # Static type checker for Python
-      pkgs.python312Packages.pytest # Testing framework
-      pkgs.python312Packages.pytest-cov # Coverage plugin for pytest
-      pkgs.python312Packages.pytest-xdist # Parallel test execution
-      pkgs.python312Packages.pytest-asyncio # Async test support
-      pkgs.python312Packages.coverage # Code coverage measurement
+    # Development tools
+    pkgs.ruff # Extremely fast Python linter and formatter (replaces black, isort, flake8, pylint)
+    pkgs.mypy # Static type checker for Python
+    pkgs.python312Packages.pytest # Testing framework
+    pkgs.python312Packages.pytest-cov # Coverage plugin for pytest
+    pkgs.python312Packages.pytest-xdist # Parallel test execution
+    pkgs.python312Packages.pytest-asyncio # Async test support
+    pkgs.python312Packages.coverage # Code coverage measurement
 
-      # Code quality and analysis
-      pkgs.bandit # Security linter for Python
-      pkgs.python312Packages.vulture # Find dead Python code
-      pkgs.python312Packages.pydocstyle # Docstring style checker
-      pkgs.python312Packages.pyupgrade # Automatically upgrade syntax for newer Python versions
+    # Code quality and analysis
+    pkgs.bandit # Security linter for Python
+    pkgs.python312Packages.vulture # Find dead Python code
+    pkgs.python312Packages.pydocstyle # Docstring style checker
+    pkgs.python312Packages.pyupgrade # Automatically upgrade syntax for newer Python versions
 
-      # Performance profiling
-      pkgs.py-spy # Sampling profiler for Python
-      # memray and scalene might not be available in nixpkgs, commenting out for now
-      # pkgs.python312Packages.memray # Memory profiler
-      # pkgs.python312Packages.scalene # High-performance CPU and memory profiler
+    # Performance profiling
+    pkgs.py-spy # Sampling profiler for Python
+    # memray and scalene might not be available in nixpkgs, commenting out for now
+    # pkgs.python312Packages.memray # Memory profiler
+    # pkgs.python312Packages.scalene # High-performance CPU and memory profiler
 
-      # Documentation tools
-      pkgs.python312Packages.mkdocs # Project documentation with Markdown
-      pkgs.python312Packages.mkdocs-material # Material theme for MkDocs
-      pkgs.python312Packages.pdoc3 # Auto-generate Python API documentation
+    # Documentation tools
+    pkgs.python312Packages.mkdocs # Project documentation with Markdown
+    pkgs.python312Packages.mkdocs-material # Material theme for MkDocs
+    pkgs.python312Packages.pdoc3 # Auto-generate Python API documentation
 
-      # Build tools
-      pkgs.python312Packages.build # PEP 517 package builder
-      pkgs.python312Packages.twine # Upload packages to PyPI
-      pkgs.python312Packages.wheel # Wheel packaging format
+    # Build tools
+    pkgs.python312Packages.build # PEP 517 package builder
+    pkgs.python312Packages.twine # Upload packages to PyPI
+    pkgs.python312Packages.wheel # Wheel packaging format
 
-      # System dependencies for common Python packages with C extensions
-      pkgs.stdenv.cc.cc.lib
-      pkgs.zlib
-      pkgs.openssl.dev
-      pkgs.libffi
-      pkgs.postgresql # For psycopg2 and similar
-      pkgs.mysql80 # For mysqlclient
-      pkgs.pkg-config
-    ];
+    # System dependencies for common Python packages with C extensions
+    pkgs.stdenv.cc.cc.lib
+    pkgs.zlib
+    pkgs.openssl.dev
+    pkgs.libffi
+    pkgs.postgresql # For psycopg2 and similar
+    pkgs.mysql80 # For mysqlclient
+    pkgs.pkg-config
+  ];
 
   shellHook = ''
     echo "🐍 Python development environment ready!"
