@@ -14,6 +14,8 @@ in {
 
       # Nix development tools
       pkgs.alejandra # Nix formatter
+      pkgs.deadnix # Dead code detection
+      pkgs.statix # Nix linter
       pkgs.cachix # Binary cache management
       pkgs.nix-tree # Analyze dependency trees
       pkgs.nix-diff # Compare derivations
@@ -34,6 +36,8 @@ in {
     echo "  nixos-rebuild switch --flake .#<hostname>"
     echo "  home-manager switch --flake .#<username>@<hostname>"
     echo "  alejandra . # Format nix files"
+    echo "  deadnix . # Check for dead code"
+    echo "  statix check . # Lint nix files"
     echo "  cachix push <cache-name> <store-path> # Push to cache"
     echo "  nix-tree # Analyze dependency tree"
     echo "  nix-diff derivation1 derivation2 # Compare builds"
