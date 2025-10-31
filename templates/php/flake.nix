@@ -22,43 +22,43 @@
       system: let
         pkgs = nixpkgs.legacyPackages.${system};
       in {
-        # The actual project package
-        packages.default = pkgs.stdenv.mkDerivation {
-          pname = "my-php-project";
-          version = "0.1.0";
-
-          src = ./.;
-
-          buildInputs = with pkgs; [
-            php83
-            php83Packages.composer
-          ];
-
-          buildPhase = ''
-            # Install composer dependencies
-            composer install --no-dev --optimize-autoloader
-          '';
-
-          installPhase = ''
-            mkdir -p $out/share/php/my-php-project
-            cp -r * $out/share/php/my-php-project/
-
-            # Optional: Create a wrapper script
-            # mkdir -p $out/bin
-            # cat > $out/bin/my-php-project << EOF
-            # #!/bin/sh
-            # ${pkgs.php83}/bin/php $out/share/php/my-php-project/index.php "\$@"
-            # EOF
-            # chmod +x $out/bin/my-php-project
-          '';
-
-          meta = with pkgs.lib; {
-            description = "My PHP project";
-            homepage = "https://github.com/yourusername/my-php-project";
-            license = licenses.mit;
-            maintainers = [];
-          };
-        };
+        # Uncomment to build your PHP project
+        # packages.default = pkgs.stdenv.mkDerivation {
+        #   pname = "my-php-project";
+        #   version = "0.1.0";
+        #
+        #   src = ./.;
+        #
+        #   buildInputs = with pkgs; [
+        #     php83
+        #     php83Packages.composer
+        #   ];
+        #
+        #   buildPhase = ''
+        #     # Install composer dependencies
+        #     composer install --no-dev --optimize-autoloader
+        #   '';
+        #
+        #   installPhase = ''
+        #     mkdir -p $out/share/php/my-php-project
+        #     cp -r * $out/share/php/my-php-project/
+        #
+        #     # Optional: Create a wrapper script
+        #     # mkdir -p $out/bin
+        #     # cat > $out/bin/my-php-project << EOF
+        #     # #!/bin/sh
+        #     # ${pkgs.php83}/bin/php $out/share/php/my-php-project/index.php "\$@"
+        #     # EOF
+        #     # chmod +x $out/bin/my-php-project
+        #   '';
+        #
+        #   meta = with pkgs.lib; {
+        #     description = "My PHP project";
+        #     homepage = "https://github.com/yourusername/my-php-project";
+        #     license = licenses.mit;
+        #     maintainers = [];
+        #   };
+        # };
 
         # Development environment from nix-devshells
         # This provides: PHP, Composer, development tools, etc.

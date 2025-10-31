@@ -26,46 +26,46 @@
         mainDocument = "main.tex";
         documentName = "my-document";
       in {
-        # Build the PDF document
-        packages.default = pkgs.stdenvNoCC.mkDerivation {
-          pname = documentName;
-          version = "0.1.0";
-
-          src = ./.;
-
-          buildInputs = with pkgs; [
-            (texlive.combine {
-              inherit
-                (texlive)
-                scheme-basic
-                latexmk
-                # Add your required LaTeX packages here
-                amsmath
-                amsfonts
-                graphics
-                hyperref
-                # bibtex  # For bibliography
-                # biblatex  # Modern bibliography system
-                ;
-            })
-          ];
-
-          buildPhase = ''
-            # Compile the LaTeX document
-            latexmk -pdf -interaction=nonstopmode ${mainDocument}
-          '';
-
-          installPhase = ''
-            mkdir -p $out
-            cp *.pdf $out/
-          '';
-
-          meta = with pkgs.lib; {
-            description = "My LaTeX document";
-            license = licenses.cc-by-40;
-            maintainers = [];
-          };
-        };
+        # Uncomment to build your LaTeX document
+        # packages.default = pkgs.stdenvNoCC.mkDerivation {
+        #   pname = documentName;
+        #   version = "0.1.0";
+        #
+        #   src = ./.;
+        #
+        #   buildInputs = with pkgs; [
+        #     (texlive.combine {
+        #       inherit
+        #         (texlive)
+        #         scheme-basic
+        #         latexmk
+        #         # Add your required LaTeX packages here
+        #         amsmath
+        #         amsfonts
+        #         graphics
+        #         hyperref
+        #         # bibtex  # For bibliography
+        #         # biblatex  # Modern bibliography system
+        #         ;
+        #     })
+        #   ];
+        #
+        #   buildPhase = ''
+        #     # Compile the LaTeX document
+        #     latexmk -pdf -interaction=nonstopmode ${mainDocument}
+        #   '';
+        #
+        #   installPhase = ''
+        #     mkdir -p $out
+        #     cp *.pdf $out/
+        #   '';
+        #
+        #   meta = with pkgs.lib; {
+        #     description = "My LaTeX document";
+        #     license = licenses.cc-by-40;
+        #     maintainers = [];
+        #   };
+        # };
 
         # Development environment from nix-devshells
         # This provides: texlive, latexmk, and editor support

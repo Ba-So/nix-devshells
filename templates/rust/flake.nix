@@ -22,28 +22,28 @@
       system: let
         pkgs = nixpkgs.legacyPackages.${system};
       in {
-        # The actual project package
-        packages.default = pkgs.rustPlatform.buildRustPackage {
-          pname = "my-rust-project";
-          version = "0.1.0";
-
-          src = ./.;
-
-          # Run `nix run nixpkgs#nix-prefetch-git -- --url . --rev HEAD` to get the hash
-          # Or let Nix tell you the correct hash in the error message
-          cargoLock.lockFile = ./Cargo.lock;
-
-          # Optional: Add runtime dependencies
-          # buildInputs = with pkgs; [ openssl ];
-          # nativeBuildInputs = with pkgs; [ pkg-config ];
-
-          meta = with pkgs.lib; {
-            description = "My Rust project";
-            homepage = "https://github.com/yourusername/my-rust-project";
-            license = licenses.mit;
-            maintainers = [];
-          };
-        };
+        # Uncomment to build your Rust package
+        # packages.default = pkgs.rustPlatform.buildRustPackage {
+        #   pname = "my-rust-project";
+        #   version = "0.1.0";
+        #
+        #   src = ./.;
+        #
+        #   # Run `nix run nixpkgs#nix-prefetch-git -- --url . --rev HEAD` to get the hash
+        #   # Or let Nix tell you the correct hash in the error message
+        #   cargoLock.lockFile = ./Cargo.lock;
+        #
+        #   # Optional: Add runtime dependencies
+        #   # buildInputs = with pkgs; [ openssl ];
+        #   # nativeBuildInputs = with pkgs; [ pkg-config ];
+        #
+        #   meta = with pkgs.lib; {
+        #     description = "My Rust project";
+        #     homepage = "https://github.com/yourusername/my-rust-project";
+        #     license = licenses.mit;
+        #     maintainers = [];
+        #   };
+        # };
 
         # Development environment from nix-devshells
         # This provides: cargo, rustc, clippy, rust-analyzer, etc.
