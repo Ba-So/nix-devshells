@@ -11,21 +11,21 @@ repos:
         entry: sed -i 's/[[:space:]]*$//'
         language: system
         types: [text]
-        stages: [commit]
+        stages: [pre-commit]
 
       - id: end-of-file-fixer
         name: fix end of files
         entry: bash -c 'for file in "$@"; do if [ -s "$file" ] && [ "$(tail -c1 "$file")" != "" ]; then echo >> "$file"; fi; done' --
         language: system
         types: [text]
-        stages: [commit]
+        stages: [pre-commit]
 
       - id: mixed-line-ending
         name: check for mixed line endings
         entry: bash
         language: system
         types: [text]
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - 'for file in "$@"; do if file "$file" | grep -q "CRLF"; then echo "CRLF line endings in $file"; exit 1; fi; done'
@@ -36,7 +36,7 @@ repos:
         entry: bash
         language: system
         types: [text]
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - 'for file in "$@"; do if [ -x "$file" ] && [ -f "$file" ] && ! head -n1 "$file" | grep -q "^#!"; then echo "Executable $file missing shebang"; exit 1; fi; done'
@@ -47,7 +47,7 @@ repos:
         entry: bash
         language: system
         types: [text]
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - 'for file in "$@"; do if head -n1 "$file" 2>/dev/null | grep -q "^#!" && [ ! -x "$file" ]; then echo "Script $file has shebang but is not executable"; exit 1; fi; done'
@@ -63,14 +63,14 @@ repos:
         language: system
         files: \.(yaml|yml)$
         exclude: ^\.pre-commit-config\.yaml$
-        stages: [commit]
+        stages: [pre-commit]
 
       - id: check-json
         name: check json syntax
         entry: bash
         language: system
         files: \.json$
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - 'for file in "$@"; do jq empty "$file" || exit 1; done'
@@ -86,7 +86,7 @@ repos:
         language: system
         types: [text]
         exclude: ^\.pre-commit-config\.yaml$
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - 'for file in "$@"; do if grep -l "BEGIN.*PRIVATE KEY" "$file"; then echo "Private key detected in $file"; exit 1; fi; done'
@@ -97,7 +97,7 @@ repos:
         entry: bash
         language: system
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - |
@@ -125,7 +125,7 @@ repos:
         language: system
         types: [text]
         exclude: "^(.pre-commit-config.yaml|.*test.*|.*example.*)$"
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - 'for file in "$@"; do if grep -iE "(password|secret|api[_-]?key|token|credential)[[:space:]]*[:=][[:space:]]*[''\"''][^''\"'']+[''\"'']" "$file"; then echo "Potential secret in $file"; exit 1; fi; done'
@@ -140,7 +140,7 @@ repos:
         entry: bash
         language: system
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - 'git ls-files | sort -f | uniq -i -d | grep -q . && echo "ERROR: Case conflicts detected in filenames" && exit 1 || exit 0'
@@ -151,7 +151,7 @@ repos:
         language: system
         types: [text]
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - 'grep -r "^<<<<<<< \|^=======$\|^>>>>>>> " . --exclude-dir=.git && echo "ERROR: Merge conflict markers detected" && exit 1 || exit 0'
@@ -161,7 +161,7 @@ repos:
         entry: bash
         language: system
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - 'find . -type l ! -exec test -e {} \; -print | grep -q . && echo "ERROR: Broken symlinks detected" && exit 1 || exit 0'
@@ -171,7 +171,7 @@ repos:
         entry: bash
         language: system
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - '[ -f .gitmodules ] && echo "ERROR: Git submodules are not allowed in this repository" && exit 1 || exit 0'
@@ -186,7 +186,7 @@ repos:
         language: system
         files: \.nix$
         pass_filenames: true
-        stages: [commit]
+        stages: [pre-commit]
 
       - id: alejandra-fix
         name: alejandra nix formatter (auto-fix)
@@ -202,7 +202,7 @@ repos:
         language: system
         files: \.nix$
         args: ["--no-underscore", "--no-lambda-pattern-names"]
-        stages: [commit]
+        stages: [pre-commit]
 
       - id: deadnix-fix
         name: deadnix - remove unused nix code (auto-fix)
@@ -219,7 +219,7 @@ repos:
         files: \.nix$
         args: ["check", "."]
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
 
       - id: statix-fix
         name: statix nix linter (auto-fix)
@@ -241,7 +241,7 @@ repos:
         language: system
         files: ^(flake\.(nix|lock)|.*\.nix)$
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
 
       - id: nix-flake-lock-check
         name: check flake.lock is up to date
@@ -249,7 +249,7 @@ repos:
         language: system
         files: ^flake\.(nix|lock)$
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - 'nix flake lock --no-update-lock-file 2>&1 | grep -q "warning: updating lock file" && echo "ERROR: flake.lock is out of sync. Run: nix flake update" && exit 1 || exit 0'
@@ -264,7 +264,7 @@ repos:
         language: system
         files: \.(sh|bash)$
         args: ["-x", "--severity=warning"]
-        stages: [commit]
+        stages: [pre-commit]
 
       - id: shellcheck-extra-strict
         name: shellcheck (extra strict - errors only)
@@ -272,7 +272,7 @@ repos:
         language: system
         files: \.(sh|bash)$
         args: ["-x", "--severity=error"]
-        stages: [push]
+        stages: [pre-push]
 
       # ═══════════════════════════════════════════════════════════
       # FORMATTING (STRICT)
@@ -285,7 +285,7 @@ repos:
         files: \.(yaml|yml|json|md)$
         exclude: flake\.lock$
         args: ["--check"]
-        stages: [commit]
+        stages: [pre-commit]
 
       - id: prettier-fix
         name: prettier formatter (auto-fix)
@@ -306,7 +306,7 @@ repos:
         language: system
         types: [text]
         exclude: flake\.lock$
-        stages: [commit]
+        stages: [pre-commit]
 
       # ═══════════════════════════════════════════════════════════
       # DOCUMENTATION CHECKS
@@ -317,7 +317,7 @@ repos:
         entry: bash
         language: system
         files: \.md$
-        stages: [commit]
+        stages: [pre-commit]
         args:
           - -c
           - 'for file in "$@"; do grep -oP "(?<=\]\()[^)]*(?=\))" "$file" | while read link; do if [[ "$link" =~ ^/ ]] && [ ! -f "${link#/}" ] && [ ! -d "${link#/}" ]; then echo "Broken link in $file: $link"; exit 1; fi; done; done'
@@ -332,7 +332,7 @@ repos:
         entry: bash
         language: system
         pass_filenames: false
-        stages: [push]
+        stages: [pre-push]
         args:
           - -c
           - 'nix flake show --json | jq -r ".packages.\"$(nix eval --impure --raw --expr builtins.currentSystem)\" | keys[]" | while read pkg; do echo "Building package: $pkg"; nix build ".#$pkg" --no-link || exit 1; done'
