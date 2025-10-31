@@ -5,11 +5,11 @@
     inherit (pkgs) rust-bin;
   };
 
-  mcp-shrimp-task-manager = pkgs.callPackage ../base/shrimp.nix {};
+  mcp-shrimp-task-manager = pkgs.callPackage ./shrimp.nix {};
 
-  mcp-gitlab = pkgs.callPackage ../base/gitlab.nix {};
+  mcp-gitlab = pkgs.callPackage ./gitlab.nix {};
 
-  codanna = pkgs.callPackage ../base/codanna.nix {};
+  codanna = pkgs.callPackage ./codanna.nix {};
 
   cratedocs-mcp = pkgs.callPackage ./cratedocs-mcp.nix {};
 }

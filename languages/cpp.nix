@@ -4,9 +4,7 @@
 }:
 # C++ development tools and environment
 # Provides everything needed for modern C++ development including compilers, build systems, and analysis tools
-let
-  serena = import ../base/serena.nix {inherit pkgs inputs;};
-in {
+{
   packages =
     [
       # Core C++ toolchain - both GCC and Clang for flexibility
@@ -64,8 +62,7 @@ in {
       # Build optimization
       pkgs.lld_18 # Fast LLVM linker
       pkgs.mold # Even faster modern linker
-    ]
-    ++ serena.packages;
+    ];
 
   shellHook = ''
     echo "🚀 C++ development environment ready!"
@@ -140,7 +137,5 @@ in {
     echo "   - Enable LTO: -flto"
     echo "   - Profile-guided optimization: -fprofile-generate/-fprofile-use"
     echo ""
-
-    ${serena.shellHook}
   '';
 }

@@ -4,9 +4,7 @@
 }:
 # LaTeX development tools and environment
 # Provides everything needed for LaTeX document development
-let
-  serena = import ../base/serena.nix {inherit pkgs inputs;};
-in {
+{
   packages =
     [
       # Full TeXLive distribution with most packages (includes latexindent)
@@ -38,10 +36,8 @@ in {
 
       # Live preview and watch tools
       pkgs.watchexec # Generic file watcher for auto-recompilation
-    ]
-    ++ serena.packages;
+    ];
 
-  # Combined shell hook for LaTeX and Serena
   shellHook = ''
     echo "📄 LaTeX toolchain ready!"
     echo "   pdflatex: $(pdflatex --version | head -n1)"
@@ -79,7 +75,5 @@ in {
     echo "   - zathura auto-reloads PDFs when they change"
     echo "   - Run 'pre-commit install' to enable automatic formatting and spell check"
     echo ""
-
-    ${serena.shellHook}
   '';
 }

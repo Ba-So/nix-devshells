@@ -5,8 +5,6 @@
 # PHP development tools and environment
 # Provides everything needed for PHP development including interpreter, extensions, and tools
 let
-  serena = import ../base/serena.nix {inherit pkgs inputs;};
-
   # PHP environment with common development extensions
   phpEnv = pkgs.php.buildEnv {
     extensions = {
@@ -95,8 +93,7 @@ in {
 
       # Web server for development
       pkgs.caddy # Modern web server with automatic HTTPS
-    ]
-    ++ serena.packages;
+    ];
 
   shellHook = ''
     echo "🐘 PHP development environment ready!"
@@ -148,7 +145,5 @@ in {
     echo "   Xdebug enabled on port 9003"
     echo "   Set breakpoints in your IDE and start debugging!"
     echo ""
-
-    ${serena.shellHook}
   '';
 }

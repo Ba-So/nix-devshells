@@ -4,9 +4,7 @@
 }:
 # Nix development tools and environment
 # Provides everything needed for NixOS configuration development including formatters and analysis tools
-let
-  serena = import ../base/serena.nix {inherit pkgs inputs;};
-in {
+{
   packages =
     [
       # NixOS specific tools
@@ -25,8 +23,7 @@ in {
       pkgs.yamllint # YAML linting
       pkgs.typos # Spell checker
       pkgs.shellcheck # Shell script linter
-    ]
-    ++ serena.packages;
+    ];
 
   shellHook = ''
     echo "🏗️  NixOS configuration development environment"
@@ -46,7 +43,5 @@ in {
     echo "  - Multiple Cachix caches configured"
     echo "  - Auto store optimization enabled"
     echo "  - Parallel builds with all cores"
-
-    ${serena.shellHook}
   '';
 }

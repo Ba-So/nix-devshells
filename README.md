@@ -1,88 +1,82 @@
 # nix-devshells
 
-Collection of Nix development shells and project templates for various programming languages and tools.
+Development shells and project templates for Nix flake-based workflows.
 
-## Available Development Shells
+## Outputs
 
-- **rust** - Rust development with cargo, clippy, and rust-analyzer
-- **php** - PHP development environment
-- **nix** - Nix development tools
-- **cpp** - C++ development with CMake and tooling
-- **python** - Python development environment
-- **py-cpp** - Combined Python and C++ environment
-- **latex** - LaTeX document preparation
-- **ansible** - Ansible automation and configuration management
+### Packages
+- `cargo-mcp` - MCP server for cargo documentation (default package)
+- `cratedocs-mcp` - MCP server for Rust crate documentation
+- `codanna` - Code intelligence and semantic search for LLMs
+- `mcp-shrimp-task-manager` - AI-powered task management for development workflows
+- `mcp-gitlab` - MCP server for GitLab API integration
 
-## Using Development Shells with direnv
+### DevShells
+- `rust` - Rust toolchain with cargo, clippy, rust-analyzer
+- `php` - PHP with composer and development tools
+- `nix` - Nix development tools (default shell)
+- `cpp` - C++ toolchain with CMake and build tools
+- `python` - Python with uv package manager
+- `py-cpp` - Combined Python and C++ environment
+- `latex` - LaTeX distribution with document preparation tools
+- `ansible` - Ansible with configuration management tools
 
-The development shells can be automatically loaded when entering a project directory using direnv.
+Each devshell includes common development tools (git, pre-commit, direnv integration).
 
-1. Install direnv for your system if not already installed
-2. Create a `.envrc` file in your project root:
+### Templates
+- `rust` - Rust project with package definition and build configuration
+- `php` - PHP project with package definition
+- `latex` - LaTeX document with build setup
+- `cpp` - C++ project with CMake configuration
+
+Templates include `.envrc`, `.mcp.json`, `.pre-commit-config.yaml`, and `flake.nix`.
+
+### Overlays
+- `overlays.default` - Provides `cargo-mcp`, `cratedocs-mcp`, `codanna`, `mcp-shrimp-task-manager`, and `mcp-gitlab` packages
+
+## Usage
+
+### With direnv
+
+Create `.envrc` in your project:
 
 ```bash
-use flake github:Ba-So/nix-devshells#<shell-name>
+use flake github:Ba-So/nix-devshells#rust
 ```
 
-Replace `<shell-name>` with one of the available shells (e.g., `rust`, `python`, `cpp`).
-
-3. Allow direnv to load the configuration:
+Allow direnv to load:
 
 ```bash
 direnv allow
 ```
 
-The development environment will now be automatically loaded when you enter the directory and unloaded when you leave.
+The shell activates on directory entry and deactivates on exit.
 
-## Using Templates
-
-Templates provide a complete project structure with development environment configuration.
-
-### Available Templates
-
-- **rust** - Rust project template
-- **php** - PHP project template
-- **latex** - LaTeX document template
-
-### Initializing a New Project
-
-Create a new project from a template:
+### Initialize from template
 
 ```bash
-nix flake init -t github:Ba-So/nix-devshells#<template-name>
-```
-
-For example, to create a new Rust project:
-
-```bash
-mkdir my-rust-project
-cd my-rust-project
+mkdir project-name
+cd project-name
 nix flake init -t github:Ba-So/nix-devshells#rust
 direnv allow
 ```
 
-The template includes:
-
-- Pre-configured `.envrc` for automatic environment loading
-- `.mcp.json` for MCP server configuration
-- `.pre-commit-config.yaml` for code quality checks
-- Language-specific configuration files
-
-### Using Templates Locally
-
-If you have this repository cloned locally:
+Local repository:
 
 ```bash
-nix flake init -t /path/to/nix-devshells#<template-name>
+nix flake init -t /path/to/nix-devshells#rust
 ```
 
-## Development
+### Direct shell activation
 
-The repository structure:
+```bash
+nix develop github:Ba-So/nix-devshells#python
+```
 
-- `base/` - Base configurations for common tools (codanna, serena, shrimp)
-- `languages/` - Language-specific shell definitions
+## Structure
+
+- `languages/` - Language-specific package sets
 - `templates/` - Project templates
-- `pkgs/` - Custom package definitions
+- `pkgs/` - Custom package definitions and common tool configurations
 - `default.nix` - Shell composition
-- `flake.nix` - Flake configuration
+- `flake.nix` - Flake outputs

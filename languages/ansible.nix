@@ -4,9 +4,7 @@
 }:
 # Ansible automation and configuration management environment
 # Provides a complete Ansible development setup with Python and essential tools
-let
-  serena = import ../base/serena.nix {inherit pkgs inputs;};
-in {
+{
   packages =
     [
       # Core Python runtime
@@ -47,8 +45,7 @@ in {
       # System dependencies
       pkgs.git
       pkgs.gnumake
-    ]
-    ++ serena.packages;
+    ];
 
   shellHook = ''
     echo "🔧 Ansible development environment ready!"
@@ -134,7 +131,5 @@ in {
     echo "   ansible-doc module_name        # Show module documentation"
     echo "   ansible-doc -t connection -l   # List connection plugins"
     echo ""
-
-    ${serena.shellHook}
   '';
 }

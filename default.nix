@@ -16,8 +16,8 @@
     ];
   };
 
-  # Import base and language-specific configurations
-  commonPackages = import ./base/common.nix {
+  # Import common packages and language-specific configurations
+  commonPackages = import ./pkgs/common.nix {
     inherit pkgs;
     inherit (devPkgs) devPkgs;
   };

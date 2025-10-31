@@ -4,9 +4,7 @@
 }:
 # Python development tools and environment with UV package manager
 # Provides a modern Python development setup with fast dependency management and quality tools
-let
-  serena = import ../base/serena.nix {inherit pkgs inputs;};
-in {
+{
   packages =
     [
       # Core Python runtime
@@ -54,8 +52,7 @@ in {
       pkgs.postgresql # For psycopg2 and similar
       pkgs.mysql80 # For mysqlclient
       pkgs.pkg-config
-    ]
-    ++ serena.packages;
+    ];
 
   shellHook = ''
     echo "🐍 Python development environment ready!"
@@ -144,7 +141,5 @@ in {
     echo "   - UV caches packages globally for speed"
     echo "   - Compatible with pip requirements files"
     echo ""
-
-    ${serena.shellHook}
   '';
 }

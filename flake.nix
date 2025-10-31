@@ -50,6 +50,9 @@
             inherit (pkgs-with-rust) rust-bin;
           };
           cratedocs-mcp = pkgs.callPackage ./pkgs/cratedocs-mcp.nix {};
+          codanna = pkgs.callPackage ./pkgs/codanna.nix {};
+          mcp-shrimp-task-manager = pkgs.callPackage ./pkgs/shrimp.nix {};
+          mcp-gitlab = pkgs.callPackage ./pkgs/gitlab.nix {};
 
           # Default to cargo-mcp as it's most generally useful
           default = pkgs-with-rust.callPackage ./pkgs/cargo-mcp.nix {
@@ -85,6 +88,9 @@
           inherit (final) rust-bin;
         };
         cratedocs-mcp = final.callPackage ./pkgs/cratedocs-mcp.nix {};
+        codanna = final.callPackage ./pkgs/codanna.nix {};
+        mcp-shrimp-task-manager = final.callPackage ./pkgs/shrimp.nix {};
+        mcp-gitlab = final.callPackage ./pkgs/gitlab.nix {};
       };
     };
 }

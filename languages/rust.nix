@@ -5,7 +5,6 @@
 # Rust development tools and environment
 # Provides everything needed for Rust development including toolchain and optimization tools
 let
-  serena = import ../base/serena.nix {inherit pkgs inputs;};
   devPkgs = import ../pkgs {inherit pkgs;};
 
   # Use rust-overlay to create unified toolchain for RustRover
@@ -59,10 +58,8 @@ in {
       # dependencies for rust
       pkgs.pkg-config
       pkgs.openssl.dev
-    ]
-    ++ serena.packages;
+    ];
 
-  # Combined shell hook for Rust and Serena
   shellHook = ''
     echo "🦀 Rust toolchain ready!"
     echo "   cargo --version: $(cargo --version)"
@@ -113,7 +110,5 @@ in {
     echo "   cargo-mcp               # MCP server for Cargo operations"
     echo "   cratedocs               # Rust documentation MCP server"
     echo ""
-
-    ${serena.shellHook}
   '';
 }
