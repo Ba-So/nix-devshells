@@ -13,6 +13,7 @@ Development shells and project templates for Nix flake-based workflows.
 - `codanna` - Code intelligence and semantic search
 - `mcp-shrimp-task-manager` - AI task management
 - `mcp-gitlab` - GitLab API integration
+- `puppeteer-mcp-server` - Browser automation with Puppeteer
 
 ### DevShells
 

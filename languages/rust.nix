@@ -48,6 +48,7 @@ in {
     # MCP (Model Context Protocol) tools
     devPkgs.cargo-mcp # MCP server for Cargo operations
     devPkgs.cratedocs-mcp # Rust documentation MCP server
+    devPkgs.puppeteer-mcp-server # Browser automation MCP server
 
     # Build optimization dependencies
     pkgs.lld # Fast linker
@@ -108,6 +109,7 @@ in {
     echo "🔌 MCP tools:"
     echo "   cargo-mcp               # MCP server for Cargo operations"
     echo "   cratedocs               # Rust documentation MCP server"
+    echo "   mcp-server-puppeteer    # Browser automation MCP server"
     echo ""
   '';
 }

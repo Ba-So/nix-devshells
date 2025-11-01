@@ -12,4 +12,6 @@
   codanna = pkgs.callPackage ./codanna.nix {};
 
   cratedocs-mcp = pkgs.callPackage ./cratedocs-mcp.nix {};
+
+  puppeteer-mcp-server = pkgs.callPackage ./puppeteer-mcp.nix {};
 }
