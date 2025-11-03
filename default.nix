@@ -33,6 +33,18 @@
   ansibleConfig = import ./languages/ansible.nix {inherit pkgs inputs;};
   # Helper function to create development shells with common patterns
 in {
+  # Expose package sets for composition in other projects
+  packageSets = {
+    common = commonPackages;
+    rust = rustConfig.packages;
+    nix = nixConfig.packages;
+    php = phpConfig.packages;
+    cpp = cppConfig.packages;
+    python = pythonConfig.packages;
+    latex = latexConfig.packages;
+    ansible = ansibleConfig.packages;
+  };
+
   # Rust development environment
   rust = pkgs.mkShell {
     buildInputs = commonPackages ++ rustConfig.packages;

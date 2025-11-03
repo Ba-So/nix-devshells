@@ -44,6 +44,10 @@
           default = shells.nix; # Default to nix shell
         };
 
+        # Expose package sets for easy composition in other projects
+        # Usage: buildInputs = devshells.packageSets.${system}.rust;
+        inherit (shells) packageSets;
+
         # Expose custom packages
         packages = {
           cargo-mcp = pkgs-with-rust.callPackage ./pkgs/cargo-mcp.nix {
@@ -54,6 +58,9 @@
           mcp-shrimp-task-manager = pkgs.callPackage ./pkgs/shrimp.nix {};
           mcp-gitlab = pkgs.callPackage ./pkgs/gitlab.nix {};
           puppeteer-mcp-server = pkgs.callPackage ./pkgs/puppeteer-mcp.nix {};
+
+          # Serena - MCP server for project analysis
+          serena = serena.packages.${system}.default or serena.defaultPackage.${system};
 
           # Default to cargo-mcp as it's most generally useful
           default = pkgs-with-rust.callPackage ./pkgs/cargo-mcp.nix {

@@ -14,6 +14,7 @@ Development shells and project templates for Nix flake-based workflows.
 - `mcp-shrimp-task-manager` - AI task management
 - `mcp-gitlab` - GitLab API integration
 - `puppeteer-mcp-server` - Browser automation with Puppeteer
+- `serena` - Project analysis MCP server
 
 ### DevShells
 
@@ -27,6 +28,19 @@ Development shells and project templates for Nix flake-based workflows.
 - `ansible` - Ansible, molecule, lint tools, vault
 
 Common tools: git, pre-commit, direnv, helix, just, jq, ripgrep, fd, nixfmt, nil LSP.
+
+### Package Sets
+
+Reusable package lists for composing custom devshells:
+
+- `packageSets.${system}.common` - Common tools (git, direnv, helix, etc.)
+- `packageSets.${system}.rust` - Rust toolchain and cargo tools
+- `packageSets.${system}.python` - Python development tools
+- `packageSets.${system}.cpp` - C++ compilers and build tools
+- `packageSets.${system}.nix` - Nix development tools
+- `packageSets.${system}.php` - PHP development tools
+- `packageSets.${system}.latex` - LaTeX tools
+- `packageSets.${system}.ansible` - Ansible automation tools
 
 ### Templates
 
@@ -82,6 +96,29 @@ nix profile install github:Ba-So/nix-devshells#cargo-mcp
   outputs = { nixpkgs, nix-devshells, ... }: {
     nixpkgs.overlays = [ nix-devshells.overlays.default ];
   };
+}
+```
+
+### Compose custom devshells
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    devshells.url = "github:Ba-So/nix-devshells";
+  };
+
+  outputs = { nixpkgs, devshells, ... }:
+    let
+      system = "x86_64-linux";
+      pkgs = nixpkgs.legacyPackages.${system};
+    in {
+      devShells.${system}.default = pkgs.mkShell {
+        # Combine package sets as needed
+        buildInputs = devshells.packageSets.${system}.rust
+                   ++ [ pkgs.postgresql pkgs.redis ];
+      };
+    };
 }
 ```
 
