@@ -16,10 +16,14 @@
     ];
   };
 
+  # Extract serena from inputs
+  serenaPackage = inputs.serena.packages.${pkgs.system}.default or inputs.serena.defaultPackage.${pkgs.system};
+
   # Import common packages and language-specific configurations
   commonPackages = import ./pkgs/common.nix {
     inherit pkgs;
     inherit (devPkgs) devPkgs;
+    serena = serenaPackage;
   };
   rustConfig = import ./languages/rust.nix {
     pkgs = devPkgs;

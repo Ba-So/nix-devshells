@@ -1,6 +1,7 @@
 {
   pkgs,
   devPkgs,
+  serena,
 }:
 # Common development tools used across all development environments
 # This provides the base set of tools every developer needs
@@ -39,4 +40,5 @@
   devPkgs.mcp-shrimp-task-manager # AI-powered task management system
   devPkgs.codanna # Code intelligence and semantic search for LLMs
   devPkgs.mcp-gitlab
+  serena # Project analysis MCP server
 ]
