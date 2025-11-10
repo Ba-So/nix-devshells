@@ -310,7 +310,7 @@
       "name": "Update flake.nix to expose lib and add composed shells",
       "description": "Update flake.nix to expose the new lib.${system} with composeShell, composeShellFromModules, and modules. Add new pre-composed shell combinations (rust-minimal, rust-python, web-dev) while maintaining all existing shells unchanged for backward compatibility. Update overlays to include new module system.",
       "notes": "Maintain all existing outputs unchanged to ensure backward compatibility. The new lib output is additive only. Existing users who reference devshells.devShells.${system}.rust should continue to work without any changes. New users can use devshells.lib.${system}.composeShell for composition.",
-      "status": "in_progress",
+      "status": "completed",
       "dependencies": [
         {
           "taskId": "6b58f429-5a4e-4f75-9871-5e08599dc251"
@@ -326,7 +326,7 @@
         }
       ],
       "createdAt": "2025-11-10T10:59:41.954Z",
-      "updatedAt": "2025-11-10T11:31:22.388Z",
+      "updatedAt": "2025-11-10T11:41:30.345Z",
       "relatedFiles": [
         {
           "path": "flake.nix",
@@ -343,21 +343,23 @@
       ],
       "implementationGuide": "In flake.nix outputs function:\n\n1. Import lib system:\n   libSystem = import ./lib/default.nix {\n     inherit pkgs system;\n     inputs = { inherit nixpkgs nixpkgs-unstable rust-overlay serena; };\n   };\n\n2. Add lib output (NEW):\n   lib.${system} = {\n     inherit (libSystem) composeShell composeShellFromModules modules;\n   };\n\n3. Keep existing devShells (BACKWARD COMPAT):\n   devShells = {\n     inherit (shells) rust php nix cpp python py-cpp latex ansible;\n     default = shells.nix;\n     \n     # NEW: Add composed shells\n     rust-minimal = libSystem.composeShell {\n       languages = [\"rust\"];\n       tools = \"minimal\";\n       mcps = [\"cargo\"];\n     };\n     \n     rust-python = libSystem.composeShell {\n       languages = [\"rust\" \"python\"];\n       mcps = [\"cargo\" \"serena\"];\n       tools = \"standard\";\n     };\n     \n     web-dev = libSystem.composeShell {\n       languages = [\"rust\" \"python\" \"php\"];\n       mcps = [\"cargo\" \"serena\" \"puppeteer\"];\n       tools = \"standard\";\n     };\n   };\n\n4. Keep packageSets export (BACKWARD COMPAT):\n   inherit (shells) packageSets;\n\n5. Update overlay to include lib utilities (optional, for external users):\n   overlays.default = final: prev: {\n     # ... existing packages\n     devshells-lib = import ./lib/default.nix { pkgs = final; inherit system inputs; };\n   };\n\nEnsure flake structure remains valid with nix flake check.",
       "verificationCriteria": "- flake.nix exposes lib.${system} with composeShell, composeShellFromModules, modules\n- All existing devShells (rust, python, cpp, etc.) remain unchanged and accessible\n- New composed shells (rust-minimal, rust-python, web-dev) are available\n- packageSets export is maintained for backward compatibility\n- Run pre-commit hooks: all pass\n- nix flake check passes\n- nix eval .#lib.x86_64-linux --apply 'builtins.attrNames' returns [\"composeShell\" \"composeShellFromModules\" \"modules\"]\n- nix build .#rust succeeds (existing shell)\n- nix build .#rust-minimal succeeds (new shell)",
-      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase."
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase.",
+      "summary": "Task completed successfully. Updated flake.nix to expose lib.${system} with composeShell, composeShellFromModules, and modules. Added three new composed shells (rust-minimal, rust-python, web-dev) while maintaining all existing shells unchanged. Updated overlay to expose devshells-lib. Fixed multiple issues including utils.nix recursion, circular dependencies in preset loading, and filterByCategory signature mismatches. All verification criteria met: nix flake check passes, lib output exposes correct functions, existing and new shells build successfully, pre-commit hooks pass, and changes committed.",
+      "completedAt": "2025-11-10T11:41:30.338Z"
     },
     {
       "id": "7534d3b9-e422-43e0-b2bb-3c9d40a8273e",
       "name": "Update default.nix for internal module system usage",
       "description": "Update default.nix to use the new module system internally while maintaining the exact same external API (packageSets and shell outputs). Replace manual shell construction with composeShell calls. This ensures backward compatibility while benefiting from the new modular architecture.",
       "notes": "This is a critical refactoring that maintains the public API contract. All existing users should see no changes in behavior. The shells should have identical packages and shellHooks as before, just assembled through the new module system. Test thoroughly to ensure backward compatibility.",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         {
           "taskId": "2d5dd9e6-187d-4b21-85da-39c2c6066244"
         }
       ],
       "createdAt": "2025-11-10T10:59:41.954Z",
-      "updatedAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T11:44:39.203Z",
       "relatedFiles": [
         {
           "path": "default.nix",
