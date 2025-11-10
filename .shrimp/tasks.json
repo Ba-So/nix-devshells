@@ -385,14 +385,14 @@
       "name": "Update templates to demonstrate new composition API",
       "description": "Update all 4 templates (rust, cpp, php, latex) to demonstrate the new composition API. Show examples of using composeShell with different configurations. Add comments explaining the new API and how to customize shells. Provide migration examples from old packageSets approach.",
       "notes": "Templates are the primary way users discover how to use devshells. Show both simple and advanced examples. Emphasize the benefits of the new API: selective MCP inclusion, tool presets, easy composition. Keep old API examples for users who want to migrate gradually.",
-      "status": "in_progress",
+      "status": "completed",
       "dependencies": [
         {
           "taskId": "2d5dd9e6-187d-4b21-85da-39c2c6066244"
         }
       ],
       "createdAt": "2025-11-10T10:59:41.954Z",
-      "updatedAt": "2025-11-10T11:46:59.706Z",
+      "updatedAt": "2025-11-10T11:53:58.937Z",
       "relatedFiles": [
         {
           "path": "templates/rust/flake.nix",
@@ -424,21 +424,23 @@
       ],
       "implementationGuide": "For each template (rust, cpp, php, latex):\n\n1. Update flake.nix to show NEW API:\n   devShells.default = devshells.lib.${system}.composeShell {\n     languages = [\"rust\"];  # or appropriate language\n     mcps = [\"cargo\" \"serena\"];  # suggested MCPs\n     tools = \"standard\";  # or \"minimal\" for lightweight\n   };\n\n2. Add commented examples showing customization:\n   # Minimal shell (fast, no MCP overhead):\n   # devShells.default = devshells.lib.${system}.composeShell {\n   #   languages = [\"rust\"];\n   #   tools = \"minimal\";\n   #   mcps = [];\n   # };\n   \n   # Extended shell with extra packages:\n   # devShells.default = devshells.lib.${system}.composeShell {\n   #   languages = [\"rust\"];\n   #   mcps = [\"cargo\" \"cratedocs\"];\n   #   tools = \"standard\";\n   #   extraPackages = with pkgs; [ diesel-cli postgresql ];\n   #   extraShellHook = ''export DATABASE_URL=\"postgres://localhost/mydb\"'';\n   # };\n   \n   # Advanced: Direct module composition:\n   # let\n   #   inherit (devshells.lib.${system}) modules composeShellFromModules;\n   # in {\n   #   devShells.default = composeShellFromModules [\n   #     modules.languages.rust\n   #     modules.mcp.cargo\n   #     modules.tools.version-control\n   #   ];\n   # }\n\n3. Keep old API example for migration reference:\n   # OLD API (still works):\n   # devShells.default = devshells.devShells.${system}.rust;\n   \n   # OLD API with extension:\n   # devShells.default = pkgs.mkShell {\n   #   inputsFrom = [ devshells.devShells.${system}.rust ];\n   #   packages = [ pkgs.diesel-cli ];\n   # };\n\n4. Add README.md to each template explaining the new API\n\nUpdate all 4 templates consistently with appropriate language and MCP selections.",
       "verificationCriteria": "- All 4 templates updated with new composition API\n- Each template shows composeShell usage with appropriate language and MCPs\n- Commented examples show minimal, standard, and extended configurations\n- Old API examples included for migration reference\n- Run pre-commit hooks: all pass\n- nix flake check succeeds for each template\n- Test: nix flake init -t github:Ba-So/nix-devshells#rust && nix develop works",
-      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase."
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase.",
+      "summary": "Task completed successfully. Updated all 4 templates (rust, cpp, php, latex) to demonstrate the new composition API with comprehensive examples. Each template shows: primary composeShell usage, minimal configuration, extended configuration with extraPackages, and advanced direct module composition. Included old API examples for migration reference. Fixed deadnix warnings by moving pkgs definitions into commented let bindings. All verification criteria met: templates updated, examples comprehensive, pre-commit hooks pass, and changes committed.",
+      "completedAt": "2025-11-10T11:53:58.926Z"
     },
     {
       "id": "39cb6c77-aad6-4946-aa6c-5182dc47fa95",
       "name": "Create comprehensive documentation",
       "description": "Create MODULE_GUIDE.md (module creation guide), COMPOSITION_GUIDE.md (user guide with examples), and update README.md to showcase the new composition API. Document the module interface specification, provide examples for each use case, and explain the migration path from old to new API.",
       "notes": "Documentation is critical for adoption of the new API. Focus on practical examples and clear explanations. The MODULE_GUIDE targets contributors, while COMPOSITION_GUIDE targets users. README should quickly showcase the benefits and point to detailed guides. Use tables and diagrams where helpful (mermaid for architecture diagrams).",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         {
           "taskId": "317bffec-750a-47f6-97da-f9b85d02d15c"
         }
       ],
       "createdAt": "2025-11-10T10:59:41.954Z",
-      "updatedAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T12:15:16.752Z",
       "relatedFiles": [
         {
           "path": "MODULE_GUIDE.md",
