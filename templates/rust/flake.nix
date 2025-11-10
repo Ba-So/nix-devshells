@@ -44,20 +44,59 @@
       #   };
       # };
 
-      # Development environment from nix-devshells
-      # This provides: cargo, rustc, clippy, rust-analyzer, etc.
-      devShells.default = devshells.devShells.${system}.rust;
+      # Development environment using NEW composition API
+      # This provides: cargo, rustc, clippy, rust-analyzer, git, helix, etc.
+      devShells.default = devshells.lib.${system}.composeShell {
+        languages = ["rust"];
+        mcps = ["cargo-mcp" "serena"]; # MCP servers for AI assistance
+        tools = "standard"; # or "minimal" for lightweight setup
+      };
 
-      # Optional: Extend the devshell with project-specific tools
+      # Alternative configurations (uncomment to use):
+
+      # Minimal shell (fast startup, no MCP overhead):
+      # devShells.default = devshells.lib.${system}.composeShell {
+      #   languages = ["rust"];
+      #   tools = "minimal";
+      #   mcps = [];
+      # };
+
+      # Extended shell with project-specific tools:
       # devShells.default = let
       #   pkgs = nixpkgs.legacyPackages.${system};
-      # in pkgs.mkShell {
-      #   inputsFrom = [ devshells.devShells.${system}.rust ];
-      #   packages = with pkgs; [
-      #     # Add project-specific development tools here
-      #     # diesel-cli
-      #     # sea-orm-cli
+      # in devshells.lib.${system}.composeShell {
+      #   languages = ["rust"];
+      #   mcps = ["cargo-mcp" "cratedocs"];
+      #   tools = "standard";
+      #   extraPackages = with pkgs; [
+      #     # Add project-specific development tools
+      #     diesel-cli
+      #     sea-orm-cli
+      #     postgresql
       #   ];
+      #   extraShellHook = ''
+      #     export DATABASE_URL="postgres://localhost/mydb"
+      #   '';
+      # };
+
+      # Advanced: Direct module composition for full control
+      # devShells.default = let
+      #   inherit (devshells.lib.${system}) modules composeShellFromModules;
+      # in
+      #   composeShellFromModules [
+      #     modules.languages.rust
+      #     modules.mcp.cargo-mcp
+      #     modules.tools.version-control
+      #     modules.tools.editors
+      #   ];
+
+      # OLD API (still works, for migration reference):
+      # devShells.default = devshells.devShells.${system}.rust;
+      #
+      # OLD API with extension:
+      # devShells.default = pkgs.mkShell {
+      #   inputsFrom = [ devshells.devShells.${system}.rust ];
+      #   packages = with pkgs; [ diesel-cli sea-orm-cli ];
       # };
 
       # Optional: Define apps for easy running

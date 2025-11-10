@@ -352,14 +352,14 @@
       "name": "Update default.nix for internal module system usage",
       "description": "Update default.nix to use the new module system internally while maintaining the exact same external API (packageSets and shell outputs). Replace manual shell construction with composeShell calls. This ensures backward compatibility while benefiting from the new modular architecture.",
       "notes": "This is a critical refactoring that maintains the public API contract. All existing users should see no changes in behavior. The shells should have identical packages and shellHooks as before, just assembled through the new module system. Test thoroughly to ensure backward compatibility.",
-      "status": "in_progress",
+      "status": "completed",
       "dependencies": [
         {
           "taskId": "2d5dd9e6-187d-4b21-85da-39c2c6066244"
         }
       ],
       "createdAt": "2025-11-10T10:59:41.954Z",
-      "updatedAt": "2025-11-10T11:44:39.203Z",
+      "updatedAt": "2025-11-10T11:46:43.223Z",
       "relatedFiles": [
         {
           "path": "default.nix",
@@ -376,21 +376,23 @@
       ],
       "implementationGuide": "In default.nix:\n\n1. Import lib system at the top:\n   libSystem = import ./lib/default.nix {\n     inherit pkgs inputs;\n     _system = _system;\n   };\n\n2. Keep packageSets export (BACKWARD COMPAT):\n   packageSets = {\n     common = libSystem.modules.presets.standard.packages;  # Use standard preset\n     rust = libSystem.modules.languages.rust.packages;\n     python = libSystem.modules.languages.python.packages;\n     cpp = libSystem.modules.languages.cpp.packages;\n     nix = libSystem.modules.languages.nix.packages;\n     php = libSystem.modules.languages.php.packages;\n     latex = libSystem.modules.languages.latex.packages;\n     ansible = libSystem.modules.languages.ansible.packages;\n   };\n\n3. Replace shell definitions using composeShell:\n   rust = libSystem.composeShell {\n     languages = [\"rust\"];\n     tools = \"standard\";\n   };\n   \n   python = libSystem.composeShell {\n     languages = [\"python\"];\n     tools = \"standard\";\n   };\n   \n   py-cpp = libSystem.composeShell {\n     languages = [\"python\" \"cpp\"];\n     tools = \"standard\";\n   };\n   \n   # Repeat for all shells: nix, php, cpp, latex, ansible\n\n4. Remove old imports:\n   # DELETE: commonPackages = import ./pkgs/common.nix {...};\n   # DELETE: rustConfig = import ./languages/rust.nix {...};\n   # etc.\n\nThe output structure remains identical, but implementation uses new module system.",
       "verificationCriteria": "- default.nix uses libSystem.composeShell for all shell definitions\n- packageSets structure is unchanged (common, rust, python, cpp, nix, php, latex, ansible)\n- All shell outputs (rust, python, cpp, etc.) have identical packages and shellHooks as before\n- Run pre-commit hooks: all pass\n- nix build .#rust produces identical output to before (compare with git stash)\n- nix eval .#packageSets.x86_64-linux --apply 'builtins.attrNames' returns all 8 sets\n- Test: Enter nix develop .#rust and verify all tools are available",
-      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase."
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase.",
+      "summary": "Task completed successfully. Completely refactored default.nix to use the module system internally while maintaining full backward compatibility. Replaced all manual shell construction with composeShell calls for 8 shells (rust, python, cpp, nix, php, latex, ansible, py-cpp). Updated packageSets to reference module packages directly. Code reduced from 147 to 73 lines while maintaining identical functionality. All verification criteria met: nix flake check passes, packageSets has all 8 sets, shells build successfully, pre-commit hooks pass, and changes committed.",
+      "completedAt": "2025-11-10T11:46:43.218Z"
     },
     {
       "id": "317bffec-750a-47f6-97da-f9b85d02d15c",
       "name": "Update templates to demonstrate new composition API",
       "description": "Update all 4 templates (rust, cpp, php, latex) to demonstrate the new composition API. Show examples of using composeShell with different configurations. Add comments explaining the new API and how to customize shells. Provide migration examples from old packageSets approach.",
       "notes": "Templates are the primary way users discover how to use devshells. Show both simple and advanced examples. Emphasize the benefits of the new API: selective MCP inclusion, tool presets, easy composition. Keep old API examples for users who want to migrate gradually.",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         {
           "taskId": "2d5dd9e6-187d-4b21-85da-39c2c6066244"
         }
       ],
       "createdAt": "2025-11-10T10:59:41.954Z",
-      "updatedAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T11:46:59.706Z",
       "relatedFiles": [
         {
           "path": "templates/rust/flake.nix",

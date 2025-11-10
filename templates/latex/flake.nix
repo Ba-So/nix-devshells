@@ -64,26 +64,64 @@
       #   };
       # };
 
-      # Development environment from nix-devshells
-      # This provides: texlive, latexmk, and editor support
-      devShells.default = devshells.devShells.${system}.latex;
+      # Development environment using NEW composition API
+      # This provides: texlive, latexmk, editor support, git, helix, etc.
+      devShells.default = devshells.lib.${system}.composeShell {
+        languages = ["latex"];
+        mcps = ["serena"]; # MCP servers for AI assistance
+        tools = "standard"; # or "minimal" for lightweight setup
+      };
 
-      # Optional: Extend the devshell with additional packages
+      # Alternative configurations (uncomment to use):
+
+      # Minimal shell (fast startup, no MCP overhead):
+      # devShells.default = devshells.lib.${system}.composeShell {
+      #   languages = ["latex"];
+      #   tools = "minimal";
+      #   mcps = [];
+      # };
+
+      # Extended shell with document-specific tools:
       # devShells.default = let
       #   pkgs = nixpkgs.legacyPackages.${system};
-      # in pkgs.mkShell {
-      #   inputsFrom = [ devshells.devShells.${system}.latex ];
-      #   packages = with pkgs; [
-      #     # Add document-specific tools here
-      #     # inkscape  # For SVG to PDF conversion
-      #     # imagemagick  # For image processing
-      #     # python3  # For build scripts
+      # in devshells.lib.${system}.composeShell {
+      #   languages = ["latex"];
+      #   mcps = ["serena"];
+      #   tools = "standard";
+      #   extraPackages = with pkgs; [
+      #     # Add document-specific tools
+      #     inkscape # For SVG to PDF conversion
+      #     imagemagick # For image processing
+      #     python3 # For build scripts
+      #     zathura # PDF viewer
       #   ];
+      #   extraShellHook = ''
+      #     echo "LaTeX project development environment ready!"
+      #   '';
+      # };
+
+      # Advanced: Direct module composition for full control
+      # devShells.default = let
+      #   inherit (devshells.lib.${system}) modules composeShellFromModules;
+      # in
+      #   composeShellFromModules [
+      #     modules.languages.latex
+      #     modules.mcp.serena
+      #     modules.tools.version-control
+      #     modules.tools.editors
+      #   ];
+
+      # OLD API (still works, for migration reference):
+      # devShells.default = devshells.devShells.${system}.latex;
+      #
+      # OLD API with extension:
+      # devShells.default = pkgs.mkShell {
+      #   inputsFrom = [ devshells.devShells.${system}.latex ];
+      #   packages = with pkgs; [ inkscape imagemagick ];
       # };
 
       # Optional: Define an app to open the PDF
       # apps.default = let
-      #   pkgs = nixpkgs.legacyPackages.${system};
       #   documentName = "my-document";
       # in {
       #   type = "app";

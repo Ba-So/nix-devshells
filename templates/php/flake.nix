@@ -59,20 +59,60 @@
       #   };
       # };
 
-      # Development environment from nix-devshells
-      # This provides: PHP, Composer, development tools, etc.
-      devShells.default = devshells.devShells.${system}.php;
+      # Development environment using NEW composition API
+      # This provides: PHP, Composer, development tools, git, helix, etc.
+      devShells.default = devshells.lib.${system}.composeShell {
+        languages = ["php"];
+        mcps = ["serena" "puppeteer"]; # MCP servers for AI assistance & browser automation
+        tools = "standard"; # or "minimal" for lightweight setup
+      };
 
-      # Optional: Extend the devshell with project-specific tools
+      # Alternative configurations (uncomment to use):
+
+      # Minimal shell (fast startup, no MCP overhead):
+      # devShells.default = devshells.lib.${system}.composeShell {
+      #   languages = ["php"];
+      #   tools = "minimal";
+      #   mcps = [];
+      # };
+
+      # Extended shell with project-specific tools:
       # devShells.default = let
       #   pkgs = nixpkgs.legacyPackages.${system};
-      # in pkgs.mkShell {
-      #   inputsFrom = [ devshells.devShells.${system}.php ];
-      #   packages = with pkgs; [
-      #     # Add project-specific development tools here
-      #     # nodejs  # For frontend asset compilation
-      #     # mysql80  # For local database
+      # in devshells.lib.${system}.composeShell {
+      #   languages = ["php"];
+      #   mcps = ["serena" "puppeteer"];
+      #   tools = "standard";
+      #   extraPackages = with pkgs; [
+      #     # Add project-specific development tools
+      #     nodejs # For frontend asset compilation
+      #     mysql80 # For local database
+      #     redis # For caching
       #   ];
+      #   extraShellHook = ''
+      #     export DATABASE_URL="mysql://root@localhost/mydb"
+      #   '';
+      # };
+
+      # Advanced: Direct module composition for full control
+      # devShells.default = let
+      #   inherit (devshells.lib.${system}) modules composeShellFromModules;
+      # in
+      #   composeShellFromModules [
+      #     modules.languages.php
+      #     modules.mcp.serena
+      #     modules.mcp.puppeteer
+      #     modules.tools.version-control
+      #     modules.tools.editors
+      #   ];
+
+      # OLD API (still works, for migration reference):
+      # devShells.default = devshells.devShells.${system}.php;
+      #
+      # OLD API with extension:
+      # devShells.default = pkgs.mkShell {
+      #   inputsFrom = [ devshells.devShells.${system}.php ];
+      #   packages = with pkgs; [ nodejs mysql80 ];
       # };
 
       # Optional: Define apps for easy running

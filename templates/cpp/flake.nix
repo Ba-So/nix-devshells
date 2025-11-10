@@ -61,19 +61,57 @@
           };
         };
 
-        # Development environment from nix-devshells
-        # This provides: CMake, C++ compiler, debugger, etc.
-        devShells.default = devshells.devShells.${system}.cpp;
+        # Development environment using NEW composition API
+        # This provides: CMake, C++ compiler, debugger, git, helix, etc.
+        devShells.default = devshells.lib.${system}.composeShell {
+          languages = ["cpp"];
+          mcps = ["serena"]; # MCP servers for AI assistance
+          tools = "standard"; # or "minimal" for lightweight setup
+        };
 
-        # Optional: Extend the devshell with project-specific tools
+        # Alternative configurations (uncomment to use):
+
+        # Minimal shell (fast startup, no MCP overhead):
+        # devShells.default = devshells.lib.${system}.composeShell {
+        #   languages = ["cpp"];
+        #   tools = "minimal";
+        #   mcps = [];
+        # };
+
+        # Extended shell with project-specific tools:
+        # devShells.default = devshells.lib.${system}.composeShell {
+        #   languages = ["cpp"];
+        #   mcps = ["serena" "codanna"];
+        #   tools = "standard";
+        #   extraPackages = with pkgs; [
+        #     # Add project-specific development tools
+        #     valgrind # Memory debugging
+        #     boost # Boost libraries
+        #     doxygen # Documentation generation
+        #   ];
+        #   extraShellHook = ''
+        #     export CMAKE_EXPORT_COMPILE_COMMANDS=ON
+        #   '';
+        # };
+
+        # Advanced: Direct module composition for full control
+        # devShells.default = let
+        #   inherit (devshells.lib.${system}) modules composeShellFromModules;
+        # in
+        #   composeShellFromModules [
+        #     modules.languages.cpp
+        #     modules.mcp.serena
+        #     modules.tools.version-control
+        #     modules.tools.editors
+        #   ];
+
+        # OLD API (still works, for migration reference):
+        # devShells.default = devshells.devShells.${system}.cpp;
+        #
+        # OLD API with extension:
         # devShells.default = pkgs.mkShell {
         #   inputsFrom = [ devshells.devShells.${system}.cpp ];
-        #   packages = with pkgs; [
-        #     # Add project-specific development tools here
-        #     # valgrind  # Memory debugging
-        #     # boost  # Boost libraries
-        #     # doxygen  # Documentation generation
-        #   ];
+        #   packages = with pkgs; [ valgrind boost ];
         # };
 
         # Optional: Define apps for easy running
