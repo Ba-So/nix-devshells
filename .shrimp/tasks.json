@@ -433,14 +433,14 @@
       "name": "Create comprehensive documentation",
       "description": "Create MODULE_GUIDE.md (module creation guide), COMPOSITION_GUIDE.md (user guide with examples), and update README.md to showcase the new composition API. Document the module interface specification, provide examples for each use case, and explain the migration path from old to new API.",
       "notes": "Documentation is critical for adoption of the new API. Focus on practical examples and clear explanations. The MODULE_GUIDE targets contributors, while COMPOSITION_GUIDE targets users. README should quickly showcase the benefits and point to detailed guides. Use tables and diagrams where helpful (mermaid for architecture diagrams).",
-      "status": "in_progress",
+      "status": "completed",
       "dependencies": [
         {
           "taskId": "317bffec-750a-47f6-97da-f9b85d02d15c"
         }
       ],
       "createdAt": "2025-11-10T10:59:41.954Z",
-      "updatedAt": "2025-11-10T12:15:16.752Z",
+      "updatedAt": "2025-11-10T12:21:01.148Z",
       "relatedFiles": [
         {
           "path": "MODULE_GUIDE.md",
@@ -465,14 +465,16 @@
       ],
       "implementationGuide": "Create MODULE_GUIDE.md:\n- Module Interface Specification:\n  - Required fields: meta (name, description, category), packages\n  - Optional fields: shellHook, env, suggestedMcps, mcpConfig, requires, appliesWhen\n  - Field type definitions and examples\n- Creating Language Modules: step-by-step guide with example\n- Creating Tool Modules: focused utility modules\n- Creating MCP Modules: MCP server integration with mcpConfig\n- Creating Presets: bundling modules together\n- Module validation and error handling\n- Contribution guidelines for new modules\n\nCreate COMPOSITION_GUIDE.md:\n- Quick Start: simplest composeShell example\n- Preset Comparison Table: minimal vs standard vs full\n- Use Cases with Examples:\n  - Single language development\n  - Multi-language projects (rust + python)\n  - Minimal shells (no MCP overhead)\n  - Custom tool selection\n  - Direct module composition\n  - Extending shells with extra packages\n- MCP Server Selection Guide: which MCPs for which languages\n- Migration Guide: from packageSets to composeShell\n- Troubleshooting common issues\n\nUpdate README.md:\n- Add \"Quick Start with Composition API\" section at top\n- Show composeShell example for common use cases\n- Link to MODULE_GUIDE.md and COMPOSITION_GUIDE.md\n- Update feature list to mention modular architecture\n- Add examples of rust-minimal, rust-python, web-dev shells\n- Maintain existing documentation for backward compatibility\n- Add \"What's New\" section explaining the modular architecture benefits\n\nAll documentation should use clear examples, code snippets, and practical use cases.",
       "verificationCriteria": "- MODULE_GUIDE.md created with complete module interface specification\n- COMPOSITION_GUIDE.md created with practical examples and use cases\n- README.md updated with Quick Start section using composeShell\n- All documentation uses correct syntax and working examples\n- Preset comparison table clearly explains minimal vs standard vs full\n- Migration guide explains transition from packageSets to composeShell\n- Run pre-commit hooks: prettier formats markdown, typos checks spelling\n- All internal links work correctly (no broken references)",
-      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase."
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase.",
+      "summary": "Task completed successfully. Created three comprehensive documentation files: MODULE_GUIDE.md (contributor guide with module interface spec, step-by-step creation guides, real-world examples), COMPOSITION_GUIDE.md (user guide with quick start, preset comparison, use cases, MCP selection guide, migration guide, troubleshooting), and updated README.md (What's New section, Quick Start with Composition API, updated outputs documentation, preset comparison, practical examples). All documentation includes clear code examples, tables, real-world use cases, and migration paths. All verification criteria met: documentation complete, correct syntax, working examples, pre-commit hooks pass, and changes committed.",
+      "completedAt": "2025-11-10T12:21:01.145Z"
     },
     {
       "id": "975dd8c4-cb5f-49cb-9b05-2dfa8670a93e",
       "name": "Comprehensive testing and validation",
       "description": "Test all shells (existing and new), validate with pre-commit hooks, ensure backward compatibility, and verify that the module system works correctly. Test composition with various combinations, MCP config generation, and preset functionality. Run full test suite and document results.",
       "notes": "This is the final validation step. All previous tasks must be complete and working. Focus on thorough testing of both new functionality and backward compatibility. The goal is to ensure existing users see no breaking changes while new users can use the enhanced API. Run tests multiple times to ensure consistency.",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         {
           "taskId": "2d5dd9e6-187d-4b21-85da-39c2c6066244"
@@ -488,7 +490,7 @@
         }
       ],
       "createdAt": "2025-11-10T10:59:41.954Z",
-      "updatedAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T12:21:21.568Z",
       "relatedFiles": [
         {
           "path": ".pre-commit-config.yaml",
