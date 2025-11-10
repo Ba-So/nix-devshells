@@ -37,16 +37,47 @@
           _system = system;
           inputs = {inherit nixpkgs nixpkgs-unstable rust-overlay serena;};
         };
+
+        # Import lib system for module composition
+        libSystem = import ./lib/default.nix {
+          inherit pkgs system;
+          inputs = {inherit nixpkgs nixpkgs-unstable rust-overlay serena;};
+        };
       in {
         # Standard flake structure: devShells.<name>
         devShells = {
           inherit (shells) rust php nix cpp python py-cpp latex ansible;
           default = shells.nix; # Default to nix shell
+
+          # NEW: Composed shells using module system
+          rust-minimal = libSystem.composeShell {
+            languages = ["rust"];
+            tools = "minimal";
+            mcps = ["cargo-mcp"];
+          };
+
+          rust-python = libSystem.composeShell {
+            languages = ["rust" "python"];
+            mcps = ["cargo-mcp" "serena"];
+            tools = "standard";
+          };
+
+          web-dev = libSystem.composeShell {
+            languages = ["rust" "python" "php"];
+            mcps = ["cargo-mcp" "serena" "puppeteer"];
+            tools = "standard";
+          };
         };
 
         # Expose package sets for easy composition in other projects
         # Usage: buildInputs = devshells.packageSets.${system}.rust;
         inherit (shells) packageSets;
+
+        # Expose lib for module composition
+        # Usage: devshells.lib.${system}.composeShell { languages = ["rust"]; tools = "minimal"; }
+        lib = {
+          inherit (libSystem) composeShell composeShellFromModules modules;
+        };
 
         # Expose custom packages
         packages = {
@@ -100,6 +131,15 @@
         mcp-shrimp-task-manager = final.callPackage ./pkgs/shrimp.nix {};
         mcp-gitlab = final.callPackage ./pkgs/gitlab.nix {};
         puppeteer-mcp-server = final.callPackage ./pkgs/puppeteer-mcp.nix {};
+
+        # Expose devshells lib for external users
+        devshells-lib = final.callPackage ./lib/default.nix {
+          pkgs = final;
+          inherit (final) system;
+          inputs = {
+            inherit nixpkgs nixpkgs-unstable rust-overlay serena;
+          };
+        };
       };
     };
 }

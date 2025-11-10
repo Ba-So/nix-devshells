@@ -10,14 +10,13 @@
   flattenPackages,
   mergeShellHooks,
   mergeEnv,
+  filterByCategory,
   validateModule,
   validateModules,
 }: let
   # Import MCP config generation
   mcpLib = import ./mcp.nix {
-    inherit pkgs lib;
-    filterByCategory = moduleList:
-      builtins.filter (m: (m.meta.category or "") == "mcp") moduleList;
+    inherit pkgs lib filterByCategory;
   };
 
   # Resolve tools parameter (string or attrset)

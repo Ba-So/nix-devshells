@@ -1,0 +1,508 @@
+{
+  "tasks": [
+    {
+      "id": "837a2b4e-173e-44a1-96b8-c149efe90540",
+      "name": "Create core lib infrastructure with validation and utilities",
+      "description": "Create the lib/ directory structure with default.nix (public API), validate.nix (module validation functions), and utils.nix (helper functions). Implement module validation that checks for required fields (meta.name, packages) and provides clear error messages. Implement utility functions: resolveModule (lookup module by name and category with error handling), memoize (cache resolved modules), and helper functions for module manipulation.",
+      "notes": "This is the foundation for the entire module system. Use Nix lib functions (lib.flatten, lib.fold, lib.concatStringsSep) for consistency with existing codebase patterns. Validation functions should be called early in composition to provide clear feedback.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T11:16:18.826Z",
+      "relatedFiles": [
+        {
+          "path": "lib/default.nix",
+          "type": "CREATE",
+          "description": "Public API export point for module system"
+        },
+        {
+          "path": "lib/validate.nix",
+          "type": "CREATE",
+          "description": "Module validation functions"
+        },
+        {
+          "path": "lib/utils.nix",
+          "type": "CREATE",
+          "description": "Helper utilities for module resolution and manipulation"
+        }
+      ],
+      "implementationGuide": "Create lib/default.nix:\n- Export public API: { composeShell, composeShellFromModules, modules }\n- Import and expose functions from compose.nix and mcp.nix\n- Import all module categories (languages, tools, mcp, presets)\n\nCreate lib/validate.nix:\n- validateModule = module: assert checks for meta, meta.name, packages\n- validateCategory = category: check category is in [\"language\" \"mcp\" \"tool\" \"preset\"]\n- Provide descriptive error messages using throw\n\nCreate lib/utils.nix:\n- resolveModule = name: category: lookup in modules.${category}.${name} with error handling\n- memoize = fn: cache function results in attrset\n- flattenPackages = modules: lib.flatten (map (m: m.packages or []) modules)\n- mergeShellHooks = modules: lib.concatStringsSep \"\\n\" (map (m: m.shellHook or \"\") modules)\n- mergeEnv = modules: lib.fold (m: acc: acc // (m.env or {})) {} modules\n\nEnsure all functions are pure and follow Nix best practices.",
+      "verificationCriteria": "- lib/default.nix exists and exports { composeShell, composeShellFromModules, modules }\n- lib/validate.nix provides validateModule with clear error messages\n- lib/utils.nix provides resolveModule, flattenPackages, mergeShellHooks, mergeEnv\n- Run pre-commit hooks: alejandra, deadnix, statix all pass\n- nix eval .#lib.x86_64-linux.modules --apply 'builtins.attrNames' returns [\"languages\" \"tools\" \"mcp\" \"presets\"]",
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase.",
+      "summary": "Task 1 completed successfully. Created lib/ infrastructure with three key files:\n\n1. **lib/validate.nix**: Module validation functions\n   - validateModule: Checks meta.name and packages fields with clear error messages\n   - validateCategory: Validates category names against allowed list\n   - validateModules: Batch validation helper\n\n2. **lib/utils.nix**: Helper utilities for module manipulation\n   - resolveModule: Module lookup with error handling\n   - flattenPackages: Flatten packages from module list\n   - mergeShellHooks: Concatenate shellHooks with newlines\n   - mergeEnv: Merge environment variables (later overrides earlier)\n   - filterByCategory: Filter modules by category\n   - getModuleNames: Extract module names\n   - resolveModules: Batch module resolution\n\n3. **lib/default.nix**: Public API entry point\n   - Exports modules attrset (languages, tools, mcp, presets)\n   - Placeholder exports for composeShell, composeShellFromModules (Task 2)\n   - Placeholder export for generateMcpConfig (Task 2)\n   - Uses pathExists checks for gradual module addition\n   - Exposes utils and validate for advanced usage\n\nAll pre-commit hooks pass:\n- ✅ alejandra (formatting)\n- ✅ deadnix (unused code detection)  \n- ✅ statix (linting)\n\nThe infrastructure is ready for Task 2 (composition functions) and subsequent module creation.",
+      "completedAt": "2025-11-10T11:16:18.793Z"
+    },
+    {
+      "id": "6b58f429-5a4e-4f75-9871-5e08599dc251",
+      "name": "Implement composition functions and MCP config generation",
+      "description": "Implement lib/compose.nix with composeShell (high-level API) and composeShellFromModules (low-level API) functions. Implement lib/mcp.nix with generateMcpConfig function that creates .mcp.json from MCP modules. The composition functions should merge packages, shellHooks, environment variables, and generate MCP configs. Include smart MCP config merging that preserves user customizations.",
+      "notes": "Use existing mkShell API from pkgs for consistency. The MCP config merging should preserve user customizations by using jq to merge JSON objects. Reference how default.nix:53-143 creates shells with mkShell for the same pattern. Ensure shellHooks are concatenated with newlines for proper formatting.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "837a2b4e-173e-44a1-96b8-c149efe90540"
+        }
+      ],
+      "createdAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T11:18:33.873Z",
+      "relatedFiles": [
+        {
+          "path": "lib/compose.nix",
+          "type": "CREATE",
+          "description": "Composition functions for building shells from modules"
+        },
+        {
+          "path": "lib/mcp.nix",
+          "type": "CREATE",
+          "description": "MCP configuration file generation"
+        },
+        {
+          "path": "lib/utils.nix",
+          "type": "DEPENDENCY",
+          "description": "Uses utility functions from utils.nix"
+        },
+        {
+          "path": "default.nix",
+          "type": "REFERENCE",
+          "description": "Reference existing mkShell usage pattern",
+          "lineStart": 53,
+          "lineEnd": 143
+        }
+      ],
+      "implementationGuide": "Create lib/compose.nix:\n\ncomposeShell = { languages ? [], mcps ? [], tools ? \"standard\", extraPackages ? [], extraShellHook ? \"\" }:\n  1. Resolve language modules: map (name: resolveModule name \"languages\") languages\n  2. Resolve MCP modules: map (name: resolveModule name \"mcp\") mcps\n  3. Resolve tools: if string then preset, else { preset, include, exclude }\n  4. Combine all modules: langModules ++ mcpModules ++ toolModules\n  5. Call composeShellFromModules with combined list\n  6. Merge extraPackages and extraShellHook into result\n\ncomposeShellFromModules = modules:\n  1. Validate all modules with validateModule\n  2. Collect packages: flattenPackages modules\n  3. Merge shellHooks: mergeShellHooks modules\n  4. Merge env vars: mergeEnv modules\n  5. Generate MCP config: generateMcpConfig modules\n  6. Return pkgs.mkShell { buildInputs = packages; shellHook = combined + mcpConfigSetup; } // envVars\n\nCreate lib/mcp.nix:\n\ngenerateMcpConfig = modules:\n  1. Filter MCP modules: where meta.category == \"mcp\"\n  2. Extract mcpConfig from each module\n  3. Merge configs: lib.fold (a: b: a // b) {} configs\n  4. Write JSON file: pkgs.writeText \"mcp.json\" (builtins.toJSON { mcpServers = merged; })\n\nMCP config shellHook snippet (smart merging):\nif [ -f .mcp.json ]; then\n  # Merge with existing config\n  ${pkgs.jq}/bin/jq -s '.[0] * .[1]' .mcp.json ${generatedMcpConfig} > .mcp.json.new\n  mv .mcp.json.new .mcp.json\n  echo \"Updated .mcp.json with MCP servers from devshell\"\nelse\n  cp ${generatedMcpConfig} .mcp.json\n  echo \"Generated .mcp.json with enabled MCP servers\"\nfi",
+      "verificationCriteria": "- lib/compose.nix exports composeShell and composeShellFromModules\n- lib/mcp.nix exports generateMcpConfig\n- composeShell accepts { languages, mcps, tools, extraPackages, extraShellHook }\n- composeShellFromModules accepts list of modules and returns mkShell derivation\n- generateMcpConfig produces valid JSON with mcpServers object\n- Run pre-commit hooks: all pass\n- Test: nix eval .#lib.x86_64-linux.composeShell --apply 'x: x {languages=[\"rust\"]; tools=\"minimal\";}' succeeds",
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase.",
+      "summary": "Task 2 completed successfully. Implemented composition functions and MCP configuration generation.\n\n**lib/mcp.nix** - MCP Configuration Generation:\n- generateMcpConfig: Filters MCP modules, extracts mcpConfig from each, merges into single config, writes JSON file\n- mcpConfigShellHook: Smart merging that preserves user customizations\n  - Uses jq to merge existing .mcp.json with generated config\n  - Falls back gracefully if jq unavailable or merge fails\n  - Provides clear user feedback about MCP server setup\n\n**lib/compose.nix** - Composition Functions:\n- composeShell (high-level API):\n  - Accepts: languages (list), mcps (list), tools (string or attrset), extraPackages, extraShellHook\n  - Resolves modules from categories (languages, mcp, presets/tools)\n  - Supports string presets (\"minimal\", \"standard\", \"full\")\n  - Supports advanced tools config: { preset = \"minimal\"; include = [\"helix\"]; }\n  - Extends base shell with extra packages and hooks\n  \n- composeShellFromModules (low-level API):\n  - Validates all modules with validateModule\n  - Flattens packages from all modules\n  - Merges shellHooks with newline separation\n  - Merges environment variables (later overrides earlier)\n  - Generates MCP config if MCP modules present\n  - Returns pkgs.mkShell with merged configuration\n\n- extendShell: Helper to extend existing shells\n\n**Integration:**\n- Both files use rec sets for proper function scoping\n- All functions validated with nix-instantiate parsing\n- MCP config generation integrates into shellHook automatically\n- Uses existing mkShell API for consistency with codebase\n\n**Validation:**\n- ✅ All pre-commit hooks pass (alejandra, deadnix, statix, nix flake check)\n- ✅ Syntax validated with nix-instantiate\n- ✅ All required exports present\n- ✅ Smart MCP merging preserves user customizations\n\nReady for Task 3 (module conversion) and Task 6 (flake integration).",
+      "completedAt": "2025-11-10T11:18:33.869Z"
+    },
+    {
+      "id": "8a499418-de50-4400-98a3-77e978c61c22",
+      "name": "Convert all language files to module format",
+      "description": "Convert all 7 language configurations (rust, python, cpp, nix, php, latex, ansible) from languages/*.nix to standardized module format in modules/languages/*.nix. Add meta, wrap existing packages and shellHook, add env variables, and specify suggestedMcps. Maintain identical functionality while adding module metadata.",
+      "notes": "Keep all existing packages and shellHooks EXACTLY the same to ensure backward compatibility. Only add the module wrapper. Reference existing language files to understand their structure before conversion. Each language module should be independent and self-contained.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "837a2b4e-173e-44a1-96b8-c149efe90540"
+        }
+      ],
+      "createdAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T11:26:23.357Z",
+      "relatedFiles": [
+        {
+          "path": "languages/rust.nix",
+          "type": "REFERENCE",
+          "description": "Source for rust module conversion",
+          "lineStart": 1,
+          "lineEnd": 116
+        },
+        {
+          "path": "languages/python.nix",
+          "type": "REFERENCE",
+          "description": "Source for python module conversion"
+        },
+        {
+          "path": "languages/cpp.nix",
+          "type": "REFERENCE",
+          "description": "Source for cpp module conversion"
+        },
+        {
+          "path": "languages/nix.nix",
+          "type": "REFERENCE",
+          "description": "Source for nix module conversion"
+        },
+        {
+          "path": "languages/php.nix",
+          "type": "REFERENCE",
+          "description": "Source for php module conversion"
+        },
+        {
+          "path": "languages/latex.nix",
+          "type": "REFERENCE",
+          "description": "Source for latex module conversion"
+        },
+        {
+          "path": "languages/ansible.nix",
+          "type": "REFERENCE",
+          "description": "Source for ansible module conversion"
+        },
+        {
+          "path": "modules/languages/rust.nix",
+          "type": "CREATE",
+          "description": "Converted rust module"
+        },
+        {
+          "path": "modules/languages/python.nix",
+          "type": "CREATE",
+          "description": "Converted python module"
+        },
+        {
+          "path": "modules/languages/cpp.nix",
+          "type": "CREATE",
+          "description": "Converted cpp module"
+        },
+        {
+          "path": "modules/languages/nix.nix",
+          "type": "CREATE",
+          "description": "Converted nix module"
+        },
+        {
+          "path": "modules/languages/php.nix",
+          "type": "CREATE",
+          "description": "Converted php module"
+        },
+        {
+          "path": "modules/languages/latex.nix",
+          "type": "CREATE",
+          "description": "Converted latex module"
+        },
+        {
+          "path": "modules/languages/ansible.nix",
+          "type": "CREATE",
+          "description": "Converted ansible module"
+        }
+      ],
+      "implementationGuide": "For each language file in languages/*.nix:\n\n1. Create modules/languages/{language}.nix\n2. Copy existing file structure: { pkgs, inputs }: { packages = [...]; shellHook = '''..'''; }\n3. Add module interface:\n   - meta = { name = \"{language}\"; description = \"...\"; category = \"language\"; }\n   - Keep existing packages list unchanged\n   - Keep existing shellHook unchanged\n   - Add env = {} if environment variables are needed (e.g., RUST_BACKTRACE for rust)\n   - Add suggestedMcps = [] with relevant MCP servers\n\nExample transformation (rust.nix):\n\nBEFORE:\n{ pkgs, inputs }: { packages = [ rustToolchain ... ]; shellHook = ''echo \"🦀 ...\"''; }\n\nAFTER:\n{ pkgs, inputs }: {\n  meta = {\n    name = \"rust\";\n    description = \"Rust 1.90.0 development environment\";\n    category = \"language\";\n  };\n  packages = [ rustToolchain ... ];  # UNCHANGED\n  shellHook = ''echo \"🦀 ...\"'';  # UNCHANGED\n  env = { RUST_BACKTRACE = \"1\"; };\n  suggestedMcps = [ \"cargo\" \"cratedocs\" ];\n}\n\nLanguage-specific suggestedMcps:\n- rust: [\"cargo\" \"cratedocs\"]\n- python: [\"serena\"]\n- cpp: [\"serena\"]\n- nix: []\n- php: []\n- latex: []\n- ansible: []\n\nCreate modules/languages/ directory first, then convert each file individually.",
+      "verificationCriteria": "- All 7 modules created in modules/languages/\n- Each module has meta with name, description, category=\"language\"\n- Each module has packages list (unchanged from original)\n- Each module has shellHook (unchanged from original)\n- Rust module has env.RUST_BACKTRACE and suggestedMcps\n- Run pre-commit hooks: all pass\n- nix eval .#lib.x86_64-linux.modules.languages --apply 'builtins.attrNames' returns all 7 languages\n- Test: nix-instantiate --eval -E 'let m = import ./modules/languages/rust.nix { pkgs = import <nixpkgs> {}; inputs = {}; }; in m.meta.name' returns \"rust\"",
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase.",
+      "summary": "Task 3 completed successfully. Converted all 7 language files to standardized module format:\n\n**Created modules/languages/ with:**\n1. **rust.nix** - Rust 1.90.0 environment (meta, env.RUST_BACKTRACE=1, suggestedMcps=[cargo, cratedocs])\n2. **python.nix** - Python 3.12 with UV (meta, suggestedMcps=[serena])\n3. **cpp.nix** - C++ with GCC/Clang (meta, suggestedMcps=[serena])\n4. **nix.nix** - Nix/NixOS development (meta, suggestedMcps=[])\n5. **php.nix** - PHP with extensions (meta, suggestedMcps=[])\n6. **latex.nix** - LaTeX document environment (meta, suggestedMcps=[])\n7. **ansible.nix** - Ansible automation (meta, suggestedMcps=[])\n8. **default.nix** - Exports all language modules\n\n**Module Structure:**\n- Each has meta={name, description, category=\"language\"}\n- All packages lists preserved EXACTLY from original files\n- All shellHooks preserved EXACTLY from original files\n- Added env where applicable (rust.nix)\n- Added suggestedMcps for relevant languages\n\n**Validation:**\n- ✅ All 7 modules created in modules/languages/\n- ✅ All pre-commit hooks pass (alejandra, deadnix, statix, nix flake check)\n- ✅ Backward compatibility maintained (packages + shellHooks unchanged)\n- ✅ Proper module interface with meta fields\n\nReady for Task 4 (split common.nix and create MCP modules).",
+      "completedAt": "2025-11-10T11:26:23.353Z"
+    },
+    {
+      "id": "b1d2e1c1-43ec-4fef-b1c2-9c1321d6f8f5",
+      "name": "Split common.nix into granular tool modules and create MCP modules",
+      "description": "Split pkgs/common.nix (44 lines) into 4 tool modules (version-control, nix-tools, editors, utilities) in modules/tools/. Create 7 MCP server modules in modules/mcp/ (cargo, serena, codanna, shrimp, gitlab, puppeteer, cratedocs). Each module follows the standardized interface with meta, packages, shellHook, and mcpConfig (for MCP modules).",
+      "notes": "Tool modules should be minimal and focused. MCP modules must include mcpConfig for .mcp.json generation. Use devPkgs parameter for MCP server packages since they're defined in pkgs/default.nix overlay. The shellHook messages should be consistent with existing style from language modules.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "837a2b4e-173e-44a1-96b8-c149efe90540"
+        }
+      ],
+      "createdAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T11:27:54.395Z",
+      "relatedFiles": [
+        {
+          "path": "pkgs/common.nix",
+          "type": "REFERENCE",
+          "description": "Source for splitting into tool modules",
+          "lineStart": 1,
+          "lineEnd": 44
+        },
+        {
+          "path": "modules/tools/version-control.nix",
+          "type": "CREATE",
+          "description": "Git and version control tools"
+        },
+        {
+          "path": "modules/tools/nix-tools.nix",
+          "type": "CREATE",
+          "description": "Nix development tools"
+        },
+        {
+          "path": "modules/tools/editors.nix",
+          "type": "CREATE",
+          "description": "Text editors"
+        },
+        {
+          "path": "modules/tools/utilities.nix",
+          "type": "CREATE",
+          "description": "Common development utilities"
+        },
+        {
+          "path": "modules/mcp/cargo.nix",
+          "type": "CREATE",
+          "description": "Cargo MCP server module"
+        },
+        {
+          "path": "modules/mcp/serena.nix",
+          "type": "CREATE",
+          "description": "Serena MCP server module"
+        },
+        {
+          "path": "modules/mcp/codanna.nix",
+          "type": "CREATE",
+          "description": "Codanna MCP server module"
+        },
+        {
+          "path": "modules/mcp/shrimp.nix",
+          "type": "CREATE",
+          "description": "Shrimp MCP server module"
+        },
+        {
+          "path": "modules/mcp/gitlab.nix",
+          "type": "CREATE",
+          "description": "GitLab MCP server module"
+        },
+        {
+          "path": "modules/mcp/puppeteer.nix",
+          "type": "CREATE",
+          "description": "Puppeteer MCP server module"
+        },
+        {
+          "path": "modules/mcp/cratedocs.nix",
+          "type": "CREATE",
+          "description": "CrateDocs MCP server module"
+        },
+        {
+          "path": "pkgs/default.nix",
+          "type": "REFERENCE",
+          "description": "Reference for devPkgs structure"
+        }
+      ],
+      "implementationGuide": "Analyze pkgs/common.nix to split into tool categories:\n\nmodules/tools/version-control.nix:\n  meta = { name = \"version-control\"; description = \"Git and version control tools\"; category = \"tool\"; }\n  packages = [ pkgs.git pkgs.git-lfs ]\n  shellHook = ''echo \"  📦 Git version control tools\"\n\nmodules/tools/nix-tools.nix:\n  meta = { name = \"nix-tools\"; description = \"Nix development and formatting tools\"; category = \"tool\"; }\n  packages = [ pkgs.nixfmt-rfc-style pkgs.nil pkgs.alejandra pkgs.deadnix pkgs.statix ]\n  shellHook = ''echo \"  📦 Nix development tools\"\n\nmodules/tools/editors.nix:\n  meta = { name = \"editors\"; description = \"Text editors\"; category = \"tool\"; }\n  packages = [ pkgs.helix ]\n  shellHook = ''echo \"  📝 Helix editor available\"\n\nmodules/tools/utilities.nix:\n  meta = { name = \"utilities\"; description = \"Common development utilities\"; category = \"tool\"; }\n  packages = [ pkgs.jq pkgs.curl pkgs.wget pkgs.tree pkgs.fd pkgs.ripgrep pkgs.gnumake pkgs.tokei pkgs.pre-commit pkgs.direnv pkgs.just ]\n  shellHook = ''echo \"  🔧 Development utilities ready\"\n\nFor MCP modules, read pkgs/{mcp-name}.nix to understand the package structure:\n\nmodules/mcp/cargo.nix:\n  meta = { name = \"cargo-mcp\"; description = \"Safe Cargo operations for Rust projects\"; category = \"mcp\"; languages = [\"rust\"]; }\n  packages = [ devPkgs.cargo-mcp ]\n  mcpConfig = { cargo = { type = \"stdio\"; command = \"cargo-mcp\"; }; }\n  shellHook = ''echo \"  📦 cargo-mcp: Safe Cargo operations\"\n\nRepeat for all 7 MCP servers with appropriate mcpConfig. For mcpConfig structure, reference existing .mcp.json if available or create standard stdio configuration. Each MCP module needs devPkgs parameter to access custom packages.",
+      "verificationCriteria": "- 4 tool modules created in modules/tools/\n- 7 MCP modules created in modules/mcp/\n- Each tool module has meta.category=\"tool\" and packages list\n- Each MCP module has meta.category=\"mcp\" and mcpConfig attrset\n- All mcpConfig objects have valid structure: { serverName = { type = \"stdio\"; command = \"...\"; }; }\n- Run pre-commit hooks: all pass\n- nix eval .#lib.x86_64-linux.modules.tools --apply 'builtins.attrNames' returns [\"version-control\" \"nix-tools\" \"editors\" \"utilities\"]\n- nix eval .#lib.x86_64-linux.modules.mcp --apply 'builtins.attrNames' returns all 7 MCP servers",
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase.",
+      "summary": "Task 4 completed successfully. Split common.nix into granular tool modules and created all MCP server modules.\n\n**Created modules/tools/ (4 modules):**\n1. **version-control.nix** - git, git-lfs\n2. **nix-tools.nix** - nixfmt-rfc-style, nil, alejandra, deadnix, statix\n3. **editors.nix** - helix\n4. **utilities.nix** - jq, curl, wget, tree, fd, ripgrep, gnumake, tokei, pre-commit, direnv, just\n5. **default.nix** - Exports all tool modules\n\n**Created modules/mcp/ (7 modules):**\n1. **cargo.nix** - Cargo MCP for Rust (uses devPkgs.cargo-mcp, mcpConfig with stdio)\n2. **serena.nix** - Project analysis (uses serena package, mcpConfig with args)\n3. **codanna.nix** - Code intelligence (uses devPkgs.codanna, mcpConfig with watch args)\n4. **shrimp.nix** - AI task management (uses devPkgs.mcp-shrimp-task-manager, mcpConfig with env)\n5. **gitlab.nix** - GitLab API (uses devPkgs.mcp-gitlab, mcpConfig with env for tokens)\n6. **puppeteer.nix** - Browser automation (uses devPkgs.puppeteer-mcp-server)\n7. **cratedocs.nix** - Rust docs (uses devPkgs.cratedocs-mcp)\n8. **default.nix** - Exports all MCP modules\n\n**Module Structure:**\n- All tool modules have meta.category=\"tool\" and packages list\n- All MCP modules have meta.category=\"mcp\" and mcpConfig with {serverName: {type, command, args?, env?}}\n- MCP configs match existing .mcp.json structure for compatibility\n- Proper use of devPkgs and serena parameters for custom packages\n\n**Validation:**\n- ✅ 4 tool modules + 7 MCP modules created\n- ✅ All pre-commit hooks pass (alejandra, deadnix, statix, nix flake check)\n- ✅ All mcpConfig objects have valid structure\n- ✅ ShellHooks consistent with language module style\n\nReady for Task 5 (create preset modules).",
+      "completedAt": "2025-11-10T11:27:54.393Z"
+    },
+    {
+      "id": "398c1455-ead1-49ce-b330-9a36c9c802e0",
+      "name": "Create preset modules with inheritance",
+      "description": "Create 3 preset modules in modules/presets/: minimal.nix (essential tools only), standard.nix (current common.nix behavior), and full.nix (everything). Implement preset inheritance where standard extends minimal and full extends standard. Each preset should include appropriate tool and MCP modules.",
+      "notes": "Presets act as pre-configured module bundles. The 'standard' preset should match the current pkgs/common.nix functionality to ensure backward compatibility. The 'minimal' preset is for users who want lightweight shells without MCP overhead. The 'full' preset includes everything for users who want all features.",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "837a2b4e-173e-44a1-96b8-c149efe90540"
+        },
+        {
+          "taskId": "b1d2e1c1-43ec-4fef-b1c2-9c1321d6f8f5"
+        }
+      ],
+      "createdAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T11:28:49.810Z",
+      "relatedFiles": [
+        {
+          "path": "modules/presets/minimal.nix",
+          "type": "CREATE",
+          "description": "Minimal preset: essential tools only"
+        },
+        {
+          "path": "modules/presets/standard.nix",
+          "type": "CREATE",
+          "description": "Standard preset: matches current common.nix"
+        },
+        {
+          "path": "modules/presets/full.nix",
+          "type": "CREATE",
+          "description": "Full preset: all tools and MCP servers"
+        },
+        {
+          "path": "lib/utils.nix",
+          "type": "DEPENDENCY",
+          "description": "Uses flattenPackages and mergeShellHooks utilities"
+        },
+        {
+          "path": "pkgs/common.nix",
+          "type": "REFERENCE",
+          "description": "Reference for standard preset package list"
+        }
+      ],
+      "implementationGuide": "Create modules/presets/minimal.nix:\n  meta = { name = \"minimal\"; description = \"Essential development tools only\"; category = \"preset\"; }\n  includes = [\n    modules.tools.version-control  # git, git-lfs\n    modules.tools.nix-tools         # nixfmt, nil, alejandra, deadnix, statix\n  ]\n  # Flatten packages from included modules\n  packages = flattenPackages includes\n  shellHook = mergeShellHooks includes\n\nCreate modules/presets/standard.nix:\n  meta = { name = \"standard\"; description = \"Standard development toolset (current common.nix)\"; category = \"preset\"; }\n  includes = [\n    modules.presets.minimal  # Inherit minimal\n    modules.tools.editors\n    modules.tools.utilities\n    modules.mcp.codanna\n    modules.mcp.serena\n    modules.mcp.shrimp\n    modules.mcp.gitlab\n  ]\n  packages = flattenPackages includes\n  shellHook = mergeShellHooks includes\n\nCreate modules/presets/full.nix:\n  meta = { name = \"full\"; description = \"All available tools and MCP servers\"; category = \"preset\"; }\n  includes = [\n    modules.presets.standard  # Inherit standard\n    modules.mcp.cargo\n    modules.mcp.puppeteer\n    modules.mcp.cratedocs\n  ]\n  packages = flattenPackages includes\n  shellHook = mergeShellHooks includes\n\nPresets need access to modules attrset and utility functions (flattenPackages, mergeShellHooks) from lib/utils.nix. Use recursive module resolution to handle includes.",
+      "verificationCriteria": "- 3 preset modules created in modules/presets/\n- Minimal preset includes only version-control and nix-tools\n- Standard preset includes minimal + editors + utilities + 4 MCP servers (codanna, serena, shrimp, gitlab)\n- Full preset includes standard + remaining MCP servers (cargo, puppeteer, cratedocs)\n- Each preset has meta.category=\"preset\"\n- Run pre-commit hooks: all pass\n- nix eval .#lib.x86_64-linux.modules.presets --apply 'builtins.attrNames' returns [\"minimal\" \"standard\" \"full\"]\n- Test: nix-instantiate --eval -E 'let p = import ./modules/presets/standard.nix {...}; in builtins.length p.packages > 20' returns true",
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase.",
+      "summary": "Task 5 completed successfully. Created all 3 preset modules with proper inheritance chain.\n\n**Created modules/presets/ (3 presets + default.nix):**\n1. **minimal.nix** - Essential tools only\n   - Includes: version-control (git, git-lfs) + nix-tools (formatters, linters)\n   - No MCP servers for lightweight shells\n   - Flattens packages and merges shellHooks from included modules\n\n2. **standard.nix** - Matches current common.nix (backward compat)\n   - Inherits from minimal preset\n   - Adds: editors (helix) + utilities (jq, curl, wget, tree, fd, ripgrep, gnumake, tokei, pre-commit, direnv, just)\n   - Adds 4 MCP servers: codanna, serena, shrimp, gitlab\n   - Combines minimal.packages + additional packages\n   - Merges minimal.shellHook + additional shellHooks\n\n3. **full.nix** - Everything including all MCPs\n   - Inherits from standard preset\n   - Adds 3 language-specific MCP servers: cargo-mcp, puppeteer, cratedocs\n   - Complete tool + MCP server coverage\n   - Full inheritance chain: minimal → standard → full\n\n4. **default.nix** - Exports all presets with rec for cross-referencing\n\n**Implementation Features:**\n- ✅ Proper inheritance: standard extends minimal, full extends standard\n- ✅ Package flattening: lib.flatten for nested lists\n- ✅ ShellHook merging: lib.concatStringsSep with newlines\n- ✅ Includes tracking: Each preset tracks which modules it includes\n- ✅ Backward compatibility: standard preset matches pkgs/common.nix packages + MCP servers\n\n**Validation:**\n- ✅ All 3 presets created in modules/presets/\n- ✅ Minimal: 2 tool modules, 0 MCP servers\n- ✅ Standard: minimal + 2 more tool modules + 4 MCP servers\n- ✅ Full: standard + 3 more MCP servers\n- ✅ All pre-commit hooks pass\n- ✅ Proper meta.category=\"preset\" on all\n\nReady for Task 6 (flake.nix integration).",
+      "completedAt": "2025-11-10T11:28:49.808Z"
+    },
+    {
+      "id": "2d5dd9e6-187d-4b21-85da-39c2c6066244",
+      "name": "Update flake.nix to expose lib and add composed shells",
+      "description": "Update flake.nix to expose the new lib.${system} with composeShell, composeShellFromModules, and modules. Add new pre-composed shell combinations (rust-minimal, rust-python, web-dev) while maintaining all existing shells unchanged for backward compatibility. Update overlays to include new module system.",
+      "notes": "Maintain all existing outputs unchanged to ensure backward compatibility. The new lib output is additive only. Existing users who reference devshells.devShells.${system}.rust should continue to work without any changes. New users can use devshells.lib.${system}.composeShell for composition.",
+      "status": "in_progress",
+      "dependencies": [
+        {
+          "taskId": "6b58f429-5a4e-4f75-9871-5e08599dc251"
+        },
+        {
+          "taskId": "8a499418-de50-4400-98a3-77e978c61c22"
+        },
+        {
+          "taskId": "b1d2e1c1-43ec-4fef-b1c2-9c1321d6f8f5"
+        },
+        {
+          "taskId": "398c1455-ead1-49ce-b330-9a36c9c802e0"
+        }
+      ],
+      "createdAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T11:31:22.388Z",
+      "relatedFiles": [
+        {
+          "path": "flake.nix",
+          "type": "TO_MODIFY",
+          "description": "Add lib output and new composed shells",
+          "lineStart": 16,
+          "lineEnd": 70
+        },
+        {
+          "path": "lib/default.nix",
+          "type": "DEPENDENCY",
+          "description": "Imported to create lib output"
+        }
+      ],
+      "implementationGuide": "In flake.nix outputs function:\n\n1. Import lib system:\n   libSystem = import ./lib/default.nix {\n     inherit pkgs system;\n     inputs = { inherit nixpkgs nixpkgs-unstable rust-overlay serena; };\n   };\n\n2. Add lib output (NEW):\n   lib.${system} = {\n     inherit (libSystem) composeShell composeShellFromModules modules;\n   };\n\n3. Keep existing devShells (BACKWARD COMPAT):\n   devShells = {\n     inherit (shells) rust php nix cpp python py-cpp latex ansible;\n     default = shells.nix;\n     \n     # NEW: Add composed shells\n     rust-minimal = libSystem.composeShell {\n       languages = [\"rust\"];\n       tools = \"minimal\";\n       mcps = [\"cargo\"];\n     };\n     \n     rust-python = libSystem.composeShell {\n       languages = [\"rust\" \"python\"];\n       mcps = [\"cargo\" \"serena\"];\n       tools = \"standard\";\n     };\n     \n     web-dev = libSystem.composeShell {\n       languages = [\"rust\" \"python\" \"php\"];\n       mcps = [\"cargo\" \"serena\" \"puppeteer\"];\n       tools = \"standard\";\n     };\n   };\n\n4. Keep packageSets export (BACKWARD COMPAT):\n   inherit (shells) packageSets;\n\n5. Update overlay to include lib utilities (optional, for external users):\n   overlays.default = final: prev: {\n     # ... existing packages\n     devshells-lib = import ./lib/default.nix { pkgs = final; inherit system inputs; };\n   };\n\nEnsure flake structure remains valid with nix flake check.",
+      "verificationCriteria": "- flake.nix exposes lib.${system} with composeShell, composeShellFromModules, modules\n- All existing devShells (rust, python, cpp, etc.) remain unchanged and accessible\n- New composed shells (rust-minimal, rust-python, web-dev) are available\n- packageSets export is maintained for backward compatibility\n- Run pre-commit hooks: all pass\n- nix flake check passes\n- nix eval .#lib.x86_64-linux --apply 'builtins.attrNames' returns [\"composeShell\" \"composeShellFromModules\" \"modules\"]\n- nix build .#rust succeeds (existing shell)\n- nix build .#rust-minimal succeeds (new shell)",
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase."
+    },
+    {
+      "id": "7534d3b9-e422-43e0-b2bb-3c9d40a8273e",
+      "name": "Update default.nix for internal module system usage",
+      "description": "Update default.nix to use the new module system internally while maintaining the exact same external API (packageSets and shell outputs). Replace manual shell construction with composeShell calls. This ensures backward compatibility while benefiting from the new modular architecture.",
+      "notes": "This is a critical refactoring that maintains the public API contract. All existing users should see no changes in behavior. The shells should have identical packages and shellHooks as before, just assembled through the new module system. Test thoroughly to ensure backward compatibility.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "2d5dd9e6-187d-4b21-85da-39c2c6066244"
+        }
+      ],
+      "createdAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T10:59:41.954Z",
+      "relatedFiles": [
+        {
+          "path": "default.nix",
+          "type": "TO_MODIFY",
+          "description": "Refactor to use module system internally",
+          "lineStart": 1,
+          "lineEnd": 147
+        },
+        {
+          "path": "lib/default.nix",
+          "type": "DEPENDENCY",
+          "description": "Import lib system for composition"
+        }
+      ],
+      "implementationGuide": "In default.nix:\n\n1. Import lib system at the top:\n   libSystem = import ./lib/default.nix {\n     inherit pkgs inputs;\n     _system = _system;\n   };\n\n2. Keep packageSets export (BACKWARD COMPAT):\n   packageSets = {\n     common = libSystem.modules.presets.standard.packages;  # Use standard preset\n     rust = libSystem.modules.languages.rust.packages;\n     python = libSystem.modules.languages.python.packages;\n     cpp = libSystem.modules.languages.cpp.packages;\n     nix = libSystem.modules.languages.nix.packages;\n     php = libSystem.modules.languages.php.packages;\n     latex = libSystem.modules.languages.latex.packages;\n     ansible = libSystem.modules.languages.ansible.packages;\n   };\n\n3. Replace shell definitions using composeShell:\n   rust = libSystem.composeShell {\n     languages = [\"rust\"];\n     tools = \"standard\";\n   };\n   \n   python = libSystem.composeShell {\n     languages = [\"python\"];\n     tools = \"standard\";\n   };\n   \n   py-cpp = libSystem.composeShell {\n     languages = [\"python\" \"cpp\"];\n     tools = \"standard\";\n   };\n   \n   # Repeat for all shells: nix, php, cpp, latex, ansible\n\n4. Remove old imports:\n   # DELETE: commonPackages = import ./pkgs/common.nix {...};\n   # DELETE: rustConfig = import ./languages/rust.nix {...};\n   # etc.\n\nThe output structure remains identical, but implementation uses new module system.",
+      "verificationCriteria": "- default.nix uses libSystem.composeShell for all shell definitions\n- packageSets structure is unchanged (common, rust, python, cpp, nix, php, latex, ansible)\n- All shell outputs (rust, python, cpp, etc.) have identical packages and shellHooks as before\n- Run pre-commit hooks: all pass\n- nix build .#rust produces identical output to before (compare with git stash)\n- nix eval .#packageSets.x86_64-linux --apply 'builtins.attrNames' returns all 8 sets\n- Test: Enter nix develop .#rust and verify all tools are available",
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase."
+    },
+    {
+      "id": "317bffec-750a-47f6-97da-f9b85d02d15c",
+      "name": "Update templates to demonstrate new composition API",
+      "description": "Update all 4 templates (rust, cpp, php, latex) to demonstrate the new composition API. Show examples of using composeShell with different configurations. Add comments explaining the new API and how to customize shells. Provide migration examples from old packageSets approach.",
+      "notes": "Templates are the primary way users discover how to use devshells. Show both simple and advanced examples. Emphasize the benefits of the new API: selective MCP inclusion, tool presets, easy composition. Keep old API examples for users who want to migrate gradually.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "2d5dd9e6-187d-4b21-85da-39c2c6066244"
+        }
+      ],
+      "createdAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T10:59:41.954Z",
+      "relatedFiles": [
+        {
+          "path": "templates/rust/flake.nix",
+          "type": "TO_MODIFY",
+          "description": "Update to demonstrate composition API",
+          "lineStart": 47,
+          "lineEnd": 62
+        },
+        {
+          "path": "templates/cpp/flake.nix",
+          "type": "TO_MODIFY",
+          "description": "Update to demonstrate composition API"
+        },
+        {
+          "path": "templates/php/flake.nix",
+          "type": "TO_MODIFY",
+          "description": "Update to demonstrate composition API"
+        },
+        {
+          "path": "templates/latex/flake.nix",
+          "type": "TO_MODIFY",
+          "description": "Update to demonstrate composition API"
+        },
+        {
+          "path": "templates/rust/README.md",
+          "type": "CREATE",
+          "description": "Template usage guide"
+        }
+      ],
+      "implementationGuide": "For each template (rust, cpp, php, latex):\n\n1. Update flake.nix to show NEW API:\n   devShells.default = devshells.lib.${system}.composeShell {\n     languages = [\"rust\"];  # or appropriate language\n     mcps = [\"cargo\" \"serena\"];  # suggested MCPs\n     tools = \"standard\";  # or \"minimal\" for lightweight\n   };\n\n2. Add commented examples showing customization:\n   # Minimal shell (fast, no MCP overhead):\n   # devShells.default = devshells.lib.${system}.composeShell {\n   #   languages = [\"rust\"];\n   #   tools = \"minimal\";\n   #   mcps = [];\n   # };\n   \n   # Extended shell with extra packages:\n   # devShells.default = devshells.lib.${system}.composeShell {\n   #   languages = [\"rust\"];\n   #   mcps = [\"cargo\" \"cratedocs\"];\n   #   tools = \"standard\";\n   #   extraPackages = with pkgs; [ diesel-cli postgresql ];\n   #   extraShellHook = ''export DATABASE_URL=\"postgres://localhost/mydb\"'';\n   # };\n   \n   # Advanced: Direct module composition:\n   # let\n   #   inherit (devshells.lib.${system}) modules composeShellFromModules;\n   # in {\n   #   devShells.default = composeShellFromModules [\n   #     modules.languages.rust\n   #     modules.mcp.cargo\n   #     modules.tools.version-control\n   #   ];\n   # }\n\n3. Keep old API example for migration reference:\n   # OLD API (still works):\n   # devShells.default = devshells.devShells.${system}.rust;\n   \n   # OLD API with extension:\n   # devShells.default = pkgs.mkShell {\n   #   inputsFrom = [ devshells.devShells.${system}.rust ];\n   #   packages = [ pkgs.diesel-cli ];\n   # };\n\n4. Add README.md to each template explaining the new API\n\nUpdate all 4 templates consistently with appropriate language and MCP selections.",
+      "verificationCriteria": "- All 4 templates updated with new composition API\n- Each template shows composeShell usage with appropriate language and MCPs\n- Commented examples show minimal, standard, and extended configurations\n- Old API examples included for migration reference\n- Run pre-commit hooks: all pass\n- nix flake check succeeds for each template\n- Test: nix flake init -t github:Ba-So/nix-devshells#rust && nix develop works",
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase."
+    },
+    {
+      "id": "39cb6c77-aad6-4946-aa6c-5182dc47fa95",
+      "name": "Create comprehensive documentation",
+      "description": "Create MODULE_GUIDE.md (module creation guide), COMPOSITION_GUIDE.md (user guide with examples), and update README.md to showcase the new composition API. Document the module interface specification, provide examples for each use case, and explain the migration path from old to new API.",
+      "notes": "Documentation is critical for adoption of the new API. Focus on practical examples and clear explanations. The MODULE_GUIDE targets contributors, while COMPOSITION_GUIDE targets users. README should quickly showcase the benefits and point to detailed guides. Use tables and diagrams where helpful (mermaid for architecture diagrams).",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "317bffec-750a-47f6-97da-f9b85d02d15c"
+        }
+      ],
+      "createdAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T10:59:41.954Z",
+      "relatedFiles": [
+        {
+          "path": "MODULE_GUIDE.md",
+          "type": "CREATE",
+          "description": "Module creation and contribution guide"
+        },
+        {
+          "path": "COMPOSITION_GUIDE.md",
+          "type": "CREATE",
+          "description": "User guide for shell composition"
+        },
+        {
+          "path": "README.md",
+          "type": "TO_MODIFY",
+          "description": "Update with composition API showcase"
+        },
+        {
+          "path": "MODULARITY_PROPOSAL.md",
+          "type": "REFERENCE",
+          "description": "Reference for architecture details"
+        }
+      ],
+      "implementationGuide": "Create MODULE_GUIDE.md:\n- Module Interface Specification:\n  - Required fields: meta (name, description, category), packages\n  - Optional fields: shellHook, env, suggestedMcps, mcpConfig, requires, appliesWhen\n  - Field type definitions and examples\n- Creating Language Modules: step-by-step guide with example\n- Creating Tool Modules: focused utility modules\n- Creating MCP Modules: MCP server integration with mcpConfig\n- Creating Presets: bundling modules together\n- Module validation and error handling\n- Contribution guidelines for new modules\n\nCreate COMPOSITION_GUIDE.md:\n- Quick Start: simplest composeShell example\n- Preset Comparison Table: minimal vs standard vs full\n- Use Cases with Examples:\n  - Single language development\n  - Multi-language projects (rust + python)\n  - Minimal shells (no MCP overhead)\n  - Custom tool selection\n  - Direct module composition\n  - Extending shells with extra packages\n- MCP Server Selection Guide: which MCPs for which languages\n- Migration Guide: from packageSets to composeShell\n- Troubleshooting common issues\n\nUpdate README.md:\n- Add \"Quick Start with Composition API\" section at top\n- Show composeShell example for common use cases\n- Link to MODULE_GUIDE.md and COMPOSITION_GUIDE.md\n- Update feature list to mention modular architecture\n- Add examples of rust-minimal, rust-python, web-dev shells\n- Maintain existing documentation for backward compatibility\n- Add \"What's New\" section explaining the modular architecture benefits\n\nAll documentation should use clear examples, code snippets, and practical use cases.",
+      "verificationCriteria": "- MODULE_GUIDE.md created with complete module interface specification\n- COMPOSITION_GUIDE.md created with practical examples and use cases\n- README.md updated with Quick Start section using composeShell\n- All documentation uses correct syntax and working examples\n- Preset comparison table clearly explains minimal vs standard vs full\n- Migration guide explains transition from packageSets to composeShell\n- Run pre-commit hooks: prettier formats markdown, typos checks spelling\n- All internal links work correctly (no broken references)",
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase."
+    },
+    {
+      "id": "975dd8c4-cb5f-49cb-9b05-2dfa8670a93e",
+      "name": "Comprehensive testing and validation",
+      "description": "Test all shells (existing and new), validate with pre-commit hooks, ensure backward compatibility, and verify that the module system works correctly. Test composition with various combinations, MCP config generation, and preset functionality. Run full test suite and document results.",
+      "notes": "This is the final validation step. All previous tasks must be complete and working. Focus on thorough testing of both new functionality and backward compatibility. The goal is to ensure existing users see no breaking changes while new users can use the enhanced API. Run tests multiple times to ensure consistency.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "2d5dd9e6-187d-4b21-85da-39c2c6066244"
+        },
+        {
+          "taskId": "7534d3b9-e422-43e0-b2bb-3c9d40a8273e"
+        },
+        {
+          "taskId": "317bffec-750a-47f6-97da-f9b85d02d15c"
+        },
+        {
+          "taskId": "39cb6c77-aad6-4946-aa6c-5182dc47fa95"
+        }
+      ],
+      "createdAt": "2025-11-10T10:59:41.954Z",
+      "updatedAt": "2025-11-10T10:59:41.954Z",
+      "relatedFiles": [
+        {
+          "path": ".pre-commit-config.yaml",
+          "type": "REFERENCE",
+          "description": "Pre-commit hooks configuration"
+        },
+        {
+          "path": "flake.nix",
+          "type": "TO_MODIFY",
+          "description": "May need fixes based on test results"
+        },
+        {
+          "path": "lib/compose.nix",
+          "type": "TO_MODIFY",
+          "description": "May need fixes based on test results"
+        }
+      ],
+      "implementationGuide": "Testing Checklist:\n\n1. Pre-commit Validation:\n   - Run: pre-commit run --all-files\n   - Verify: alejandra, deadnix, statix, prettier, typos all pass\n   - Fix any formatting or linting issues\n\n2. Flake Validation:\n   - Run: nix flake check\n   - Verify: no errors in flake structure\n\n3. Existing Shells (Backward Compat):\n   - Test each: nix build .#rust, .#python, .#cpp, .#nix, .#php, .#latex, .#ansible, .#py-cpp\n   - Enter each: nix develop .#rust, verify all tools available\n   - Compare package lists with previous version (should be identical)\n\n4. New Composed Shells:\n   - Test: nix build .#rust-minimal, .#rust-python, .#web-dev\n   - Enter: nix develop .#rust-minimal, verify minimal toolset\n   - Verify MCP config generation in each shell\n\n5. Composition API:\n   - Test minimal: nix eval --expr 'let f = import ./flake.nix; lib = f.lib.x86_64-linux; in lib.composeShell { languages = [\"rust\"]; tools = \"minimal\"; mcps = []; }'\n   - Test with MCPs: verify .mcp.json generation\n   - Test custom tools: extraPackages and extraShellHook\n\n6. Module Resolution:\n   - Test: nix eval .#lib.x86_64-linux.modules.languages.rust.meta.name\n   - Test: nix eval .#lib.x86_64-linux.modules.presets.standard.packages --apply 'builtins.length'\n   - Verify all module categories accessible\n\n7. PackageSets (Backward Compat):\n   - Test: nix eval .#packageSets.x86_64-linux.rust --apply 'builtins.length'\n   - Verify all 8 packageSets available\n\n8. Templates:\n   - Test each: cd /tmp && nix flake init -t path/to/devshells#rust && nix develop\n   - Verify shell enters successfully and tools work\n\n9. MCP Config Generation:\n   - Enter shell, check if .mcp.json created\n   - Verify JSON structure: { mcpServers: { ... } }\n   - Test merging: create .mcp.json with custom config, enter shell, verify merge\n\n10. Documentation:\n    - Verify all examples in docs can be copy-pasted and work\n    - Check all links in README and guides\n\nDocument any failures and fix before marking complete. Create test report summarizing all validations.",
+      "verificationCriteria": "- All pre-commit hooks pass on entire codebase\n- nix flake check passes without errors\n- All 8 existing shells build and work identically to before\n- All 3 new composed shells (rust-minimal, rust-python, web-dev) build and work\n- packageSets output is identical in structure to before\n- lib.${system} exports work correctly (composeShell, modules)\n- All 4 templates can be initialized and work\n- MCP config generation works and merges correctly with existing configs\n- Documentation examples all work when copy-pasted\n- No breaking changes for existing users\n- Test report documents all validations passed",
+      "analysisResult": "Implement modular devshell architecture for nix-devshells repository. This enables composable shells where users can combine languages + tools + MCP servers without the all-or-nothing approach. The implementation maintains full backward compatibility with existing shells and packageSets. Key features: standardized module interface, composition API (composeShell + composeShellFromModules), selective MCP server inclusion, three-tier preset system (minimal/standard/full), automatic MCP config generation, and comprehensive documentation. Architecture reuses existing language file structures and follows established Nix patterns from the codebase."
+    }
+  ]
+}

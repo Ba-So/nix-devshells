@@ -3,7 +3,7 @@
 {
   lib,
   modules,
-}: {
+}: rec {
   # Resolve a module by name and category with error handling
   resolveModule = name: category: let
     categoryModules = modules.${category} or {};

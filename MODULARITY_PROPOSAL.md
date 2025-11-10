@@ -3,6 +3,7 @@
 ## Executive Summary
 
 This proposal restructures the nix-devshells repository to enable:
+
 - **Composable shells**: Easily combine rust + python + specific tools
 - **Selective MCP servers**: Opt-in to only the servers you need
 - **Modular common packages**: Choose which common tools to include
@@ -11,12 +12,14 @@ This proposal restructures the nix-devshells repository to enable:
 ## Current Architecture Analysis
 
 ### Strengths ✓
+
 - Language configs are self-contained (`languages/*.nix`)
 - PackageSets exposed for external composition
 - MCP servers packaged independently
 - Template system demonstrates usage
 
 ### Limitations ✗
+
 1. **All-or-nothing MCP integration**: Every shell gets all 7 MCP servers via `common.nix`
 2. **Monolithic common packages**: 30+ tools always included, no opt-out
 3. **Manual shell combination**: `py-cpp` shell manually combines packages
@@ -127,6 +130,7 @@ Each module exports a standardized interface:
 ### 3. Composition API
 
 **Simple combination:**
+
 ```nix
 # lib/compose.nix provides:
 composeShell {
@@ -137,6 +141,7 @@ composeShell {
 ```
 
 **Advanced configuration:**
+
 ```nix
 composeShell {
   languages = [ "rust" "python" ];
@@ -154,6 +159,7 @@ composeShell {
 ```
 
 **Using modules directly:**
+
 ```nix
 composeShellFromModules [
   modules.languages.rust
@@ -203,6 +209,7 @@ composeShellFromModules [
 ### 5. Flake API
 
 **Backward compatible outputs:**
+
 ```nix
 {
   # Legacy shells (unchanged for compatibility)
@@ -257,6 +264,7 @@ composeShellFromModules [
 #### Example 1: Quick Language Combination
 
 **Before:**
+
 ```nix
 # User's flake.nix - manual composition
 devShells.default = pkgs.mkShell {
@@ -270,6 +278,7 @@ devShells.default = pkgs.mkShell {
 ```
 
 **After:**
+
 ```nix
 # User's flake.nix - simple composition
 {
@@ -349,6 +358,7 @@ generateMcpConfig = modules:
 ```
 
 **Usage in shell:**
+
 ```nix
 shellHook = ''
   # Auto-generate .mcp.json if not present
@@ -361,17 +371,20 @@ shellHook = ''
 ### 8. Migration Path
 
 **Phase 1: Add new structure alongside existing**
+
 - Create `lib/` and `modules/` directories
 - Implement composition functions
 - Keep existing `languages/` and structure unchanged
 - Add new composed shells to flake outputs
 
 **Phase 2: Update templates**
+
 - Templates use new composition API
 - Show both old and new patterns in examples
 - Update README with new patterns
 
 **Phase 3: Deprecate old structure (optional)**
+
 - Move language files into modules/
 - Mark old packageSets as legacy
 - Provide migration guide
@@ -404,12 +417,14 @@ shellHook = ''
 ## Implementation Checklist
 
 ### Core Infrastructure
+
 - [ ] Create `lib/default.nix` with module system
 - [ ] Implement `lib/compose.nix` with `composeShell` function
 - [ ] Implement `lib/mcp.nix` with config generation
 - [ ] Add module validation and error messages
 
 ### Module Migration
+
 - [ ] Convert language files to module format
   - [ ] rust.nix → modules/languages/rust.nix
   - [ ] python.nix → modules/languages/python.nix
@@ -430,17 +445,20 @@ shellHook = ''
   - [ ] modules/mcp/cratedocs.nix
 
 ### Presets
+
 - [ ] Create modules/presets/minimal.nix
 - [ ] Create modules/presets/standard.nix
 - [ ] Create modules/presets/full.nix
 
 ### Flake Updates
+
 - [ ] Update flake.nix to expose lib with composeShell
 - [ ] Add pre-composed shell combinations
 - [ ] Maintain backward compatibility with existing shells
 - [ ] Update flake outputs documentation
 
 ### Templates
+
 - [ ] Update rust template to use composition API
 - [ ] Update python template
 - [ ] Update cpp template
@@ -448,6 +466,7 @@ shellHook = ''
 - [ ] Add examples of different composition patterns
 
 ### Documentation
+
 - [ ] Update README with new composition patterns
 - [ ] Add MODULE_GUIDE.md explaining module creation
 - [ ] Add COMPOSITION_GUIDE.md with examples
@@ -455,6 +474,7 @@ shellHook = ''
 - [ ] Update per-shell documentation
 
 ### Testing
+
 - [ ] Test all pre-defined shells still work
 - [ ] Test composition with various combinations
 - [ ] Test MCP config generation
@@ -665,16 +685,19 @@ in
 ## Timeline Estimate
 
 - **Phase 1 (Core infrastructure)**: 1-2 days
+
   - Implement lib/compose.nix
   - Create module system foundation
   - Basic validation and tests
 
 - **Phase 2 (Module migration)**: 2-3 days
+
   - Convert all language files to modules
   - Split common.nix into tool modules
   - Create MCP modules
 
 - **Phase 3 (Integration)**: 1-2 days
+
   - Update flake.nix
   - Create preset modules
   - Generate composed shells
@@ -689,6 +712,7 @@ in
 ## Conclusion
 
 This modular architecture provides:
+
 - **Flexibility**: Compose any combination of languages, tools, and MCP servers
 - **Simplicity**: High-level API for common use cases
 - **Efficiency**: Include only what you need (no bloat)
