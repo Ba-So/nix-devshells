@@ -13,6 +13,7 @@
   filterByCategory,
   validateModule,
   validateModules,
+  deduplicateModules,
 }: let
   # Import MCP config generation
   mcpLib = import ./mcp.nix {
@@ -64,8 +65,10 @@ in rec {
     # Resolve tool modules/presets
     toolModules = resolveTools tools;
 
-    # Combine all modules
-    allModules = langModules ++ mcpModules ++ toolModules;
+    # Combine all modules and deduplicate by name
+    # This prevents loading the same module multiple times
+    # (e.g., when an MCP is in both the explicit list and a preset)
+    allModules = deduplicateModules (langModules ++ mcpModules ++ toolModules);
 
     # Compose base shell from modules
     baseShell = composeShellFromModules allModules;

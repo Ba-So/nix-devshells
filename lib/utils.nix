@@ -43,6 +43,23 @@
   getModuleNames = moduleList:
     map (m: m.meta.name or "<unnamed>") moduleList;
 
+  # Deduplicate modules by name (keeps last occurrence)
+  # This allows explicit mcps to override preset-included ones
+  deduplicateModules = moduleList: let
+    # Create a map from module name to module
+    # Later modules override earlier ones with the same name
+    moduleMap =
+      lib.foldl (
+        acc: m: let
+          name = m.meta.name or "<unnamed>";
+        in
+          acc // {${name} = m;}
+      ) {}
+      moduleList;
+  in
+    # Convert back to a list
+    builtins.attrValues moduleMap;
+
   # Resolve multiple modules at once
   resolveModules = names: category:
     map (name: resolveModule name category) names;

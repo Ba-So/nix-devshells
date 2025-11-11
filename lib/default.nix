@@ -115,7 +115,7 @@
     then
       import ./compose.nix {
         inherit pkgs lib system inputs modules;
-        inherit (utils) resolveModule flattenPackages mergeShellHooks mergeEnv filterByCategory;
+        inherit (utils) resolveModule flattenPackages mergeShellHooks mergeEnv filterByCategory deduplicateModules;
         inherit (validate) validateModule validateModules;
       }
     else {
