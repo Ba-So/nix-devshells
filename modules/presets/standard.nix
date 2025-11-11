@@ -15,7 +15,6 @@
     modules.mcp.codanna # Code intelligence
     modules.mcp.serena # Project analysis
     modules.mcp.shrimp # Task management
-    modules.mcp.gitlab # GitLab integration
   ];
 
   # Combine minimal packages with additional packages
