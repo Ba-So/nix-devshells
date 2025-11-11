@@ -48,6 +48,7 @@
 
     # Testing frameworks (header-only, for reference)
     pkgs.catch2 # Modern C++ testing framework
+    pkgs.doctest # performant doctest framework
     pkgs.gtest # Google Test framework
     pkgs.gbenchmark # Google's microbenchmark library
 

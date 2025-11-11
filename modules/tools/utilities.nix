@@ -19,6 +19,8 @@
     pkgs.gnumake
     pkgs.tokei # Lines of code counter
     pkgs.pre-commit
+    pkgs.nodePackages.prettier
+    pkgs.nodePackages.markdownlint-cli
     pkgs.direnv
     pkgs.just
   ];
