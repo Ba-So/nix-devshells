@@ -20,6 +20,7 @@ in {
     python = libSystem.modules.languages.python.packages;
     latex = libSystem.modules.languages.latex.packages;
     ansible = libSystem.modules.languages.ansible.packages;
+    julia = libSystem.modules.languages.julia.packages;
   };
 
   # Rust development environment
@@ -67,6 +68,12 @@ in {
   # Ansible development environment
   ansible = libSystem.composeShell {
     languages = ["ansible"];
+    tools = "standard";
+  };
+
+  # Julia development environment
+  julia = libSystem.composeShell {
+    languages = ["julia"];
     tools = "standard";
   };
 }

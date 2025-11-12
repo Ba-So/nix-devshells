@@ -46,7 +46,7 @@
       in {
         # Standard flake structure: devShells.<name>
         devShells = {
-          inherit (shells) rust php nix cpp python py-cpp latex ansible;
+          inherit (shells) rust php nix cpp python py-cpp latex ansible julia;
           default = shells.nix; # Default to nix shell
 
           # NEW: Composed shells using module system
