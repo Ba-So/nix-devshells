@@ -50,7 +50,7 @@ Development shells and project templates for Nix flake-based workflows.
 - `cargo-mcp` - Cargo operations
 - `cratedocs-mcp` - Rust crate docs
 - `codanna` - Code intelligence
-- `mcp-shrimp-task-manager` - Task management
+- `claude-task-master` - AI-powered task management
 - `mcp-gitlab` - GitLab integration
 - `puppeteer-mcp-server` - Browser automation
 - `serena` - Project analysis

@@ -21,10 +21,13 @@
     };
     serena = inputs.serena.packages.${system}.default or inputs.serena.defaultPackage.${system};
     codanna = pkgs.callPackage ../pkgs/codanna.nix {};
-    mcp-shrimp-task-manager = pkgs.callPackage ../pkgs/shrimp.nix {};
+    claude-task-master = pkgs.callPackage ../pkgs/claude-task-master.nix {};
     mcp-gitlab = pkgs.callPackage ../pkgs/gitlab.nix {};
     puppeteer-mcp-server = pkgs.callPackage ../pkgs/puppeteer-mcp.nix {};
     cratedocs-mcp = pkgs.callPackage ../pkgs/cratedocs-mcp.nix {};
+
+    # Deprecated/legacy packages
+    mcp-shrimp-task-manager = pkgs.callPackage ../pkgs/shrimp.nix {};
   };
 
   # Import validation and utility functions

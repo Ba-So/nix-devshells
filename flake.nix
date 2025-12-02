@@ -86,12 +86,15 @@
           };
           cratedocs-mcp = pkgs.callPackage ./pkgs/cratedocs-mcp.nix {};
           codanna = pkgs.callPackage ./pkgs/codanna.nix {};
-          mcp-shrimp-task-manager = pkgs.callPackage ./pkgs/shrimp.nix {};
+          claude-task-master = pkgs.callPackage ./pkgs/claude-task-master.nix {};
           mcp-gitlab = pkgs.callPackage ./pkgs/gitlab.nix {};
           puppeteer-mcp-server = pkgs.callPackage ./pkgs/puppeteer-mcp.nix {};
 
           # Serena - MCP server for project analysis
           serena = serena.packages.${system}.default or serena.defaultPackage.${system};
+
+          # Deprecated/legacy packages
+          mcp-shrimp-task-manager = pkgs.callPackage ./pkgs/shrimp.nix {};
 
           # Default to cargo-mcp as it's most generally useful
           default = pkgs-with-rust.callPackage ./pkgs/cargo-mcp.nix {
@@ -128,9 +131,12 @@
         };
         cratedocs-mcp = final.callPackage ./pkgs/cratedocs-mcp.nix {};
         codanna = final.callPackage ./pkgs/codanna.nix {};
-        mcp-shrimp-task-manager = final.callPackage ./pkgs/shrimp.nix {};
+        claude-task-master = final.callPackage ./pkgs/claude-task-master.nix {};
         mcp-gitlab = final.callPackage ./pkgs/gitlab.nix {};
         puppeteer-mcp-server = final.callPackage ./pkgs/puppeteer-mcp.nix {};
+
+        # Deprecated/legacy packages
+        mcp-shrimp-task-manager = final.callPackage ./pkgs/shrimp.nix {};
 
         # Expose devshells lib for external users
         devshells-lib = final.callPackage ./lib/default.nix {
