@@ -1,0 +1,58 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Add Python development shell",
+        "description": "Create a Nix development shell configuration for Python projects with common dependencies",
+        "details": "",
+        "testStrategy": "",
+        "status": "in-progress",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Python package dependencies",
+            "description": "List common Python packages like pip, virtualenv, pytest",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1,
+            "updatedAt": "2025-12-02T09:28:53.788Z",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Create flake.nix for Python shell",
+            "description": "Write the Nix flake configuration",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 1,
+            "parentId": "undefined"
+          }
+        ],
+        "updatedAt": "2025-12-02T09:28:53.788Z"
+      },
+      {
+        "id": "2",
+        "title": "Add Rust development shell",
+        "description": "Create a Nix development shell for Rust projects with cargo and rustc",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": ["1"],
+        "priority": "medium",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2025-12-02T09:28:53.789Z",
+      "taskCount": 2,
+      "completedCount": 0,
+      "tags": ["master"]
+    }
+  }
+}

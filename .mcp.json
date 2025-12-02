@@ -1,16 +1,5 @@
 {
   "mcpServers": {
-    "shrimp": {
-      "type": "stdio",
-      "command": "mcp-shrimp-task-manager",
-      "args": [],
-      "env": {
-        "DATA_DIR": ".shrimp",
-        "TEMPLATES_USE": "en",
-        "ENABLE_GUI": "true",
-        "MCP_PROMPT_EXECUTE_TASK_APPEND": "Validation: Add that pre-commit hooks must pass and progress must be committed."
-      }
-    },
     "codanna": {
       "type": "stdio",
       "command": "codanna",
@@ -22,13 +11,28 @@
       "args": ["start-mcp-server", "--transport", "stdio", "--project", "."],
       "env": {}
     },
-    "gitlab": {
+    "claude-task-master": {
       "type": "stdio",
-      "command": "mcp-gitlab",
+      "command": "task-master-mcp",
       "args": [],
       "env": {
-        "GITLAB_PERSONAL_ACCESS_TOKEN": "",
-        "GITLAB_API_URL": "https://gitlab.com/api/v4"
+        "TASKMASTER_DIR": ".taskmaster"
+      }
+    },
+    "task-master-ai": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "task-master-ai"],
+      "env": {
+        "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY_HERE",
+        "PERPLEXITY_API_KEY": "YOUR_PERPLEXITY_API_KEY_HERE",
+        "OPENAI_API_KEY": "YOUR_OPENAI_KEY_HERE",
+        "GOOGLE_API_KEY": "YOUR_GOOGLE_KEY_HERE",
+        "XAI_API_KEY": "YOUR_XAI_KEY_HERE",
+        "OPENROUTER_API_KEY": "YOUR_OPENROUTER_KEY_HERE",
+        "MISTRAL_API_KEY": "YOUR_MISTRAL_KEY_HERE",
+        "AZURE_OPENAI_API_KEY": "YOUR_AZURE_KEY_HERE",
+        "OLLAMA_API_KEY": "YOUR_OLLAMA_API_KEY_HERE"
       }
     }
   }

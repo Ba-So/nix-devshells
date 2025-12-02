@@ -14,4 +14,6 @@
   cratedocs-mcp = pkgs.callPackage ./cratedocs-mcp.nix {};
 
   puppeteer-mcp-server = pkgs.callPackage ./puppeteer-mcp.nix {};
+
+  claude-task-master = pkgs.callPackage ./claude-task-master {};
 }

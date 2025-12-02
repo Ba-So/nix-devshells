@@ -31,6 +31,12 @@
 
         pkgs = nixpkgs.legacyPackages.${system};
 
+        # Create pkgs with unfree packages allowed for specific packages
+        pkgs-unfree = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
+
         # Import our shell definitions
         shells = import ./default.nix {
           inherit pkgs;
@@ -86,7 +92,7 @@
           };
           cratedocs-mcp = pkgs.callPackage ./pkgs/cratedocs-mcp.nix {};
           codanna = pkgs.callPackage ./pkgs/codanna.nix {};
-          claude-task-master = pkgs.callPackage ./pkgs/claude-task-master.nix {};
+          claude-task-master = pkgs-unfree.callPackage ./pkgs/claude-task-master {};
           mcp-gitlab = pkgs.callPackage ./pkgs/gitlab.nix {};
           puppeteer-mcp-server = pkgs.callPackage ./pkgs/puppeteer-mcp.nix {};
 
@@ -131,7 +137,7 @@
         };
         cratedocs-mcp = final.callPackage ./pkgs/cratedocs-mcp.nix {};
         codanna = final.callPackage ./pkgs/codanna.nix {};
-        claude-task-master = final.callPackage ./pkgs/claude-task-master.nix {};
+        claude-task-master = final.callPackage ./pkgs/claude-task-master {};
         mcp-gitlab = final.callPackage ./pkgs/gitlab.nix {};
         puppeteer-mcp-server = final.callPackage ./pkgs/puppeteer-mcp.nix {};
 
