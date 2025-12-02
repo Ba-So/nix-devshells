@@ -53,7 +53,7 @@ stdenv.mkDerivation rec {
   meta = {
     description = "AI-driven task management system for development workflows (npx wrapper)";
     homepage = "https://github.com/eyaltoledano/claude-task-master";
-    license = lib.licenses.unfree; # MIT WITH Commons-Clause
+    license = lib.licenses.mit; # Actually MIT WITH Commons-Clause
     maintainers = with lib.maintainers; [];
     platforms = lib.platforms.all;
     mainProgram = "task-master-ai";
