@@ -21,7 +21,7 @@
     };
     serena = inputs.serena.packages.${system}.default or inputs.serena.defaultPackage.${system};
     codanna = pkgs.callPackage ../pkgs/codanna.nix {};
-    claude-task-master = pkgs.callPackage ../pkgs/claude-task-master.nix {};
+    claude-task-master = pkgs.callPackage ../pkgs/claude-task-master {};
     mcp-gitlab = pkgs.callPackage ../pkgs/gitlab.nix {};
     puppeteer-mcp-server = pkgs.callPackage ../pkgs/puppeteer-mcp.nix {};
     cratedocs-mcp = pkgs.callPackage ../pkgs/cratedocs-mcp.nix {};
@@ -39,7 +39,8 @@
   languageModules =
     if builtins.pathExists ../modules/languages
     then
-      import ../modules/languages {
+      import ../modules/languages
+      {
         pkgs = pkgs-with-rust;
         inherit inputs lib;
       }
@@ -48,7 +49,8 @@
   toolModules =
     if builtins.pathExists ../modules/tools
     then
-      import ../modules/tools {
+      import ../modules/tools
+      {
         pkgs = pkgs-with-rust;
         inherit lib;
       }
@@ -57,7 +59,8 @@
   mcpModules =
     if builtins.pathExists ../modules/mcp
     then
-      import ../modules/mcp {
+      import ../modules/mcp
+      {
         pkgs = pkgs-with-rust;
         inherit lib devPkgs;
         inherit (devPkgs) serena;
@@ -116,7 +119,8 @@
   compose =
     if builtins.pathExists ./compose.nix
     then
-      import ./compose.nix {
+      import ./compose.nix
+      {
         inherit pkgs lib system inputs modules;
         inherit (utils) resolveModule flattenPackages mergeShellHooks mergeEnv filterByCategory deduplicateModules;
         inherit (validate) validateModule validateModules;
@@ -131,7 +135,8 @@
   mcp =
     if builtins.pathExists ./mcp.nix
     then
-      import ./mcp.nix {
+      import ./mcp.nix
+      {
         inherit pkgs lib;
         inherit (utils) filterByCategory;
       }
