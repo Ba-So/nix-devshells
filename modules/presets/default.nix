@@ -4,8 +4,7 @@
   pkgs,
   lib,
   modules,
-}: rec {
+}: {
   minimal = import ./minimal.nix {inherit pkgs lib modules;};
   standard = import ./standard.nix {inherit pkgs lib modules;};
-  full = import ./full.nix {inherit pkgs lib modules;};
 }
