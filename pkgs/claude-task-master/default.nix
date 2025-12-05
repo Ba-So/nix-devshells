@@ -1,61 +1,65 @@
 {
   lib,
-  stdenv,
-  makeWrapper,
+  buildNpmPackage,
+  fetchzip,
   nodejs_20,
 }:
-stdenv.mkDerivation rec {
+buildNpmPackage rec {
   pname = "task-master-ai";
-  version = "0.36.0";
+  version = "0.37.0";
 
-  # No source needed - we're creating wrappers
-  dontUnpack = true;
-  dontBuild = true;
+  nodejs = nodejs_20;
 
-  nativeBuildInputs = [makeWrapper];
+  src = fetchzip {
+    url = "https://registry.npmjs.org/task-master-ai/-/task-master-ai-${version}.tgz";
+    hash = "sha256-kGnxv9hpbTEFapn2L+DUzZfu7eiNS4GsGHfX0djuzpA=";
+  };
 
-  installPhase = ''
-        mkdir -p $out/bin
+  npmDepsHash = "sha256-udJWH9LfSMcb0zW7uuUyhy3LQsrObYTaObPcSCMUESw=";
 
-        # The npm package provides these binaries:
-        # - task-master: CLI tool (dist/task-master.js)
-        # - task-master-mcp: MCP server (dist/mcp-server.js)
-        # - task-master-ai: Also MCP server (dist/mcp-server.js)
+  # Handle peer dependency conflicts (zod v3 vs v4)
+  npmFlags = ["--legacy-peer-deps"];
 
-        # Main CLI wrapper - calls the task-master binary from npm
-        cat > $out/bin/task-master <<'EOF'
-    #!/usr/bin/env bash
-    export TASKMASTER_DISABLE_AUTO_UPDATE=true
-    unset NODE_ENV
-    exec ${nodejs_20}/bin/npx -y -p "task-master-ai@${version}" task-master "$@"
-    EOF
-        chmod +x $out/bin/task-master
+  postPatch = ''
+    # Use our pre-generated clean lockfile (generated from npm tarball without workspaces)
+    cp ${./package-lock.json} package-lock.json
 
-        # task-master-ai wrapper - calls task-master-ai binary (which is the MCP server)
-        cat > $out/bin/task-master-ai <<'EOF'
-    #!/usr/bin/env bash
-    export TASKMASTER_DISABLE_AUTO_UPDATE=true
-    unset NODE_ENV
-    exec ${nodejs_20}/bin/npx -y -p "task-master-ai@${version}" task-master-ai "$@"
-    EOF
-        chmod +x $out/bin/task-master-ai
+    # Remove workspaces and devDependencies from package.json to match our lockfile
+    ${nodejs_20}/bin/node <<'PATCH_SCRIPT'
+      const fs = require('fs');
+      const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+      delete pkg.workspaces;
+      delete pkg.devDependencies;
+      fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+    PATCH_SCRIPT
+  '';
 
-        # MCP server wrapper - calls the task-master-mcp binary
-        cat > $out/bin/task-master-mcp <<'EOF'
-    #!/usr/bin/env bash
-    export TASKMASTER_DISABLE_AUTO_UPDATE=true
-    unset NODE_ENV
-    exec ${nodejs_20}/bin/npx -y -p "task-master-ai@${version}" task-master-mcp "$@"
-    EOF
-        chmod +x $out/bin/task-master-mcp
+  # The npm package is already pre-built (dist/ contains compiled JS)
+  dontNpmBuild = true;
+
+  AUTHORIZED = "1";
+
+  # Disable auto-updates and create wrapper scripts
+  postInstall = ''
+    wrapProgram $out/bin/task-master \
+      --set TASKMASTER_SKIP_AUTO_UPDATE 1 \
+      --unset NODE_ENV
+
+    wrapProgram $out/bin/task-master-mcp \
+      --set TASKMASTER_SKIP_AUTO_UPDATE 1 \
+      --unset NODE_ENV
+
+    wrapProgram $out/bin/task-master-ai \
+      --set TASKMASTER_SKIP_AUTO_UPDATE 1 \
+      --unset NODE_ENV
   '';
 
   meta = {
-    description = "AI-driven task management system for development workflows (npx wrapper)";
+    description = "AI-driven task management system for development workflows";
     homepage = "https://github.com/eyaltoledano/claude-task-master";
-    license = lib.licenses.mit; # Actually MIT WITH Commons-Clause
-    maintainers = with lib.maintainers; [];
+    license = lib.licenses.unfree; # MIT WITH Commons-Clause
+    maintainers = [];
     platforms = lib.platforms.all;
-    mainProgram = "task-master-ai";
+    mainProgram = "task-master";
   };
 }
