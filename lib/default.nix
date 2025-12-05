@@ -14,6 +14,12 @@
     overlays = [inputs.rust-overlay.overlays.default];
   };
 
+  # Create pkgs with unfree packages allowed for claude-task-master
+  pkgs-unfree = import inputs.nixpkgs {
+    inherit system;
+    config.allowUnfree = true;
+  };
+
   # Build custom packages for MCP modules
   devPkgs = {
     cargo-mcp = pkgs-with-rust.callPackage ../pkgs/cargo-mcp.nix {
@@ -21,7 +27,7 @@
     };
     serena = inputs.serena.packages.${system}.default or inputs.serena.defaultPackage.${system};
     codanna = pkgs.callPackage ../pkgs/codanna.nix {};
-    claude-task-master = pkgs.callPackage ../pkgs/claude-task-master {};
+    claude-task-master = pkgs-unfree.callPackage ../pkgs/claude-task-master {};
     mcp-gitlab = pkgs.callPackage ../pkgs/gitlab.nix {};
     puppeteer-mcp-server = pkgs.callPackage ../pkgs/puppeteer-mcp.nix {};
     cratedocs-mcp = pkgs.callPackage ../pkgs/cratedocs-mcp.nix {};
