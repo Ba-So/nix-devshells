@@ -84,9 +84,10 @@ in {
     pkgs.symfony-cli
 
     # Code quality and analysis
-    # Note: php-cs-fixer and other tools are best installed via composer
-    # as they are marked broken or unavailable in nixpkgs
+    # Note: php-cs-fixer is best installed via composer
+    # as it is marked broken or unavailable in nixpkgs
     phpEnv.packages.php-codesniffer # PHP_CodeSniffer for style checking
+    phpEnv.packages.phpstan # Static analysis tool
 
     # Development utilities
     pkgs.nodejs # For frontend asset compilation
@@ -126,8 +127,8 @@ in {
 
     echo "🔍 Code quality tools:"
     echo "   ✅ phpcs: $(phpcs --version 2>/dev/null || echo "Install via: composer require --dev squizlabs/php_codesniffer")"
+    echo "   ✅ phpstan: $(phpstan --version 2>/dev/null || echo "not found")"
     echo "   📦 php-cs-fixer: Install via: composer require --dev friendsofphp/php-cs-fixer"
-    echo "   📦 phpstan: Install via: composer require --dev phpstan/phpstan"
     echo "   📦 parallel-lint: Install via: composer require --dev php-parallel-lint/php-parallel-lint"
     echo ""
 
@@ -140,10 +141,8 @@ in {
     echo "   caddy file-server --browse               # Static file server"
     echo ""
 
-    echo "🔧 Development tools (install via composer):"
-    echo "   composer require --dev squizlabs/php_codesniffer"
+    echo "🔧 Additional tools (install via composer):"
     echo "   composer require --dev friendsofphp/php-cs-fixer"
-    echo "   composer require --dev phpstan/phpstan"
     echo "   composer require --dev php-parallel-lint/php-parallel-lint"
     echo ""
 
