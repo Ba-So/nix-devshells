@@ -5,19 +5,20 @@
   pkg-config,
   openssl,
   onnxruntime,
+  perl,
 }:
 rustPlatform.buildRustPackage rec {
   pname = "codanna";
-  version = "0.5.18-nix";
+  version = "0.8.3-nix";
 
   src = fetchFromGitHub {
     owner = "Ba-So";
     repo = "codanna";
     rev = "main";
-    hash = "sha256-QHRMVLVmhJjnWnoYmrkXFK2Z+KoaRwO2tEVskH/BNNw=";
+    hash = "sha256-BfIexYM73PuDha6G1prVBrQ1Xp8wWOvCoim53ufAs14=";
   };
 
-  cargoHash = "sha256-P3+J31oXJ2yRv2OfXhjVxaAoImJOPsdxwOdmPyWmL0M=";
+  cargoHash = "sha256-qx+8mjjvPNzJPW7tBH7Pao1jqz5+HGOlC4SelC41VJA=";
 
   # Optimize build for faster compilation
   doCheck = false; # Skip tests to speed up build
@@ -26,7 +27,7 @@ rustPlatform.buildRustPackage rec {
   # Build with minimal features for MCP server usage
   buildFeatures = ["http-server"]; # Only enable HTTP server, skip HTTPS for speed
 
-  nativeBuildInputs = [pkg-config];
+  nativeBuildInputs = [pkg-config perl];
   buildInputs = [openssl onnxruntime];
 
   # Configure ort-sys to use system ONNX Runtime instead of downloading
