@@ -22,9 +22,11 @@
     };
     pyproject-build-systems = {
       url = "github:pyproject-nix/build-system-pkgs";
-      inputs.pyproject-nix.follows = "pyproject-nix";
-      inputs.uv2nix.follows = "uv2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs = {
+        pyproject-nix.follows = "pyproject-nix";
+        uv2nix.follows = "uv2nix";
+        nixpkgs.follows = "nixpkgs";
+      };
     };
   };
 
@@ -66,7 +68,10 @@
         # Import lib system for module composition
         libSystem = import ./lib/default.nix {
           inherit pkgs system;
-          inputs = {inherit nixpkgs nixpkgs-unstable rust-overlay serena;};
+          inputs = {
+            inherit nixpkgs nixpkgs-unstable rust-overlay serena;
+            inherit pyproject-nix uv2nix pyproject-build-systems;
+          };
         };
       in {
         # Standard flake structure: devShells.<name>
