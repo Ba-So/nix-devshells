@@ -12,6 +12,7 @@
   gitlab = import ./gitlab.nix {inherit pkgs lib devPkgs;};
   puppeteer = import ./puppeteer.nix {inherit pkgs lib devPkgs;};
   cratedocs = import ./cratedocs.nix {inherit pkgs lib devPkgs;};
+  qdrant = import ./qdrant.nix {inherit pkgs lib devPkgs;};
 
   # Deprecated/legacy MCPs
   shrimp = import ./shrimp.nix {inherit pkgs lib devPkgs;};

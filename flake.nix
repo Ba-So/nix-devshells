@@ -11,6 +11,21 @@
       url = "github:oraios/serena?ref=dc31e4e";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    pyproject-nix = {
+      url = "github:pyproject-nix/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    uv2nix = {
+      url = "github:pyproject-nix/uv2nix";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.uv2nix.follows = "uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -19,6 +34,9 @@
     flake-utils,
     rust-overlay,
     serena,
+    pyproject-nix,
+    uv2nix,
+    pyproject-build-systems,
     ...
   }:
     flake-utils.lib.eachDefaultSystem
@@ -97,6 +115,11 @@
           mcp-gitlab = pkgs.callPackage ./pkgs/gitlab.nix {};
           puppeteer-mcp-server = pkgs.callPackage ./pkgs/puppeteer-mcp.nix {};
 
+          # Qdrant MCP - MCP server for semantic documentation search
+          qdrant-mcp = pkgs.callPackage ./pkgs/qdrant-mcp.nix {
+            inherit pyproject-nix uv2nix pyproject-build-systems;
+          };
+
           # Serena - MCP server for project analysis
           serena = serena.packages.${system}.default or serena.defaultPackage.${system};
 
@@ -141,6 +164,9 @@
         claude-task-master = final.callPackage ./pkgs/claude-task-master {};
         mcp-gitlab = final.callPackage ./pkgs/gitlab.nix {};
         puppeteer-mcp-server = final.callPackage ./pkgs/puppeteer-mcp.nix {};
+        qdrant-mcp = final.callPackage ./pkgs/qdrant-mcp.nix {
+          inherit pyproject-nix uv2nix pyproject-build-systems;
+        };
 
         # Deprecated/legacy packages
         mcp-shrimp-task-manager = final.callPackage ./pkgs/shrimp.nix {};
