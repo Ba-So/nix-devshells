@@ -86,15 +86,9 @@
     },
     "pyproject-build-systems": {
       "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "pyproject-nix": [
-          "pyproject-nix"
-        ],
-        "uv2nix": [
-          "uv2nix"
-        ]
+        "nixpkgs": ["nixpkgs"],
+        "pyproject-nix": ["pyproject-nix"],
+        "uv2nix": ["uv2nix"]
       },
       "locked": {
         "lastModified": 1763662255,
@@ -112,18 +106,9 @@
     },
     "pyproject-build-systems_2": {
       "inputs": {
-        "nixpkgs": [
-          "serena",
-          "nixpkgs"
-        ],
-        "pyproject-nix": [
-          "serena",
-          "pyproject-nix"
-        ],
-        "uv2nix": [
-          "serena",
-          "uv2nix"
-        ]
+        "nixpkgs": ["serena", "nixpkgs"],
+        "pyproject-nix": ["serena", "pyproject-nix"],
+        "uv2nix": ["serena", "uv2nix"]
       },
       "locked": {
         "lastModified": 1755484659,
@@ -141,9 +126,7 @@
     },
     "pyproject-nix": {
       "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
+        "nixpkgs": ["nixpkgs"]
       },
       "locked": {
         "lastModified": 1764134915,
@@ -161,10 +144,7 @@
     },
     "pyproject-nix_2": {
       "inputs": {
-        "nixpkgs": [
-          "serena",
-          "nixpkgs"
-        ]
+        "nixpkgs": ["serena", "nixpkgs"]
       },
       "locked": {
         "lastModified": 1755886095,
@@ -213,9 +193,7 @@
     "serena": {
       "inputs": {
         "flake-utils": "flake-utils_2",
-        "nixpkgs": [
-          "nixpkgs"
-        ],
+        "nixpkgs": ["nixpkgs"],
         "pyproject-build-systems": "pyproject-build-systems_2",
         "pyproject-nix": "pyproject-nix_2",
         "uv2nix": "uv2nix"
@@ -267,14 +245,8 @@
     },
     "uv2nix": {
       "inputs": {
-        "nixpkgs": [
-          "serena",
-          "nixpkgs"
-        ],
-        "pyproject-nix": [
-          "serena",
-          "pyproject-nix"
-        ]
+        "nixpkgs": ["serena", "nixpkgs"],
+        "pyproject-nix": ["serena", "pyproject-nix"]
       },
       "locked": {
         "lastModified": 1755887980,
@@ -292,12 +264,8 @@
     },
     "uv2nix_2": {
       "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "pyproject-nix": [
-          "pyproject-nix"
-        ]
+        "nixpkgs": ["nixpkgs"],
+        "pyproject-nix": ["pyproject-nix"]
       },
       "locked": {
         "lastModified": 1764992234,
