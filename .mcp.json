@@ -19,12 +19,6 @@
         "TASKMASTER_DIR": ".taskmaster"
       }
     },
-    "task-master-ai": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "task-master-ai"],
-      "env": {}
-    },
     "qdrant-docs": {
       "type": "stdio",
       "command": "mcp-server-qdrant",
