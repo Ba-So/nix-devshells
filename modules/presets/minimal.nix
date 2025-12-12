@@ -8,6 +8,7 @@
   # Include essential tool modules
   includedModules = [
     modules.tools.version-control # git, git-lfs
+    modules.tools.utilities # jq, curl, wget, tree, fd, ripgrep, etc.
     modules.tools.nix-tools # nixfmt, nil, alejandra, deadnix, statix
   ];
 

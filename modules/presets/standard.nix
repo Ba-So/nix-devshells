@@ -10,8 +10,6 @@
 
   # Additional modules beyond minimal
   additionalModules = [
-    modules.tools.editors # helix
-    modules.tools.utilities # jq, curl, wget, tree, fd, ripgrep, etc.
     modules.mcp.codanna # Code intelligence
     modules.mcp.serena # Project analysis
     modules.mcp.shrimp # Task management
