@@ -1,0 +1,137 @@
+{
+  pkgs,
+  inputs,
+}:
+# JavaScript/TypeScript development tools and environment
+# Provides a modern JS/TS/React development setup with fast tooling and quality checks
+{
+  packages = [
+    # Core Node.js runtime
+    pkgs.nodejs_22
+
+    # Package managers
+    pkgs.nodePackages.npm # Node package manager
+    pkgs.nodePackages.pnpm # Fast, disk-efficient package manager
+
+    # Language server and tooling (Biome - modern Rust-based toolchain)
+    pkgs.biome # LSP, formatter, and linter in one (replaces ESLint, Prettier partially)
+
+    # Additional formatting (Prettier for full ecosystem support)
+    pkgs.nodePackages.prettier # Code formatter
+
+    # Testing framework with built-in coverage
+    pkgs.nodePackages.vitest # Fast unit test framework with coverage support
+
+    # Type checking
+    pkgs.nodePackages.typescript # TypeScript compiler and type checker
+    pkgs.nodePackages.typescript-language-server # TypeScript language server (backup LSP)
+
+    # Build and development tools
+    pkgs.nodePackages.vite # Fast build tool and dev server
+    pkgs.nodePackages.webpack # Module bundler (for projects that need it)
+    pkgs.nodePackages.webpack-cli
+
+    # Code quality
+    pkgs.nodePackages.eslint # Linter (for projects using ESLint config)
+
+    # Development utilities
+    pkgs.nodePackages.nodemon # Auto-restart on file changes
+    pkgs.nodePackages.npm-check-updates # Update dependencies
+
+    # System dependencies for native modules
+    pkgs.stdenv.cc.cc.lib
+    pkgs.python3 # Required for node-gyp
+    pkgs.pkg-config
+  ];
+
+  shellHook = ''
+    echo "🟨 JavaScript/TypeScript development environment ready!"
+    echo "   node --version: $(node --version)"
+    echo "   npm --version: $(npm --version)"
+    echo "   pnpm --version: $(pnpm --version)"
+    echo ""
+
+    # Set up npm and pnpm cache directories
+    export NPM_CONFIG_PREFIX="$HOME/.npm-global"
+    export PNPM_HOME="$HOME/.local/share/pnpm"
+    mkdir -p "$NPM_CONFIG_PREFIX" "$PNPM_HOME"
+    export PATH="$NPM_CONFIG_PREFIX/bin:$PNPM_HOME:$PATH"
+
+    # Configure for native module builds
+    export npm_config_build_from_source=true
+    export PYTHON="${pkgs.python3}/bin/python"
+
+    # Set up library paths for native modules
+    export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH"
+
+    echo "⚡ Package managers configured"
+    echo "   NPM cache: $NPM_CONFIG_PREFIX"
+    echo "   PNPM home: $PNPM_HOME"
+    echo ""
+
+    # Check for package.json
+    if [ -f "package.json" ]; then
+      echo "📦 Project detected (package.json found)"
+
+      if [ ! -d "node_modules" ]; then
+        echo "   No node_modules found. Install with:"
+        echo "   npm install    (or)    pnpm install"
+        echo ""
+      else
+        echo "   ✅ node_modules found"
+        echo ""
+      fi
+    fi
+
+    echo "🔧 Development tools:"
+    echo "   ✅ biome: Modern LSP, formatter & linter (Helix-compatible)"
+    echo "   ✅ prettier: Code formatter"
+    echo "   ✅ vitest: Fast testing framework with coverage"
+    echo "   ✅ typescript: Type checking for JS/TS"
+    echo "   ✅ vite: Fast build tool and dev server"
+    echo ""
+
+    echo "💡 Quick commands:"
+    echo "   npm init / pnpm init       # Initialize new project"
+    echo "   npm install / pnpm install # Install dependencies"
+    echo "   pnpm add <pkg>             # Add package (faster than npm)"
+    echo "   npm run <script>           # Run package.json script"
+    echo ""
+
+    echo "🧪 Testing:"
+    echo "   vitest                     # Run tests in watch mode"
+    echo "   vitest run                 # Run tests once"
+    echo "   vitest run --coverage      # Run with coverage report"
+    echo ""
+
+    echo "🎨 Code quality:"
+    echo "   biome check .              # Lint and format check (fast!)"
+    echo "   biome check --write .      # Auto-fix issues"
+    echo "   biome format .             # Format code"
+    echo "   prettier --write .         # Format with Prettier"
+    echo "   tsc --noEmit               # Type check TypeScript"
+    echo ""
+
+    echo "🚀 Development:"
+    echo "   vite                       # Start Vite dev server"
+    echo "   vite build                 # Build for production"
+    echo "   nodemon index.js           # Auto-restart on changes"
+    echo ""
+
+    echo "📦 Package management tips:"
+    echo "   - pnpm is faster and more disk-efficient than npm"
+    echo "   - Use 'pnpm install --frozen-lockfile' in CI"
+    echo "   - Biome is much faster than ESLint for linting"
+    echo "   - Vitest is compatible with Jest API but much faster"
+    echo ""
+
+    echo "🔧 Helix LSP configuration:"
+    echo "   Biome LSP is automatically available for JS/TS/JSX/TSX"
+    echo "   Add to ~/.config/helix/languages.toml:"
+    echo "   [[language]]"
+    echo "   name = \"javascript\""
+    echo "   language-servers = [\"biome\"]"
+    echo "   formatter = { command = \"biome\", args = [\"format\", \"--stdin-file-path\", \"file.js\"] }"
+    echo ""
+  '';
+}

@@ -12,4 +12,5 @@
   latex = import ./latex.nix {inherit pkgs inputs lib;};
   ansible = import ./ansible.nix {inherit pkgs inputs lib;};
   julia = import ./julia.nix {inherit pkgs inputs lib;};
+  js = import ./js.nix {inherit pkgs inputs lib;};
 }
