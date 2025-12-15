@@ -40,7 +40,7 @@
 "devshells":
   - changed-files:
       - any-glob-to-any-file:
-          - "languages/**"
+          - "modules/languages/**"
           - "base/**"
           - "default.nix"
 
@@ -48,30 +48,34 @@
   - changed-files:
       - any-glob-to-any-file:
           - "templates/rust/**"
-          - "languages/rust.nix"
+          - "modules/languages/rust.nix"
 
 "php":
   - changed-files:
       - any-glob-to-any-file:
           - "templates/php/**"
-          - "languages/php.nix"
+          - "modules/languages/php.nix"
 
 "cpp":
   - changed-files:
       - any-glob-to-any-file:
           - "templates/cpp/**"
-          - "languages/cpp.nix"
+          - "modules/languages/cpp.nix"
 
 "latex":
   - changed-files:
       - any-glob-to-any-file:
           - "templates/latex/**"
-          - "languages/latex.nix"
+          - "modules/languages/latex.nix"
 
 "python":
   - changed-files:
-      - any-glob-to-any-file: "languages/python.nix"
+      - any-glob-to-any-file: "modules/languages/python.nix"
 
 "ansible":
   - changed-files:
-      - any-glob-to-any-file: "languages/ansible.nix"
+      - any-glob-to-any-file: "modules/languages/ansible.nix"
+
+"javascript":
+  - changed-files:
+      - any-glob-to-any-file: "modules/languages/js.nix"

@@ -102,12 +102,6 @@
     echo "   npm run <script>           # Run package.json script"
     echo ""
 
-    echo "🧪 Testing (install per-project):"
-    echo "   pnpm add -D vitest @vitest/coverage-v8"
-    echo "   vitest                     # Run tests in watch mode"
-    echo "   vitest run --coverage      # Run with coverage report"
-    echo ""
-
     echo "🎨 Code quality:"
     echo "   biome check .              # Lint and format check (fast!)"
     echo "   biome check --write .      # Auto-fix issues"
@@ -127,15 +121,6 @@
     echo "   - Use 'pnpm install --frozen-lockfile' in CI"
     echo "   - Biome is much faster than ESLint for linting"
     echo "   - Install test frameworks (vitest, jest) per-project"
-    echo ""
-
-    echo "🔧 Helix LSP configuration:"
-    echo "   Biome LSP is automatically available for JS/TS/JSX/TSX"
-    echo "   Add to ~/.config/helix/languages.toml:"
-    echo "   [[language]]"
-    echo "   name = \"javascript\""
-    echo "   language-servers = [\"biome\"]"
-    echo "   formatter = { command = \"biome\", args = [\"format\", \"--stdin-file-path\", \"file.js\"] }"
     echo ""
   '';
 
