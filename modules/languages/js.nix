@@ -26,15 +26,12 @@
     # Additional formatting (Prettier for full ecosystem support)
     pkgs.nodePackages.prettier # Code formatter
 
-    # Testing framework with built-in coverage
-    pkgs.nodePackages.vitest # Fast unit test framework with coverage support
-
     # Type checking
     pkgs.nodePackages.typescript # TypeScript compiler and type checker
     pkgs.nodePackages.typescript-language-server # TypeScript language server (backup LSP)
 
     # Build and development tools
-    pkgs.nodePackages.vite # Fast build tool and dev server
+    pkgs.vite # Fast build tool and dev server (standalone package)
     pkgs.nodePackages.webpack # Module bundler (for projects that need it)
     pkgs.nodePackages.webpack-cli
 
@@ -93,7 +90,6 @@
     echo "🔧 Development tools:"
     echo "   ✅ biome: Modern LSP, formatter & linter (Helix-compatible)"
     echo "   ✅ prettier: Code formatter"
-    echo "   ✅ vitest: Fast testing framework with coverage"
     echo "   ✅ typescript: Type checking for JS/TS"
     echo "   ✅ vite: Fast build tool and dev server"
     echo ""
@@ -102,12 +98,13 @@
     echo "   npm init / pnpm init       # Initialize new project"
     echo "   npm install / pnpm install # Install dependencies"
     echo "   pnpm add <pkg>             # Add package (faster than npm)"
+    echo "   pnpm add -D vitest         # Add vitest for testing"
     echo "   npm run <script>           # Run package.json script"
     echo ""
 
-    echo "🧪 Testing:"
+    echo "🧪 Testing (install per-project):"
+    echo "   pnpm add -D vitest @vitest/coverage-v8"
     echo "   vitest                     # Run tests in watch mode"
-    echo "   vitest run                 # Run tests once"
     echo "   vitest run --coverage      # Run with coverage report"
     echo ""
 
@@ -129,7 +126,7 @@
     echo "   - pnpm is faster and more disk-efficient than npm"
     echo "   - Use 'pnpm install --frozen-lockfile' in CI"
     echo "   - Biome is much faster than ESLint for linting"
-    echo "   - Vitest is compatible with Jest API but much faster"
+    echo "   - Install test frameworks (vitest, jest) per-project"
     echo ""
 
     echo "🔧 Helix LSP configuration:"
