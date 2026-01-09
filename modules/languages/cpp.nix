@@ -31,7 +31,8 @@
     pkgs.pkg-config # Library discovery tool
 
     # Development tools
-    pkgs.clang-tools_18 # Includes clangd, clang-format, clang-tidy
+
+    pkgs.llvmPackages_18.clang-tools # Includes clangd, clang-format, clang-tidy
     pkgs.ccache # Compilation cache for faster rebuilds
     pkgs.distcc # Distributed compilation (optional)
 

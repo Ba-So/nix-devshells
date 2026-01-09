@@ -36,6 +36,20 @@
       overlay
     ]
   );
-in
+
   # Build virtual environment with all dependencies
-  pythonSet.mkVirtualEnv "mcp-server-qdrant-env" workspace.deps.default
+  venv = pythonSet.mkVirtualEnv "mcp-server-qdrant-env" workspace.deps.default;
+in
+  # Wrap the venv to isolate PYTHONPATH - prevents pollution of other Python environments
+  pkgs.runCommand "mcp-server-qdrant" {
+    nativeBuildInputs = [pkgs.makeWrapper];
+    meta = {
+      description = "MCP server for Qdrant semantic search";
+      mainProgram = "mcp-server-qdrant";
+    };
+  } ''
+    mkdir -p $out/bin
+    makeWrapper ${venv}/bin/mcp-server-qdrant $out/bin/mcp-server-qdrant \
+      --unset PYTHONPATH \
+      --unset PYTHONHOME
+  ''
