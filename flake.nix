@@ -8,7 +8,11 @@
     rust-overlay.url = "github:oxalica/rust-overlay";
     serena = {
       # pin to last-working commit, there is no release with a flake.nix yet
-      url = "github:oraios/serena?ref=dc31e4e";
+      url = "github:oraios/serena?ref=eb54e834b6da7a5e11f51c27afbcf55be92ae066";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    codanna = {
+      url = "github:ba-so/codanna";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     pyproject-nix = {
@@ -36,6 +40,7 @@
     flake-utils,
     rust-overlay,
     serena,
+    codanna,
     pyproject-nix,
     uv2nix,
     pyproject-build-systems,
@@ -62,14 +67,14 @@
         shells = import ./default.nix {
           inherit pkgs;
           _system = system;
-          inputs = {inherit nixpkgs nixpkgs-unstable rust-overlay serena;};
+          inputs = {inherit nixpkgs nixpkgs-unstable rust-overlay serena codanna;};
         };
 
         # Import lib system for module composition
         libSystem = import ./lib/default.nix {
           inherit pkgs system;
           inputs = {
-            inherit nixpkgs nixpkgs-unstable rust-overlay serena;
+            inherit nixpkgs nixpkgs-unstable rust-overlay serena codanna;
             inherit pyproject-nix uv2nix pyproject-build-systems;
           };
         };
@@ -115,7 +120,7 @@
             inherit (pkgs-with-rust) rust-bin;
           };
           cratedocs-mcp = pkgs.callPackage ./pkgs/cratedocs-mcp.nix {};
-          codanna = pkgs.callPackage ./pkgs/codanna.nix {};
+          codanna = codanna.packages.${system}.default;
           claude-task-master = pkgs-unfree.callPackage ./pkgs/claude-task-master {};
           mcp-gitlab = pkgs.callPackage ./pkgs/gitlab.nix {};
           puppeteer-mcp-server = pkgs.callPackage ./pkgs/puppeteer-mcp.nix {};
@@ -165,7 +170,7 @@
           inherit (final) rust-bin;
         };
         cratedocs-mcp = final.callPackage ./pkgs/cratedocs-mcp.nix {};
-        codanna = final.callPackage ./pkgs/codanna.nix {};
+        codanna = codanna.packages.${final.system}.default;
         claude-task-master = final.callPackage ./pkgs/claude-task-master {};
         mcp-gitlab = final.callPackage ./pkgs/gitlab.nix {};
         puppeteer-mcp-server = final.callPackage ./pkgs/puppeteer-mcp.nix {};
@@ -181,7 +186,7 @@
           pkgs = final;
           inherit (final) system;
           inputs = {
-            inherit nixpkgs nixpkgs-unstable rust-overlay serena;
+            inherit nixpkgs nixpkgs-unstable rust-overlay serena codanna;
           };
         };
       };

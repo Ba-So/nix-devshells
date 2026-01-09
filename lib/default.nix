@@ -26,7 +26,7 @@
       inherit (pkgs-with-rust) rust-bin;
     };
     serena = inputs.serena.packages.${system}.default or inputs.serena.defaultPackage.${system};
-    codanna = pkgs.callPackage ../pkgs/codanna.nix {};
+    codanna = inputs.codanna.packages.${system}.default;
     claude-task-master = pkgs-unfree.callPackage ../pkgs/claude-task-master {};
     mcp-gitlab = pkgs.callPackage ../pkgs/gitlab.nix {};
     puppeteer-mcp-server = pkgs.callPackage ../pkgs/puppeteer-mcp.nix {};
