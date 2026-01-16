@@ -29,26 +29,6 @@
       "env": {
         "TASKMASTER_DIR": ".taskmaster"
       }
-    },
-    "qdrant-docs": {
-      "type": "stdio",
-      "command": "mcp-server-qdrant",
-      "args": [],
-      "env": {
-        "QDRANT_URL": "http://localhost:6333",
-        "EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2"
-      }
-    },
-    "shrimp": {
-      "args": [],
-      "command": "mcp-shrimp-task-manager",
-      "env": {
-        "DATA_DIR": ".shrimp",
-        "ENABLE_GUI": "true",
-        "MCP_PROMPT_EXECUTE_TASK_APPEND": "Validation: Add that pre-commit hooks must pass and progress must be committed.",
-        "TEMPLATES_USE": "en"
-      },
-      "type": "stdio"
     }
   }
 }

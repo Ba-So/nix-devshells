@@ -39,3 +39,4 @@ node_modules/
 tasks.json
 tasks/
 .codannaignore
+.taskmaster/tasks
