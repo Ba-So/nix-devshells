@@ -26,7 +26,7 @@
     # PDF viewing and manipulation
     pkgs.zathura # Lightweight PDF viewer
     pkgs.evince # GNOME PDF viewer
-    pkgs.poppler_utils # PDF manipulation utilities (pdfinfo, pdftoppm, etc.)
+    pkgs.poppler-utils # PDF manipulation utilities (pdfinfo, pdftoppm, etc.)
 
     # Image conversion and manipulation (often needed for LaTeX)
     pkgs.imagemagick
