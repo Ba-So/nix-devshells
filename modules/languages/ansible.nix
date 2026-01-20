@@ -19,7 +19,6 @@
     # Ansible and related tools
     pkgs.ansible
     pkgs.ansible-lint # Best practices checker for Ansible
-    pkgs.ansible-language-server # LSP for Ansible YAML files
 
     # Python development tools (minimal set for Ansible work)
     pkgs.python312Packages.pytest # Testing framework
