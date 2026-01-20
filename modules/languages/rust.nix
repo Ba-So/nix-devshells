@@ -40,6 +40,7 @@ in {
 
     # Performance and optimization tools
     pkgs.sccache # Compilation cache for faster builds
+    pkgs.cargo-flamegraph # Generate flamegraphs from Rust code
     pkgs.cargo-machete # Find unused dependencies
     pkgs.cargo-bloat # Analyze binary size and identify bloat
     pkgs.cargo-llvm-lines # Count LLVM IR lines for compile-time analysis
@@ -103,6 +104,7 @@ in {
     echo "   cargo run               # Build and run"
     echo ""
     echo "🔧 Optimization tools:"
+    echo "   cargo flamegraph        # Generate CPU flamegraphs"
     echo "   cargo machete           # Find unused dependencies"
     echo "   cargo bloat             # Analyze binary size"
     echo "   cargo llvm-lines        # Count LLVM IR lines"
