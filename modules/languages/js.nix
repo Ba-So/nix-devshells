@@ -32,8 +32,6 @@
 
     # Build and development tools
     pkgs.vite # Fast build tool and dev server (standalone package)
-    pkgs.nodePackages.webpack # Module bundler (for projects that need it)
-    pkgs.nodePackages.webpack-cli
 
     # Code quality
     pkgs.nodePackages.eslint # Linter (for projects using ESLint config)

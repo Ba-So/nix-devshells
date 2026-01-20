@@ -72,7 +72,10 @@
     mkdir -p "$UV_CACHE_DIR"
 
     # Set up library paths for packages with C extensions
-    export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:${pkgs.openssl.out}/lib:$LD_LIBRARY_PATH"
+    # Note: OpenSSL is intentionally excluded from LD_LIBRARY_PATH to avoid breaking
+    # system binaries like curl that may be linked against a different OpenSSL version.
+    # Python packages should use rpath for OpenSSL linking at runtime.
+    export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:$LD_LIBRARY_PATH"
 
     # Configure build environment for packages that compile C extensions
     export CFLAGS="-I${pkgs.zlib.dev}/include -I${pkgs.openssl.dev}/include"
