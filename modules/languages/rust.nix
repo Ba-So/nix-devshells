@@ -42,6 +42,8 @@ in {
     pkgs.sccache # Compilation cache for faster builds
     pkgs.cargo-flamegraph # Generate flamegraphs from Rust code
     pkgs.perf
+    pkgs.binutils # Provides addr2line for flamegraph symbol resolution
+    pkgs.elfutils # Better DWARF parsing support
     pkgs.cargo-machete # Find unused dependencies
     pkgs.cargo-bloat # Analyze binary size and identify bloat
     pkgs.cargo-llvm-lines # Count LLVM IR lines for compile-time analysis
