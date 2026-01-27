@@ -55,7 +55,17 @@
           overlays = [rust-overlay.overlays.default];
         };
 
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [
+            # Fix conan build failure (test_create_pip_manager fails with Python 3.13)
+            (final: prev: {
+              conan = prev.conan.overrideAttrs (old: {
+                doCheck = false;
+              });
+            })
+          ];
+        };
 
         # Create pkgs with unfree packages allowed for specific packages
         pkgs-unfree = import nixpkgs {
