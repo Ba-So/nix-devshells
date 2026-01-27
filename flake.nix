@@ -60,8 +60,10 @@
           overlays = [
             # Fix conan build failure (test_create_pip_manager fails with Python 3.13)
             (final: prev: {
-              conan = prev.conan.overrideAttrs (old: {
-                doCheck = false;
+              conan = prev.conan.overridePythonAttrs (old: {
+                disabledTestPaths = (old.disabledTestPaths or []) ++ [
+                  "test/functional/tools/system/pip_manager_test.py"
+                ];
               });
             })
           ];

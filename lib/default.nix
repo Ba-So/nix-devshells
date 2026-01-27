@@ -11,7 +11,17 @@
   # Create pkgs with rust overlay for cargo-mcp
   pkgs-with-rust = import inputs.nixpkgs {
     inherit system;
-    overlays = [inputs.rust-overlay.overlays.default];
+    overlays = [
+      inputs.rust-overlay.overlays.default
+      # Fix conan build failure (test_create_pip_manager fails with Python 3.13)
+      (final: prev: {
+        conan = prev.conan.overridePythonAttrs (old: {
+          disabledTestPaths = (old.disabledTestPaths or []) ++ [
+            "test/functional/tools/system/pip_manager_test.py"
+          ];
+        });
+      })
+    ];
   };
 
   # Create pkgs with unfree packages allowed for claude-task-master
