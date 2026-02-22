@@ -8,11 +8,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1767988893,
-        "narHash": "sha256-TUj+2x2hFXs3oRvB2Dg7TXe4xmq1e69FXzJ2cr+KC6A=",
+        "lastModified": 1771781695,
+        "narHash": "sha256-fxyhTgCKiFehEG4H4l5sTG9EPzbcF8nuzxLqGS2cvN8=",
         "owner": "ba-so",
         "repo": "codanna",
-        "rev": "278dcc6da7e5cb536b3bdeda9ed3d01cdcd1d3ad",
+        "rev": "db7536f54cd3754a44bf54d27b22c566ece77eb9",
         "type": "github"
       },
       "original": {
