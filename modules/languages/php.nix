@@ -87,7 +87,7 @@ in {
     # Note: php-cs-fixer is best installed via composer
     # as it is marked broken or unavailable in nixpkgs
     phpEnv.packages.php-codesniffer # PHP_CodeSniffer for style checking
-    phpEnv.packages.phpstan # Static analysis tool
+    pkgs.phpstan # Static analysis tool
 
     # Development utilities
     pkgs.nodejs # For frontend asset compilation
