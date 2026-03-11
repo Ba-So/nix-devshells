@@ -61,9 +61,11 @@
             # Fix conan build failure (test_create_pip_manager fails with Python 3.13)
             (final: prev: {
               conan = prev.conan.overridePythonAttrs (old: {
-                disabledTestPaths = (old.disabledTestPaths or []) ++ [
-                  "test/functional/tools/system/pip_manager_test.py"
-                ];
+                disabledTestPaths =
+                  (old.disabledTestPaths or [])
+                  ++ [
+                    "test/functional/tools/system/pip_manager_test.py"
+                  ];
               });
             })
           ];
@@ -142,6 +144,11 @@
             inherit pyproject-nix uv2nix pyproject-build-systems;
           };
 
+          # Paper Search MCP - Academic paper search across multiple sources
+          paper-search-mcp = pkgs.callPackage ./pkgs/paper-search-mcp.nix {
+            inherit pyproject-nix uv2nix pyproject-build-systems;
+          };
+
           # Serena - MCP server for project analysis
           serena = serena.packages.${system}.default or serena.defaultPackage.${system};
 
@@ -187,6 +194,9 @@
         mcp-gitlab = final.callPackage ./pkgs/gitlab.nix {};
         puppeteer-mcp-server = final.callPackage ./pkgs/puppeteer-mcp.nix {};
         qdrant-mcp = final.callPackage ./pkgs/qdrant-mcp.nix {
+          inherit pyproject-nix uv2nix pyproject-build-systems;
+        };
+        paper-search-mcp = final.callPackage ./pkgs/paper-search-mcp.nix {
           inherit pyproject-nix uv2nix pyproject-build-systems;
         };
 

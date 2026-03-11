@@ -10,13 +10,13 @@
     category = "mcp";
   };
 
-  packages = [pkgs.uv];
+  packages = [devPkgs.paper-search-mcp];
 
   mcpConfig = {
     paper-search = {
       type = "stdio";
-      command = "uvx";
-      args = ["paper-search-mcp"];
+      command = "paper-search-mcp";
+      args = [];
       env = {
         SEMANTIC_SCHOLAR_API_KEY = "";
       };

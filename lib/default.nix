@@ -16,9 +16,11 @@
       # Fix conan build failure (test_create_pip_manager fails with Python 3.13)
       (final: prev: {
         conan = prev.conan.overridePythonAttrs (old: {
-          disabledTestPaths = (old.disabledTestPaths or []) ++ [
-            "test/functional/tools/system/pip_manager_test.py"
-          ];
+          disabledTestPaths =
+            (old.disabledTestPaths or [])
+            ++ [
+              "test/functional/tools/system/pip_manager_test.py"
+            ];
         });
       })
     ];
@@ -42,6 +44,9 @@
     puppeteer-mcp-server = pkgs.callPackage ../pkgs/puppeteer-mcp.nix {};
     cratedocs-mcp = pkgs.callPackage ../pkgs/cratedocs-mcp.nix {};
     qdrant-mcp = pkgs.callPackage ../pkgs/qdrant-mcp.nix {
+      inherit (inputs) pyproject-nix uv2nix pyproject-build-systems;
+    };
+    paper-search-mcp = pkgs.callPackage ../pkgs/paper-search-mcp.nix {
       inherit (inputs) pyproject-nix uv2nix pyproject-build-systems;
     };
 
