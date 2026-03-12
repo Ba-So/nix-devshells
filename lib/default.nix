@@ -42,6 +42,7 @@
     claude-task-master = pkgs-unfree.callPackage ../pkgs/claude-task-master {};
     mcp-gitlab = pkgs.callPackage ../pkgs/gitlab.nix {};
     puppeteer-mcp-server = pkgs.callPackage ../pkgs/puppeteer-mcp.nix {};
+    universal-screenshot-mcp = pkgs.callPackage ../pkgs/universal-screenshot-mcp.nix {};
     cratedocs-mcp = pkgs.callPackage ../pkgs/cratedocs-mcp.nix {};
     qdrant-mcp = pkgs.callPackage ../pkgs/qdrant-mcp.nix {
       inherit (inputs) pyproject-nix uv2nix pyproject-build-systems;
