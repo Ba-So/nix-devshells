@@ -168,6 +168,19 @@
       # Placeholder until mcp.nix is created
       generateMcpConfig = _: throw "mcp.nix not yet implemented (Task 2)";
     };
+
+  # Import worktree support
+  worktree =
+    if builtins.pathExists ./worktree.nix
+    then
+      import ./worktree.nix
+      {
+        inherit pkgs lib system;
+      }
+    else {
+      # Placeholder
+      generateSubtreeFlakeContent = _: throw "worktree.nix not yet implemented";
+    };
 in {
   # Public API exports
   inherit modules;
@@ -176,7 +189,10 @@ in {
   inherit (compose) composeShell composeShellFromModules;
 
   # MCP configuration
-  inherit (mcp) generateMcpConfig;
+  inherit (mcp) generateMcpConfig generateMcpConfigFiltered generateWorktreeMcpConfigs;
+
+  # Worktree support
+  inherit (worktree) generateSubtreeFlakeContent worktreeShellHook subtreeShellHook worktreeScripts mkWorktreeScripts;
 
   # Utility functions (exposed for advanced usage)
   inherit utils validate;

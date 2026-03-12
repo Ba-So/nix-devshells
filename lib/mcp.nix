@@ -4,15 +4,25 @@
   pkgs,
   lib,
   filterByCategory,
-}: {
+}: rec {
   # Generate MCP configuration from modules
   # Returns a derivation containing the mcp.json file
-  generateMcpConfig = modules: let
+  generateMcpConfig = modules: generateMcpConfigFiltered modules [];
+
+  # Generate MCP configuration excluding specific servers by name
+  # excludeNames is a list of module names to exclude (e.g., ["claude-task-master"])
+  generateMcpConfigFiltered = modules: excludeNames: let
     # Filter to only MCP modules
     mcpModules = filterByCategory "mcp" modules;
 
+    # Filter out excluded modules by name
+    filteredModules =
+      builtins.filter
+      (m: !(builtins.elem (m.meta.name or "") excludeNames))
+      mcpModules;
+
     # Extract mcpConfig from each module
-    configs = map (m: m.mcpConfig or {}) mcpModules;
+    configs = map (m: m.mcpConfig or {}) filteredModules;
 
     # Merge all configs (later configs override earlier ones)
     mergedConfig = lib.foldl (a: b: a // b) {} configs;
@@ -22,6 +32,13 @@
   in
     # Write to a file in the Nix store
     pkgs.writeText "mcp.json" jsonContent;
+
+  # Generate MCP configs for worktree setup
+  # Returns attrset with orchestrator (all MCPs) and shared (without task-master)
+  generateWorktreeMcpConfigs = modules: {
+    orchestrator = generateMcpConfig modules;
+    shared = generateMcpConfigFiltered modules ["claude-task-master"];
+  };
 
   # Generate shellHook snippet for MCP config setup
   # Includes smart merging to preserve user customizations

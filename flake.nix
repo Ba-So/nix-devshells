@@ -181,6 +181,10 @@
           path = ./templates/cpp;
           description = "C++ project template with CMake and complete package definition";
         };
+        worktree = {
+          path = ./templates/worktree;
+          description = "Multi-agent worktree project with orchestrator and worker support";
+        };
       };
 
       # Overlay for easy integration into other configurations
