@@ -138,6 +138,7 @@
           claude-task-master = pkgs-unfree.callPackage ./pkgs/claude-task-master {};
           mcp-gitlab = pkgs.callPackage ./pkgs/gitlab.nix {};
           puppeteer-mcp-server = pkgs.callPackage ./pkgs/puppeteer-mcp.nix {};
+          universal-screenshot-mcp = pkgs.callPackage ./pkgs/universal-screenshot-mcp.nix {};
 
           # Qdrant MCP - MCP server for semantic documentation search
           qdrant-mcp = pkgs.callPackage ./pkgs/qdrant-mcp.nix {
@@ -197,6 +198,7 @@
         claude-task-master = final.callPackage ./pkgs/claude-task-master {};
         mcp-gitlab = final.callPackage ./pkgs/gitlab.nix {};
         puppeteer-mcp-server = final.callPackage ./pkgs/puppeteer-mcp.nix {};
+        universal-screenshot-mcp = final.callPackage ./pkgs/universal-screenshot-mcp.nix {};
         qdrant-mcp = final.callPackage ./pkgs/qdrant-mcp.nix {
           inherit pyproject-nix uv2nix pyproject-build-systems;
         };

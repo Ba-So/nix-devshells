@@ -15,5 +15,7 @@
 
   puppeteer-mcp-server = pkgs.callPackage ./puppeteer-mcp.nix {};
 
+  universal-screenshot-mcp = pkgs.callPackage ./universal-screenshot-mcp.nix {};
+
   claude-task-master = pkgs.callPackage ./claude-task-master {};
 }
