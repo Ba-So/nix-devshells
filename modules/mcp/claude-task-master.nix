@@ -43,8 +43,10 @@
         # Config exists - check if it needs patching
         local needs_patch=false
 
-        # Check for claudeCode.pathToClaudeCodeExecutable
-        if ! ${pkgs.jq}/bin/jq -e '.claudeCode.pathToClaudeCodeExecutable' "$config_file" &>/dev/null; then
+        # Check for claudeCode.pathToClaudeCodeExecutable matching current path
+        local current_path
+        current_path=$(${pkgs.jq}/bin/jq -r '.claudeCode.pathToClaudeCodeExecutable // ""' "$config_file" 2>/dev/null)
+        if [ "$current_path" != "$claude_path" ]; then
           needs_patch=true
         fi
 
@@ -61,6 +63,21 @@
               "main": {"provider": "claude-code", "modelId": "sonnet", "maxTokens": 64000, "temperature": 0.2},
               "research": {"provider": "claude-code", "modelId": "opus", "maxTokens": 32000, "temperature": 0.1},
               "fallback": {"provider": "claude-code", "modelId": "sonnet", "maxTokens": 64000, "temperature": 0.2}
+            } |
+            .global = (.global // {}) * {
+              "logLevel": "info",
+              "debug": false,
+              "defaultNumTasks": 10,
+              "defaultSubtasks": 5,
+              "defaultPriority": "medium",
+              "projectName": (.global.projectName // "Task Master"),
+              "ollamaBaseURL": "http://localhost:11434/api",
+              "bedrockBaseURL": "https://bedrock.us-east-1.amazonaws.com",
+              "responseLanguage": "English",
+              "enableCodebaseAnalysis": true,
+              "enableProxy": false,
+              "anonymousTelemetry": true,
+              "userId": (.global.userId // "")
             } |
             .claudeCode.pathToClaudeCodeExecutable = $path
           ' "$config_file" > "$tmp" && \
@@ -86,6 +103,21 @@
               "main": {"provider": "claude-code", "modelId": "sonnet", "maxTokens": 64000, "temperature": 0.2},
               "research": {"provider": "claude-code", "modelId": "opus", "maxTokens": 32000, "temperature": 0.1},
               "fallback": {"provider": "claude-code", "modelId": "sonnet", "maxTokens": 64000, "temperature": 0.2}
+            } |
+            .global = (.global // {}) * {
+              "logLevel": "info",
+              "debug": false,
+              "defaultNumTasks": 10,
+              "defaultSubtasks": 5,
+              "defaultPriority": "medium",
+              "projectName": (.global.projectName // "Task Master"),
+              "ollamaBaseURL": "http://localhost:11434/api",
+              "bedrockBaseURL": "https://bedrock.us-east-1.amazonaws.com",
+              "responseLanguage": "English",
+              "enableCodebaseAnalysis": true,
+              "enableProxy": false,
+              "anonymousTelemetry": true,
+              "userId": (.global.userId // "")
             } |
             .claudeCode.pathToClaudeCodeExecutable = $path
           ' "$config_file" > "$tmp" && mv "$tmp" "$config_file"
