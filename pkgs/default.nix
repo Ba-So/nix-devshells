@@ -17,5 +17,7 @@
 
   universal-screenshot-mcp = pkgs.callPackage ./universal-screenshot-mcp.nix {};
 
+  computer-use-mcp = pkgs.callPackage ./computer-use-mcp.nix {};
+
   claude-task-master = pkgs.callPackage ./claude-task-master {};
 }

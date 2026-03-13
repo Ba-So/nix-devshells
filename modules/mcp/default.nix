@@ -12,6 +12,7 @@
   gitlab = import ./gitlab.nix {inherit pkgs lib devPkgs;};
   puppeteer = import ./puppeteer.nix {inherit pkgs lib devPkgs;};
   universal-screenshot = import ./universal-screenshot.nix {inherit pkgs lib devPkgs;};
+  computer-use = import ./computer-use.nix {inherit pkgs lib devPkgs;};
   cratedocs = import ./cratedocs.nix {inherit pkgs lib devPkgs;};
   qdrant = import ./qdrant.nix {inherit pkgs lib devPkgs;};
   paper-search = import ./paper-search.nix {inherit pkgs lib devPkgs;};

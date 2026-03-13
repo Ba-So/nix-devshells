@@ -59,7 +59,7 @@
           inherit system;
           overlays = [
             # Fix conan build failure (test_create_pip_manager fails with Python 3.13)
-            (final: prev: {
+            (_: prev: {
               conan = prev.conan.overridePythonAttrs (old: {
                 disabledTestPaths =
                   (old.disabledTestPaths or [])
@@ -139,6 +139,7 @@
           mcp-gitlab = pkgs.callPackage ./pkgs/gitlab.nix {};
           puppeteer-mcp-server = pkgs.callPackage ./pkgs/puppeteer-mcp.nix {};
           universal-screenshot-mcp = pkgs.callPackage ./pkgs/universal-screenshot-mcp.nix {};
+          computer-use-mcp = pkgs.callPackage ./pkgs/computer-use-mcp.nix {};
 
           # Qdrant MCP - MCP server for semantic documentation search
           qdrant-mcp = pkgs.callPackage ./pkgs/qdrant-mcp.nix {
@@ -199,6 +200,7 @@
         mcp-gitlab = final.callPackage ./pkgs/gitlab.nix {};
         puppeteer-mcp-server = final.callPackage ./pkgs/puppeteer-mcp.nix {};
         universal-screenshot-mcp = final.callPackage ./pkgs/universal-screenshot-mcp.nix {};
+        computer-use-mcp = final.callPackage ./pkgs/computer-use-mcp.nix {};
         qdrant-mcp = final.callPackage ./pkgs/qdrant-mcp.nix {
           inherit pyproject-nix uv2nix pyproject-build-systems;
         };
