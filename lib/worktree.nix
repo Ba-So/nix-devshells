@@ -1,12 +1,25 @@
 # Worktree mode support
 # Generates subtree flakes and helper commands for multi-agent workflows
+#
+# Design: Sibling worktree pattern
+# ================================
+# The main repo contains the orchestrator, and worktrees are created as siblings:
+#
+#   myproject/                  # Main git repo + orchestrator
+#   ├── .shared/                # Shared config for sibling worktrees
+#   ├── .orchestrator/          # Orchestrator MCP config
+#   └── <source code>
+#
+#   ../myproject-feature-x/     # Sibling worktree (not nested)
+#   ../myproject-feature-y/     # Another sibling worktree
+#
 {
   pkgs,
   lib,
   system,
 }: rec {
   # Generate the content of a subtree flake.nix file
-  # This flake will be used by child worktrees
+  # This flake will be used by sibling worktrees
   generateSubtreeFlakeContent = {
     languages,
     mcps,
@@ -42,6 +55,7 @@
   '';
 
   # Generate shared CLAUDE.md content for worker agents
+  # projectName is the name of the main project directory (for path hints)
   generateSharedClaudeMd = ''
     # Worker Agent Instructions
 
@@ -49,9 +63,10 @@
 
     ## Environment
 
-    - This worktree uses a shared codanna index at `../../.shared/.codanna/`
-    - Task coordination is handled by the orchestrator agent
-    - MCP servers are available but task-master is only available to the orchestrator
+    - You are in a **sibling worktree** of the main project
+    - The main project is at `../<project-name>/`
+    - Shared codanna index is at `../<project-name>/.shared/.codanna/`
+    - Task coordination is handled by the orchestrator agent in the main project
 
     ## Workflow
 
@@ -67,33 +82,38 @@
   '';
 
   # Generate orchestrator CLAUDE.md content
-  generateOrchestratorClaudeMd = mainDir: ''
+  generateOrchestratorClaudeMd = ''
     # Orchestrator Agent Instructions
 
     You are the orchestrator agent in a multi-agent worktree workflow.
 
-    ## Project Structure
+    ## Project Structure (Sibling Worktrees)
 
     ```
-    ./                      # You are here (project root)
-    ├── ${mainDir}/         # Main git checkout (source code lives here)
-    ├── worktrees/          # All worker worktrees
-    │   ├── feature-x/
-    │   └── feature-y/
-    ├── .shared/            # Shared config for worker agents
-    └── .orchestrator/      # Your MCP config
+    ./                          # You are here (main git repo + orchestrator)
+    ├── .shared/                # Shared config for worker agents
+    │   ├── flake.nix           # Worker shell definition
+    │   ├── .mcp.json           # Worker MCP config (no task-master)
+    │   ├── .codanna/           # Shared code index
+    │   └── CLAUDE.md           # Worker instructions
+    ├── .orchestrator/          # Your MCP config
+    │   └── .mcp.json           # Full MCP (with task-master)
+    └── <source code>           # Your actual code
+
+    ../<project>-feature-x/     # Sibling worktree (worker)
+    ../<project>-feature-y/     # Another sibling worktree
     ```
 
     ## Your Responsibilities
 
     1. **Task Management**: Use task-master MCP to create, assign, and track tasks
-    2. **Code Navigation**: Use codanna to understand the codebase (indexes ${mainDir}/)
+    2. **Code Navigation**: Use codanna to understand the codebase
     3. **Worktree Management**: Create worktrees for parallel work streams
     4. **Coordination**: Monitor worker progress and merge completed work
 
     ## Available Commands
 
-    - `worktree-new <branch>` - Create a new worktree for a feature/fix
+    - `worktree-new <branch>` - Create a new sibling worktree
     - `worktree-status` - Show all worktrees and shared resources
     - `worktree-remove <branch>` - Remove a completed worktree
 
@@ -106,33 +126,28 @@
 
     ### Monitoring Progress
     - Check task status via task-master
-    - Review commits in worktrees: `cd <worktree> && git log`
+    - Review commits in worktrees: `cd ../<project>-feature-x && git log`
     - Use codanna to understand code changes
 
     ### Completing Work
     1. Review worker's commits
-    2. Merge the branch: `cd ${mainDir} && git merge feature-x`
+    2. Merge the branch: `git merge feature-x`
     3. Remove the worktree: `worktree-remove feature-x`
     4. Mark task as complete
-
-    ## Code Location
-
-    **Important**: The actual source code is in `${mainDir}/`, not the project root.
-    When reading/editing code, always use paths like `${mainDir}/src/...`.
 
     ## MCP Servers
 
     You have access to:
     - **task-master**: Task management and coordination
-    - **codanna**: Code intelligence (indexes ${mainDir}/)
+    - **codanna**: Code intelligence (indexes this directory)
     - Other configured MCPs (serena, etc.)
 
     Workers do NOT have task-master access - only you coordinate tasks.
   '';
 
   # Create worktree helper scripts as actual executables
-  # mainDir specifies the subdirectory containing the main git checkout
-  mkWorktreeScripts = {mainDir ? "main"}:
+  # Uses sibling worktree pattern: worktrees are created as siblings of the main repo
+  mkWorktreeScripts = {}:
     pkgs.stdenvNoCC.mkDerivation {
       name = "worktree-scripts";
       dontUnpack = true;
@@ -146,35 +161,32 @@
         #!/usr/bin/env bash
         set -euo pipefail
 
-        # Main git directory (configured at shell creation time)
-        MAIN_DIR="${mainDir}"
-
         branch="''${1:-}"
         if [ -z "$branch" ]; then
           echo "Usage: worktree-new <branch-name>"
-          echo "Creates a new git worktree with proper symlinks to shared config"
+          echo "Creates a new git worktree as a sibling directory"
           echo ""
-          echo "Worktrees are created in the 'worktrees/' directory."
+          echo "Example: worktree-new feature-auth"
+          echo "  Creates: ../<project>-feature-auth/"
           exit 1
         fi
 
         # Check we're in the project root (where .shared/ lives)
         if [ ! -d ".shared" ]; then
           echo "Error: .shared/ directory not found."
-          echo "Run this command from the project root (where flake.nix is)."
+          echo "Run this command from the project root (orchestrator directory)."
           exit 1
         fi
 
-        # Check main git directory exists
-        if [ ! -d "$MAIN_DIR/.git" ] && [ ! -f "$MAIN_DIR/.git" ]; then
-          echo "Error: $MAIN_DIR/ is not a git repository."
-          echo "Expected main git checkout at: $MAIN_DIR/"
+        # Check this is a git repository
+        if [ ! -d ".git" ]; then
+          echo "Error: Current directory is not a git repository."
           exit 1
         fi
 
-        # Ensure worktrees directory exists
-        mkdir -p ./worktrees
-        worktree_path="./worktrees/$branch"
+        # Get project name from current directory
+        project_name=$(basename "$(pwd)")
+        worktree_path="../''${project_name}-''${branch}"
 
         # Check if worktree already exists
         if [ -d "$worktree_path" ]; then
@@ -182,35 +194,33 @@
           exit 1
         fi
 
-        # Create the git worktree (run from main dir)
+        # Create the git worktree as a sibling
         echo "Creating git worktree for branch '$branch'..."
-        cd "$MAIN_DIR"
-        if git worktree add "../worktrees/$branch" -b "$branch" 2>/dev/null || git worktree add "../worktrees/$branch" "$branch"; then
+        if git worktree add "$worktree_path" -b "$branch" 2>/dev/null || git worktree add "$worktree_path" "$branch"; then
           echo "  Created worktree at $worktree_path"
         else
           echo "Error: Failed to create worktree"
           exit 1
         fi
-        cd ..
 
-        # Create .envrc in worktree
-        cat > "$worktree_path/.envrc" << 'ENVRC_EOF'
+        # Create .envrc in worktree pointing back to .shared
+        cat > "$worktree_path/.envrc" << ENVRC_EOF
         # Use the shared subtree flake for worker agents
-        use flake ../../.shared --impure
+        use flake ../$project_name/.shared --impure
         ENVRC_EOF
         echo "  Created $worktree_path/.envrc"
 
         # Create symlinks to shared config
-        ln -sf ../../.shared/.mcp.json "$worktree_path/.mcp.json"
-        echo "  Linked .mcp.json -> ../../.shared/.mcp.json"
+        ln -sf "../$project_name/.shared/.mcp.json" "$worktree_path/.mcp.json"
+        echo "  Linked .mcp.json -> ../$project_name/.shared/.mcp.json"
 
-        ln -sf ../../.shared/CLAUDE.md "$worktree_path/CLAUDE.md"
-        echo "  Linked CLAUDE.md -> ../../.shared/CLAUDE.md"
+        ln -sf "../$project_name/.shared/CLAUDE.md" "$worktree_path/CLAUDE.md"
+        echo "  Linked CLAUDE.md -> ../$project_name/.shared/CLAUDE.md"
 
         echo ""
         echo "Worktree '$branch' created successfully!"
         echo "  Path: $worktree_path"
-        echo "  Shell: use flake ../../.shared --impure"
+        echo "  Shell: use flake ../$project_name/.shared --impure"
 
         # Auto-allow direnv if available
         if command -v direnv &> /dev/null; then
@@ -230,18 +240,17 @@
         #!/usr/bin/env bash
         set -euo pipefail
 
-        # Main git directory (configured at shell creation time)
-        MAIN_DIR="${mainDir}"
+        project_name=$(basename "$(pwd)")
 
-        echo "=== Project Structure ==="
-        echo "  Main git checkout: $MAIN_DIR/"
+        echo "=== Project: $project_name ==="
+        echo "  Location: $(pwd)"
         echo ""
 
         echo "=== Git Worktrees ==="
-        if [ -d "$MAIN_DIR/.git" ] || [ -f "$MAIN_DIR/.git" ]; then
-          (cd "$MAIN_DIR" && git worktree list)
+        if [ -d ".git" ]; then
+          git worktree list
         else
-          echo "  Error: $MAIN_DIR/ is not a git repository"
+          echo "  Error: Current directory is not a git repository"
         fi
         echo ""
 
@@ -281,63 +290,67 @@
         #!/usr/bin/env bash
         set -euo pipefail
 
-        # Main git directory (configured at shell creation time)
-        MAIN_DIR="${mainDir}"
-
         branch="''${1:-}"
         if [ -z "$branch" ]; then
           echo "Usage: worktree-remove <branch-name>"
-          echo "Removes a git worktree from the worktrees/ directory"
+          echo "Removes a sibling git worktree"
           exit 1
         fi
 
-        worktree_path="./worktrees/$branch"
+        project_name=$(basename "$(pwd)")
+        worktree_path="../''${project_name}-''${branch}"
 
         if [ ! -d "$worktree_path" ]; then
           echo "Error: Worktree directory $worktree_path does not exist"
           exit 1
         fi
 
-        # Run git worktree remove from main dir
+        # Run git worktree remove
         echo "Removing git worktree '$branch'..."
-        (cd "$MAIN_DIR" && git worktree remove "../worktrees/$branch" --force)
+        git worktree remove "$worktree_path" --force
         echo "  Removed worktree at $worktree_path"
 
         # Optionally remove the branch
         read -p "Also delete branch '$branch'? [y/N] " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-          (cd "$MAIN_DIR" && git branch -D "$branch" 2>/dev/null) && echo "  Deleted branch '$branch'" || echo "  Could not delete branch (may not exist or be checked out elsewhere)"
+          git branch -D "$branch" 2>/dev/null && echo "  Deleted branch '$branch'" || echo "  Could not delete branch (may not exist or be checked out elsewhere)"
         fi
         SCRIPT_EOF
               chmod +x $out/bin/worktree-remove
       '';
     };
 
-  # Default worktree scripts (mainDir = "main")
+  # Default worktree scripts
   worktreeScripts = mkWorktreeScripts {};
 
   # Shell hook for worktree mode (orchestrator)
   # Sets up directories and generates config files
+  # Uses sibling worktree pattern - main repo is the orchestrator, worktrees are siblings
   worktreeShellHook = {
     mcpConfigOrchestrator,
     mcpConfigShared,
     languages,
     mcps,
     tools,
-    mainDir ? "main",
     devshellsUrl ? "github:Ba-So/nix-devshells",
   }: let
     subtreeFlakeContent = generateSubtreeFlakeContent {
       inherit languages mcps tools devshellsUrl;
     };
     sharedClaudeMd = generateSharedClaudeMd;
-    orchestratorClaudeMd = generateOrchestratorClaudeMd mainDir;
+    orchestratorClaudeMd = generateOrchestratorClaudeMd;
   in ''
-    # Worktree mode setup
+    # Worktree mode setup (sibling pattern)
     _setup_worktree_mode() {
       local project_root
       project_root="$(pwd)"
+
+      # Verify this is a git repository
+      if [ ! -d ".git" ]; then
+        echo "  Warning: Not a git repository. Worktree commands won't work."
+        echo "  Initialize git first: git init"
+      fi
 
       # Create .shared directory
       if [ ! -d ".shared" ]; then
@@ -370,21 +383,25 @@
       # Copy orchestrator MCP config (with task-master)
       cp ${mcpConfigOrchestrator} .orchestrator/.mcp.json
 
-      # Update codanna in orchestrator config to index mainDir
+      # Update codanna in orchestrator config to index current directory (.)
       if ${pkgs.jq}/bin/jq -e '.mcpServers.codanna' .orchestrator/.mcp.json &>/dev/null; then
-        ${pkgs.jq}/bin/jq --arg mainDir "${mainDir}" '
-          .mcpServers.codanna.args = ["serve", $mainDir, "--watch", "--watch-interval", "5"]
+        ${pkgs.jq}/bin/jq '
+          .mcpServers.codanna.args = ["serve", ".", "--watch", "--watch-interval", "5"]
         ' .orchestrator/.mcp.json > .orchestrator/.mcp.json.tmp && \
         mv .orchestrator/.mcp.json.tmp .orchestrator/.mcp.json
-        echo "  Configured codanna to index ${mainDir}/"
+        echo "  Configured codanna to index current directory"
       fi
       echo "  Generated .orchestrator/.mcp.json (with task-master)"
 
-      # Generate orchestrator CLAUDE.md at root
-      cat > CLAUDE.md << 'ORCHESTRATOR_CLAUDE_EOF'
+      # Generate orchestrator CLAUDE.md at root (only if not exists or is a generated file)
+      if [ ! -f "CLAUDE.md" ] || grep -q "Orchestrator Agent Instructions" CLAUDE.md 2>/dev/null; then
+        cat > CLAUDE.md << 'ORCHESTRATOR_CLAUDE_EOF'
     ${orchestratorClaudeMd}
     ORCHESTRATOR_CLAUDE_EOF
-      echo "  Generated CLAUDE.md (orchestrator instructions)"
+        echo "  Generated CLAUDE.md (orchestrator instructions)"
+      else
+        echo "  Keeping existing CLAUDE.md (not overwriting user content)"
+      fi
 
       # Create symlink from root to orchestrator config
       if [ ! -L ".mcp.json" ] && [ ! -f ".mcp.json" ]; then
@@ -409,7 +426,7 @@
       # Set CODANNA_INDEX_DIR for shared index
       export CODANNA_INDEX_DIR="$project_root/.shared/.codanna"
 
-      echo "  Worktree mode configured"
+      echo "  Worktree mode configured (sibling pattern)"
       echo "  CODANNA_INDEX_DIR=$CODANNA_INDEX_DIR"
     }
 
@@ -420,24 +437,32 @@
 
   # Shell hook for subtree mode (worker agents)
   # Minimal setup - just sets CODANNA_INDEX_DIR
+  # Sibling pattern: worktree is at ../<project>-<branch>/, main project is at ../<project>/
   subtreeShellHook = ''
-    # Subtree mode setup (worker agent)
+    # Subtree mode setup (worker agent in sibling worktree)
     _setup_subtree_mode() {
       local project_root
       project_root="$(pwd)"
 
-      # Set CODANNA_INDEX_DIR to shared index (grandparent's .shared/.codanna)
-      # Worktrees are now at ./worktrees/<branch>/, so .shared is at ../../.shared/
-      if [ -d "../../.shared/.codanna" ]; then
-        export CODANNA_INDEX_DIR="$(cd ../.. && pwd)/.shared/.codanna"
-        echo "  Using shared codanna index: $CODANNA_INDEX_DIR"
-      elif [ -d "../.shared/.codanna" ]; then
-        # Fallback for legacy worktrees at project root
-        export CODANNA_INDEX_DIR="$(cd .. && pwd)/.shared/.codanna"
+      # Find the main project's .shared directory
+      # In sibling pattern, we're at ../<project>-<branch>/, main is at ../<project>/
+      # The .envrc points to ../<project>/.shared, so we can find it from the flake path
+
+      # Try to find .shared in sibling directories
+      local found_shared=""
+      for sibling in ../*; do
+        if [ -d "$sibling/.shared/.codanna" ]; then
+          found_shared="$(cd "$sibling/.shared/.codanna" && pwd)"
+          break
+        fi
+      done
+
+      if [ -n "$found_shared" ]; then
+        export CODANNA_INDEX_DIR="$found_shared"
         echo "  Using shared codanna index: $CODANNA_INDEX_DIR"
       else
-        echo "  Warning: Shared codanna index not found"
-        echo "  Run 'direnv allow' in the orchestrator directory first"
+        echo "  Warning: Shared codanna index not found in sibling directories"
+        echo "  Run 'direnv allow' in the main project directory first"
       fi
     }
 
@@ -445,20 +470,22 @@
   '';
 
   # Create a filtered source for worktree flakes
-  # Excludes mainDir, worktrees/, and generated directories to avoid
-  # copying large build artifacts to the nix store during flake evaluation
+  # Excludes generated directories to avoid copying them to the nix store
+  # With sibling pattern, there's no nested mainDir to filter
   mkWorktreeSource = {
     src,
-    mainDir ? "main",
     extraExcludes ? [],
   }: let
     excludedNames =
       [
-        mainDir # Main git checkout (contains build artifacts)
-        "worktrees" # All worktrees
         ".shared" # Generated by worktree mode
         ".orchestrator" # Generated by worktree mode
         ".direnv" # direnv cache
+        "target" # Common build directory (Rust, etc.)
+        "node_modules" # Node.js dependencies
+        "__pycache__" # Python cache
+        ".mypy_cache" # Mypy cache
+        ".pytest_cache" # Pytest cache
       ]
       ++ extraExcludes;
   in

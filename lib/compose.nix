@@ -64,7 +64,6 @@ in rec {
     extraPackages ? [],
     extraShellHook ? "",
     devshellsUrl ? "github:Ba-So/nix-devshells",
-    mainDir ? "main", # For worktree mode: subdirectory containing the main git checkout
     ...
   }: let
     # Resolve language modules
@@ -97,7 +96,7 @@ in rec {
       if type == "worktree"
       then
         composeWorktreeShell {
-          inherit allModules languages mcps tools devshellsUrl mainDir;
+          inherit allModules languages mcps tools devshellsUrl;
         }
       else if type == "subtree"
       then composeSubtreeShell allModules
@@ -111,19 +110,19 @@ in rec {
 
   # Compose shell for worktree mode (orchestrator)
   # Sets up .shared/ and .orchestrator/ directories, generates subtree flake
+  # Uses sibling worktree pattern - main repo is orchestrator, worktrees are siblings
   composeWorktreeShell = {
     allModules,
     languages,
     mcps,
     tools,
     devshellsUrl,
-    mainDir,
   }: let
     # Validate all modules
     validatedModules = validateModules allModules;
 
-    # Create worktree scripts with configured mainDir
-    worktreeScriptsConfigured = worktreeLib.mkWorktreeScripts {inherit mainDir;};
+    # Create worktree scripts
+    worktreeScriptsConfigured = worktreeLib.mkWorktreeScripts {};
 
     # Collect packages from all modules (plus worktree scripts)
     allPackages = flattenPackages validatedModules ++ [worktreeScriptsConfigured];
@@ -141,7 +140,7 @@ in rec {
     worktreeHook = worktreeLib.worktreeShellHook {
       mcpConfigOrchestrator = mcpConfigs.orchestrator;
       mcpConfigShared = mcpConfigs.shared;
-      inherit languages mcps devshellsUrl mainDir;
+      inherit languages mcps devshellsUrl;
       tools = toolsToString tools;
     };
 
