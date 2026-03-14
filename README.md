@@ -118,7 +118,9 @@ devshells.lib.${system}.composeShellFromModules [
 ]
 ```
 
-## Multi-Agent Worktree Workflow
+## Git Worktree Workflow
+
+This flake adds some quality of life commands for git-worktree management.
 
 The worktree workflow enables parallel AI agent development with shared resources. An orchestrator agent coordinates work across multiple worker agents, each in their own git worktree.
 
