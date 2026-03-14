@@ -15,7 +15,11 @@
     flake-utils,
     devshells,
     ...
-  }:
+  }: let
+    # Subdirectory containing the main git checkout
+    # Worktrees will be created in ./worktrees/<branch>/
+    mainDir = "main";
+  in
     flake-utils.lib.eachDefaultSystem (system: {
       # Main development environment - ORCHESTRATOR shell
       # This shell sets up:
@@ -27,9 +31,7 @@
       devShells.default = devshells.lib.${system}.composeShell {
         type = "worktree"; # Enable multi-agent worktree mode
 
-        # Subdirectory containing the main git checkout
-        # Worktrees will be created as siblings to this directory
-        mainDir = "main"; # or "dev", "repo", etc.
+        inherit mainDir;
 
         # Languages available in all worktrees
         languages = ["rust"];
@@ -53,6 +55,18 @@
       #   languages = ["rust"];
       #   mcps = ["codanna" "claude-task-master"];
       #   tools = "minimal";
+      # };
+
+      # If you need filtered source for other derivations (e.g., building your project),
+      # use mkWorktreeSource to exclude mainDir and worktrees from the nix store:
+      #
+      # packages.default = pkgs.stdenv.mkDerivation {
+      #   src = devshells.lib.${system}.mkWorktreeSource {
+      #     src = ./.;
+      #     inherit mainDir;
+      #     # extraExcludes = [ "other-large-dir" ];
+      #   };
+      #   # ...
       # };
     });
 }

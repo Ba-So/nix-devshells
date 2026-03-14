@@ -21,12 +21,26 @@ project/                            # Orchestrator container
 │   └── CLAUDE.md                   # Shared agent instructions
 ├── main/                           # Main git checkout (configured via mainDir)
 │   └── ...                         # Your actual code
-└── feature-x/                      # Worktree (sibling to main)
-    ├── .envrc                      # use flake ../.shared --impure
-    ├── .mcp.json → ../.shared/.mcp.json
-    ├── CLAUDE.md → ../.shared/CLAUDE.md
-    └── ...                         # Working copy
+└── worktrees/                      # All worker worktrees
+    └── feature-x/                  # Worktree directory
+        ├── .envrc                  # use flake ../../.shared --impure
+        ├── .mcp.json → ../../.shared/.mcp.json
+        ├── CLAUDE.md → ../../.shared/CLAUDE.md
+        └── ...                     # Working copy
 ```
+
+## Source Filtering
+
+When the project container is not a git repository, Nix would normally copy the entire directory to the store during flake evaluation. This includes potentially large build artifacts in `main/target/` or similar.
+
+The template uses `mkWorktreeSource` to filter out:
+
+- `main/` (or your configured `mainDir`) - the main git checkout
+- `worktrees/` - all worker worktrees
+- `.shared/` and `.orchestrator/` - generated directories
+- `.direnv/` - direnv cache
+
+This ensures fast flake evaluation even with large build artifacts present.
 
 ## Initial Setup
 
@@ -66,16 +80,16 @@ From the project root (where flake.nix is):
 worktree-new feature-auth
 
 # This creates:
-#   ./feature-auth/
-#   ./feature-auth/.envrc (use flake ../.shared --impure)
-#   ./feature-auth/.mcp.json → ../.shared/.mcp.json
-#   ./feature-auth/CLAUDE.md → ../.shared/CLAUDE.md
+#   ./worktrees/feature-auth/
+#   ./worktrees/feature-auth/.envrc (use flake ../../.shared --impure)
+#   ./worktrees/feature-auth/.mcp.json → ../../.shared/.mcp.json
+#   ./worktrees/feature-auth/CLAUDE.md → ../../.shared/CLAUDE.md
 ```
 
 ### Activate Worker Environment
 
 ```bash
-cd feature-auth
+cd worktrees/feature-auth
 direnv allow
 
 # Worker shell activates with:
@@ -105,12 +119,14 @@ worktree-remove feature-auth
 ## Agent Roles
 
 ### Orchestrator (project root)
+
 - Has access to `claude-task-master` MCP
 - Manages task coordination
 - Creates/removes worktrees
 - Full project oversight
 
 ### Workers (worktree directories)
+
 - Work in isolated worktrees
 - Share codanna index for code navigation
 - No access to task-master (prevents conflicts)
@@ -120,13 +136,14 @@ worktree-remove feature-auth
 
 Edit `flake.nix` to customize:
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `mainDir` | `"main"` | Subdirectory containing the main git checkout |
-| `languages` | `[]` | Programming languages to include |
-| `mcps` | `[]` | MCP servers (workers get these minus task-master) |
-| `tools` | `"standard"` | Tool preset ("minimal", "standard", "full") |
-| `devshellsUrl` | GitHub | Pin to specific devshells version |
+| Parameter       | Default      | Description                                       |
+| --------------- | ------------ | ------------------------------------------------- |
+| `mainDir`       | `"main"`     | Subdirectory containing the main git checkout     |
+| `languages`     | `[]`         | Programming languages to include                  |
+| `mcps`          | `[]`         | MCP servers (workers get these minus task-master) |
+| `tools`         | `"standard"` | Tool preset ("minimal", "standard", "full")       |
+| `devshellsUrl`  | GitHub       | Pin to specific devshells version                 |
+| `extraExcludes` | `[]`         | Additional directories to filter from source      |
 
 ## Example Configuration
 
@@ -138,4 +155,17 @@ devShells.default = devshells.lib.${system}.composeShell {
   mcps = ["codanna" "serena" "claude-task-master"];
   tools = "standard";
 };
+```
+
+## Custom Source Filtering
+
+If you have additional large directories to exclude:
+
+```nix
+filteredSource = system:
+  devshells.lib.${system}.mkWorktreeSource {
+    src = ./.;
+    inherit mainDir;
+    extraExcludes = [ "data" "models" "node_modules" ];
+  };
 ```

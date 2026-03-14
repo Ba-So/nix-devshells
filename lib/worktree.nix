@@ -49,7 +49,7 @@
 
     ## Environment
 
-    - This worktree uses a shared codanna index at `../.shared/.codanna/`
+    - This worktree uses a shared codanna index at `../../.shared/.codanna/`
     - Task coordination is handled by the orchestrator agent
     - MCP servers are available but task-master is only available to the orchestrator
 
@@ -77,9 +77,11 @@
     ```
     ./                      # You are here (project root)
     ├── ${mainDir}/         # Main git checkout (source code lives here)
+    ├── worktrees/          # All worker worktrees
+    │   ├── feature-x/
+    │   └── feature-y/
     ├── .shared/            # Shared config for worker agents
-    ├── .orchestrator/      # Your MCP config
-    └── <worktrees>/        # Worker agent worktrees (siblings to ${mainDir}/)
+    └── .orchestrator/      # Your MCP config
     ```
 
     ## Your Responsibilities
@@ -152,7 +154,7 @@
           echo "Usage: worktree-new <branch-name>"
           echo "Creates a new git worktree with proper symlinks to shared config"
           echo ""
-          echo "Worktrees are created as siblings to '$MAIN_DIR/' in the project root."
+          echo "Worktrees are created in the 'worktrees/' directory."
           exit 1
         fi
 
@@ -170,7 +172,9 @@
           exit 1
         fi
 
-        worktree_path="./$branch"
+        # Ensure worktrees directory exists
+        mkdir -p ./worktrees
+        worktree_path="./worktrees/$branch"
 
         # Check if worktree already exists
         if [ -d "$worktree_path" ]; then
@@ -181,7 +185,7 @@
         # Create the git worktree (run from main dir)
         echo "Creating git worktree for branch '$branch'..."
         cd "$MAIN_DIR"
-        if git worktree add "../$branch" -b "$branch" 2>/dev/null || git worktree add "../$branch" "$branch"; then
+        if git worktree add "../worktrees/$branch" -b "$branch" 2>/dev/null || git worktree add "../worktrees/$branch" "$branch"; then
           echo "  Created worktree at $worktree_path"
         else
           echo "Error: Failed to create worktree"
@@ -192,21 +196,21 @@
         # Create .envrc in worktree
         cat > "$worktree_path/.envrc" << 'ENVRC_EOF'
         # Use the shared subtree flake for worker agents
-        use flake ../.shared --impure
+        use flake ../../.shared --impure
         ENVRC_EOF
         echo "  Created $worktree_path/.envrc"
 
         # Create symlinks to shared config
-        ln -sf ../.shared/.mcp.json "$worktree_path/.mcp.json"
-        echo "  Linked .mcp.json -> ../.shared/.mcp.json"
+        ln -sf ../../.shared/.mcp.json "$worktree_path/.mcp.json"
+        echo "  Linked .mcp.json -> ../../.shared/.mcp.json"
 
-        ln -sf ../.shared/CLAUDE.md "$worktree_path/CLAUDE.md"
-        echo "  Linked CLAUDE.md -> ../.shared/CLAUDE.md"
+        ln -sf ../../.shared/CLAUDE.md "$worktree_path/CLAUDE.md"
+        echo "  Linked CLAUDE.md -> ../../.shared/CLAUDE.md"
 
         echo ""
         echo "Worktree '$branch' created successfully!"
         echo "  Path: $worktree_path"
-        echo "  Shell: use flake ../.shared --impure"
+        echo "  Shell: use flake ../../.shared --impure"
 
         # Auto-allow direnv if available
         if command -v direnv &> /dev/null; then
@@ -283,11 +287,11 @@
         branch="''${1:-}"
         if [ -z "$branch" ]; then
           echo "Usage: worktree-remove <branch-name>"
-          echo "Removes a git worktree"
+          echo "Removes a git worktree from the worktrees/ directory"
           exit 1
         fi
 
-        worktree_path="./$branch"
+        worktree_path="./worktrees/$branch"
 
         if [ ! -d "$worktree_path" ]; then
           echo "Error: Worktree directory $worktree_path does not exist"
@@ -296,7 +300,7 @@
 
         # Run git worktree remove from main dir
         echo "Removing git worktree '$branch'..."
-        (cd "$MAIN_DIR" && git worktree remove "../$branch" --force)
+        (cd "$MAIN_DIR" && git worktree remove "../worktrees/$branch" --force)
         echo "  Removed worktree at $worktree_path"
 
         # Optionally remove the branch
@@ -422,16 +426,50 @@
       local project_root
       project_root="$(pwd)"
 
-      # Set CODANNA_INDEX_DIR to shared index (parent's .shared/.codanna)
-      if [ -d "../.shared/.codanna" ]; then
+      # Set CODANNA_INDEX_DIR to shared index (grandparent's .shared/.codanna)
+      # Worktrees are now at ./worktrees/<branch>/, so .shared is at ../../.shared/
+      if [ -d "../../.shared/.codanna" ]; then
+        export CODANNA_INDEX_DIR="$(cd ../.. && pwd)/.shared/.codanna"
+        echo "  Using shared codanna index: $CODANNA_INDEX_DIR"
+      elif [ -d "../.shared/.codanna" ]; then
+        # Fallback for legacy worktrees at project root
         export CODANNA_INDEX_DIR="$(cd .. && pwd)/.shared/.codanna"
         echo "  Using shared codanna index: $CODANNA_INDEX_DIR"
       else
-        echo "  Warning: Shared codanna index not found at ../.shared/.codanna"
+        echo "  Warning: Shared codanna index not found"
         echo "  Run 'direnv allow' in the orchestrator directory first"
       fi
     }
 
     _setup_subtree_mode
   '';
+
+  # Create a filtered source for worktree flakes
+  # Excludes mainDir, worktrees/, and generated directories to avoid
+  # copying large build artifacts to the nix store during flake evaluation
+  mkWorktreeSource = {
+    src,
+    mainDir ? "main",
+    extraExcludes ? [],
+  }: let
+    excludedNames =
+      [
+        mainDir # Main git checkout (contains build artifacts)
+        "worktrees" # All worktrees
+        ".shared" # Generated by worktree mode
+        ".orchestrator" # Generated by worktree mode
+        ".direnv" # direnv cache
+      ]
+      ++ extraExcludes;
+  in
+    builtins.path {
+      path = src;
+      name = "worktree-source";
+      filter = path: _type: let
+        name = baseNameOf path;
+        # Always include essential flake files at the root
+        isFlakeFile = name == "flake.nix" || name == "flake.lock" || name == ".envrc";
+      in
+        isFlakeFile || !(builtins.elem name excludedNames);
+    };
 }

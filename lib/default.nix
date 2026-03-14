@@ -194,7 +194,7 @@ in {
   inherit (mcp) generateMcpConfig generateMcpConfigFiltered generateWorktreeMcpConfigs;
 
   # Worktree support
-  inherit (worktree) generateSubtreeFlakeContent worktreeShellHook subtreeShellHook worktreeScripts mkWorktreeScripts;
+  inherit (worktree) generateSubtreeFlakeContent worktreeShellHook subtreeShellHook worktreeScripts mkWorktreeScripts mkWorktreeSource;
 
   # Utility functions (exposed for advanced usage)
   inherit utils validate;
