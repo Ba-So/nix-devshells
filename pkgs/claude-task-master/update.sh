@@ -34,30 +34,30 @@ fi
 VERSION="$1"
 info "Updating task-master-ai to version $VERSION"
 
-# Step 1: Fetch package-lock.json from GitHub tag
-info "Fetching package-lock.json from GitHub tag task-master-ai@${VERSION}..."
-if ! curl -fsSL "https://raw.githubusercontent.com/eyaltoledano/claude-task-master/task-master-ai@${VERSION}/package-lock.json" -o "$SCRIPT_DIR/package-lock.json"; then
-    error "Failed to fetch package-lock.json from GitHub tag task-master-ai@${VERSION}"
-fi
-
-# Verify version matches
-LOCK_VERSION=$(grep -m1 '"version":' "$SCRIPT_DIR/package-lock.json" | sed 's/.*"\([0-9.]*\)".*/\1/')
-if [ "$LOCK_VERSION" != "$VERSION" ]; then
-    warn "package-lock.json version ($LOCK_VERSION) differs from requested version ($VERSION)"
-fi
-
-# Step 2: Update version in default.nix
+# Step 1: Update version in default.nix
 info "Updating version in default.nix..."
 sed -i "s/version = \".*\";/version = \"${VERSION}\";/" "$SCRIPT_DIR/default.nix"
 
-# Step 3: Set hashes to lib.fakeHash temporarily
+# Step 2: Set all hashes to lib.fakeHash temporarily
 info "Setting hashes to lib.fakeHash for hash calculation..."
 sed -i 's/npmDepsHash = ".*";/npmDepsHash = lib.fakeHash;/' "$SCRIPT_DIR/default.nix"
-sed -i 's/hash = "sha256-.*";/hash = lib.fakeHash;/' "$SCRIPT_DIR/default.nix"
+sed -i 's/hash = "sha256-.*";/hash = lib.fakeHash;/g' "$SCRIPT_DIR/default.nix"
+
+# Step 3: Get the package-lock.json hash
+info "Calculating package-lock.json hash..."
+LOCK_URL="https://raw.githubusercontent.com/eyaltoledano/claude-task-master/task-master-ai%40${VERSION}/package-lock.json"
+LOCK_HASH=$(nix-prefetch-url "$LOCK_URL" 2>&1 | tail -1)
+if [ -z "$LOCK_HASH" ]; then
+    error "Failed to fetch package-lock.json from $LOCK_URL"
+fi
+LOCK_HASH_SRI=$(nix hash convert --hash-algo sha256 --to sri "$LOCK_HASH")
+info "package-lock.json hash: $LOCK_HASH_SRI"
+
+# Update lockfile hash (first occurrence after packageLock = fetchurl)
+sed -i "0,/hash = lib.fakeHash;/s|hash = lib.fakeHash;|hash = \"${LOCK_HASH_SRI}\";|" "$SCRIPT_DIR/default.nix"
 
 # Step 4: Get the source hash
 info "Calculating source hash..."
-cd "$SCRIPT_DIR"
 SOURCE_HASH=$(nix-prefetch-url --type sha256 --unpack "https://registry.npmjs.org/task-master-ai/-/task-master-ai-${VERSION}.tgz" 2>&1 | tail -1)
 if [ -z "$SOURCE_HASH" ]; then
     error "Failed to calculate source hash"
@@ -65,8 +65,8 @@ fi
 SOURCE_HASH_SRI=$(nix hash convert --hash-algo sha256 --to sri "$SOURCE_HASH")
 info "Source hash: $SOURCE_HASH_SRI"
 
-# Update source hash
-sed -i "s|hash = lib.fakeHash;|hash = \"${SOURCE_HASH_SRI}\";|" "$SCRIPT_DIR/default.nix"
+# Update source hash (second occurrence, after src = fetchzip)
+sed -i "0,/hash = lib.fakeHash;/s|hash = lib.fakeHash;|hash = \"${SOURCE_HASH_SRI}\";|" "$SCRIPT_DIR/default.nix"
 
 # Step 5: Build to get the real npmDepsHash
 info "Building package to determine npmDepsHash..."
@@ -99,7 +99,10 @@ rm -f result
 
 info "Successfully updated task-master-ai to version $VERSION"
 info "Updated files:"
-info "  - default.nix (version: $VERSION, source hash: $SOURCE_HASH_SRI, npmDepsHash: $NPM_DEPS_HASH)"
-info "  - package-lock.json"
+info "  - default.nix"
+info "    version: $VERSION"
+info "    package-lock hash: $LOCK_HASH_SRI"
+info "    source hash: $SOURCE_HASH_SRI"
+info "    npmDepsHash: $NPM_DEPS_HASH"
 echo ""
 warn "Don't forget to test the package and commit the changes!"
