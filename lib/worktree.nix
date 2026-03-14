@@ -55,94 +55,185 @@
   '';
 
   # Generate shared CLAUDE.md content for worker agents
-  # projectName is the name of the main project directory (for path hints)
   generateSharedClaudeMd = ''
-    # Worker Agent Instructions
+    # Worker Agent
 
-    This is a shared configuration for worker agents in a worktree-based multi-agent workflow.
+    You are a worker agent in a multi-agent worktree workflow. You work on isolated feature branches while an orchestrator coordinates tasks.
 
-    ## Environment
+    ## Your Environment
 
-    - You are in a **sibling worktree** of the main project
-    - The main project is at `../<project-name>/`
-    - Shared codanna index is at `../<project-name>/.shared/.codanna/`
-    - Task coordination is handled by the orchestrator agent in the main project
+    - **Location**: Sibling worktree (`../<project>-<branch>/`)
+    - **Main project**: `../<project>/`
+    - **Branch**: You're on a dedicated feature branch
+    - **Code index**: Shared with main project (read-only)
 
-    ## Workflow
+    ## Your Role
 
-    1. Work is assigned by the orchestrator
-    2. Complete assigned work in this worktree
-    3. Commit changes when work is complete
-    4. Report completion to orchestrator
+    You focus on **implementation**. The orchestrator handles task coordination.
 
-    ## Limitations
+    ### What You Do
+    - Implement assigned features/fixes
+    - Write tests for your changes
+    - Commit completed work with clear messages
+    - Keep changes focused on the assigned task
 
-    - No direct access to task-master MCP
-    - Use the shared codanna index for code navigation
+    ### What You Don't Do
+    - Create or manage tasks (no task-master access)
+    - Work on unrelated code
+    - Merge branches (orchestrator handles this)
+
+    ## Git Workflow
+
+    ```bash
+    # Check your branch
+    git branch
+
+    # Stage and commit your work
+    git add <files>
+    git commit -m "feat: description of change"
+
+    # Push when ready for review
+    git push -u origin <branch>
+    ```
+
+    ## Communication
+
+    Your commits are your primary communication. Write clear commit messages:
+    - `feat:` - New feature
+    - `fix:` - Bug fix
+    - `refactor:` - Code restructuring
+    - `test:` - Adding tests
+    - `docs:` - Documentation
+
+    When blocked or need clarification, note it in a commit or leave a TODO comment.
+
+    ## Available Tools
+
+    - **codanna**: Code intelligence (shared index from main project)
+    - **serena**: Project analysis (if configured)
+    - Other MCPs as configured (except task-master)
   '';
 
   # Generate orchestrator CLAUDE.md content
   generateOrchestratorClaudeMd = ''
-    # Orchestrator Agent Instructions
+    # Orchestrator Agent
 
-    You are the orchestrator agent in a multi-agent worktree workflow.
+    You are the orchestrator in a multi-agent worktree workflow. You coordinate tasks and manage parallel work streams across sibling worktrees.
 
-    ## Project Structure (Sibling Worktrees)
+    ## Project Structure
 
     ```
-    ./                          # You are here (main git repo + orchestrator)
-    ├── .shared/                # Shared config for worker agents
-    │   ├── flake.nix           # Worker shell definition
-    │   ├── .mcp.json           # Worker MCP config (no task-master)
-    │   ├── .codanna/           # Shared code index
-    │   └── CLAUDE.md           # Worker instructions
-    ├── .orchestrator/          # Your MCP config
-    │   └── .mcp.json           # Full MCP (with task-master)
-    └── <source code>           # Your actual code
+    ./                              # Main repo (you are here)
+    ├── .shared/                    # Shared config for workers
+    │   └── .codanna/               # Shared code index
+    ├── .orchestrator/              # Your MCP config
+    └── <source code>
 
-    ../<project>-feature-x/     # Sibling worktree (worker)
-    ../<project>-feature-y/     # Another sibling worktree
+    ../<project>-feature-x/         # Worker worktree (sibling)
+    ../<project>-feature-y/         # Another worker worktree
     ```
 
-    ## Your Responsibilities
+    ## Your Role
 
-    1. **Task Management**: Use task-master MCP to create, assign, and track tasks
-    2. **Code Navigation**: Use codanna to understand the codebase
-    3. **Worktree Management**: Create worktrees for parallel work streams
-    4. **Coordination**: Monitor worker progress and merge completed work
+    You are the **coordinator**. Workers handle implementation.
 
-    ## Available Commands
+    ### What You Do
+    - Break down work into tasks (task-master)
+    - Create worktrees for parallel work streams
+    - Monitor progress across worktrees
+    - Review and merge completed work
+    - Resolve conflicts and blockers
 
-    - `worktree-new <branch>` - Create a new sibling worktree
-    - `worktree-status` - Show all worktrees and shared resources
-    - `worktree-remove <branch>` - Remove a completed worktree
+    ### What Workers Do
+    - Implement assigned tasks
+    - Commit changes to their branch
+    - Stay focused on their assigned work
 
-    ## Workflow
+    ## Worktree Commands
 
-    ### Starting New Work
-    1. Create a task in task-master
-    2. Create a worktree: `worktree-new feature-x`
-    3. Assign the task to a worker agent in that worktree
+    ```bash
+    # Create a new worktree for a feature
+    worktree-new feature-auth
+    # Creates: ../<project>-feature-auth/
 
-    ### Monitoring Progress
-    - Check task status via task-master
-    - Review commits in worktrees: `cd ../<project>-feature-x && git log`
-    - Use codanna to understand code changes
+    # Check status of all worktrees
+    worktree-status
 
-    ### Completing Work
-    1. Review worker's commits
-    2. Merge the branch: `git merge feature-x`
-    3. Remove the worktree: `worktree-remove feature-x`
-    4. Mark task as complete
+    # Remove a completed worktree
+    worktree-remove feature-auth
+    ```
 
-    ## MCP Servers
+    ## Task Management
 
-    You have access to:
-    - **task-master**: Task management and coordination
-    - **codanna**: Code intelligence (indexes this directory)
-    - Other configured MCPs (serena, etc.)
+    Use task-master MCP to coordinate work:
 
-    Workers do NOT have task-master access - only you coordinate tasks.
+    ```
+    # View tasks
+    task-master list
+    task-master next
+
+    # Create tasks
+    task-master add-task --prompt="Implement user authentication"
+
+    # Update status
+    task-master set-status --id=1 --status=in-progress
+    task-master set-status --id=1 --status=done
+    ```
+
+    ## Typical Workflow
+
+    ### 1. Plan Work
+    ```bash
+    # Analyze complexity if needed
+    task-master analyze-complexity --research
+
+    # Create tasks from requirements
+    task-master add-task --prompt="..." --research
+    ```
+
+    ### 2. Spawn Workers
+    ```bash
+    # Create worktree for each major task
+    worktree-new feature-auth
+    worktree-new feature-dashboard
+
+    # Workers activate with: cd ../<project>-<branch> && direnv allow
+    ```
+
+    ### 3. Monitor Progress
+    ```bash
+    # Check task status
+    task-master list
+
+    # Review worker commits
+    git log ../<project>-feature-auth
+
+    # Check worktree status
+    worktree-status
+    ```
+
+    ### 4. Complete Work
+    ```bash
+    # Merge completed feature
+    git merge feature-auth
+
+    # Clean up
+    worktree-remove feature-auth
+    task-master set-status --id=1 --status=done
+    ```
+
+    ## Available Tools
+
+    - **task-master**: Task creation, assignment, and tracking (orchestrator only)
+    - **codanna**: Code intelligence and navigation
+    - **serena**: Project analysis (if configured)
+    - Other configured MCPs
+
+    ## Notes
+
+    - Workers do NOT have task-master access - coordinate through you
+    - The shared codanna index is at `.shared/.codanna/`
+    - Workers see the same code index but work on isolated branches
   '';
 
   # Create worktree helper scripts as actual executables
