@@ -34,11 +34,15 @@ in
       cp ${packageLock} package-lock.json
 
       # Remove workspaces and devDependencies from package.json to match lockfile
+      # Also add missing peer dependency @opentelemetry/sdk-metrics required by @google/gemini-cli-core
       ${nodejs_20}/bin/node <<'PATCH_SCRIPT'
         const fs = require('fs');
         const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
         delete pkg.workspaces;
         delete pkg.devDependencies;
+        // Add peer dependency that --legacy-peer-deps doesn't install
+        pkg.dependencies = pkg.dependencies || {};
+        pkg.dependencies['@opentelemetry/sdk-metrics'] = '^2.2.0';
         fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
       PATCH_SCRIPT
     '';
