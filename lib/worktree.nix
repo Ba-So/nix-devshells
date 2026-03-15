@@ -114,6 +114,339 @@
     - Other MCPs as configured (except task-master)
   '';
 
+  # Generate orchestrator skill commands for .claude/commands/
+  # These enable the hybrid orchestration workflow
+  generateOrchestratorSkills = {
+    # Hybrid orchestration - main entry point
+    "hybrid-orchestrate" = ''
+      # Hybrid Orchestrator
+
+      Orchestrate tasks using worktree isolation with single-session control.
+
+      Tasks to orchestrate: $ARGUMENTS
+
+      ## Architecture
+
+      ```
+      ┌─────────────────────────────────────────────────────────────┐
+      │  ORCHESTRATOR (this session, main worktree)                 │
+      │                                                             │
+      │  1. Create worktrees for isolation                          │
+      │  2. Spawn background agents (one per worktree)              │
+      │  3. Monitor progress via TaskOutput                         │
+      │  4. Run review agents on completed work                     │
+      │  5. Merge approved changes back to main                     │
+      │                                                             │
+      │         │              │              │                     │
+      │         ▼              ▼              ▼                     │
+      │  ┌──────────┐   ┌──────────┐   ┌──────────┐                │
+      │  │ Worker A │   │ Worker B │   │ Worker C │                │
+      │  │ (bg)     │   │ (bg)     │   │ (bg)     │                │
+      │  └──────────┘   └──────────┘   └──────────┘                │
+      └─────────────────────────────────────────────────────────────┘
+      ```
+
+      ## Workflow
+
+      ### Phase 1: Setup Worktrees
+
+      Parse task IDs from $ARGUMENTS (comma or space separated).
+
+      For each task ID:
+      ```bash
+      task-master show <id>  # Get task details
+      worktree-new task-<id> # Create isolated worktree
+      ```
+
+      ### Phase 2: Spawn Coding Agents
+
+      **CRITICAL**: Spawn ALL agents in a SINGLE message for true parallelism.
+
+      Use Task tool with `run_in_background=true` for each task:
+
+      ```
+      Task(subagent_type="general-purpose", run_in_background=true, prompt="
+      CODING AGENT - Task <id>
+
+      ## Working Directory
+      FIRST: cd <absolute-path-to-worktree>
+
+      ## Task
+      <task details>
+
+      ## Instructions
+      1. cd to working directory
+      2. Implement the required changes
+      3. Run tests if applicable
+      4. Commit: git add -A && git commit -m 'feat: <summary>'
+      5. Push: git push -u origin task-<id>
+
+      ## Output
+      Report: files changed, summary, ready for review (yes/no)
+      ")
+      ```
+
+      Record agent IDs for later retrieval.
+
+      ### Phase 3: Monitor Progress
+
+      Check agents periodically:
+      ```
+      TaskOutput(task_id="<agent-id>", block=false)
+      ```
+
+      Or wait for completion:
+      ```
+      TaskOutput(task_id="<agent-id>", block=true)
+      ```
+
+      ### Phase 4: Review Completed Work
+
+      For each completed task, spawn review agent:
+      ```
+      Task(subagent_type="general-purpose", prompt="
+      REVIEW AGENT - Task <id>
+
+      cd <worktree-path>
+
+      Check:
+      - Correctness: implements requirements?
+      - Quality: follows patterns?
+      - Safety: no bugs?
+
+      Output: APPROVE or CHANGES_REQUESTED with specifics
+      ")
+      ```
+
+      ### Phase 5: Iterate or Merge
+
+      **If CHANGES_REQUESTED**: Spawn fix agent, then re-review.
+
+      **If APPROVED**:
+      ```bash
+      git merge origin/task-<id> --no-ff
+      task-master set-status --id=<id> --status=done
+      worktree-remove task-<id>
+      ```
+    '';
+
+    # Spawn workers - quick command
+    "spawn-workers" = ''
+      # Spawn Workers
+
+      Create worktrees and spawn parallel coding agents for tasks: $ARGUMENTS
+
+      ## Steps
+
+      ### 1. Parse Tasks
+      Split $ARGUMENTS into task IDs.
+
+      ### 2. Setup
+      ```bash
+      PROJECT_ROOT=$(pwd)
+      PROJECT_NAME=$(basename "$PROJECT_ROOT")
+      ```
+
+      ### 3. Create Worktrees
+      For each task ID:
+      ```bash
+      task-master show <id>
+      worktree-new task-<id>
+      ```
+
+      ### 4. Spawn Agents in Parallel
+
+      **Send ONE message with ALL Task calls:**
+
+      ```
+      Task(subagent_type="general-purpose", run_in_background=true, prompt="
+      CODING AGENT - Task <id>
+
+      Working directory: ''${PROJECT_ROOT}/../''${PROJECT_NAME}-task-<id>
+      FIRST COMMAND: cd <working directory>
+
+      ## Task
+      <title and description from task-master>
+
+      ## Instructions
+      1. cd to working directory (MANDATORY)
+      2. Implement changes
+      3. Commit: git commit -m 'feat: <description>'
+      4. Push: git push -u origin task-<id>
+
+      ## Output
+      {
+        \"task_id\": \"<id>\",
+        \"status\": \"complete|blocked\",
+        \"files_changed\": [...],
+        \"summary\": \"...\",
+        \"ready_for_review\": true|false
+      }
+      ")
+      ```
+
+      ### 5. Report
+      Return agent IDs and how to check progress.
+    '';
+
+    # Collect results from background agents
+    "collect-results" = ''
+      # Collect Results
+
+      Gather results from background worker agents: $ARGUMENTS
+
+      ## Steps
+
+      ### 1. Check Each Agent
+      ```
+      TaskOutput(task_id="<agent-id>", block=false, timeout=5000)
+      ```
+
+      Categorize: Completed / Running / Failed
+
+      ### 2. Wait for Remaining (optional)
+      ```
+      TaskOutput(task_id="<agent-id>", block=true, timeout=600000)
+      ```
+
+      ### 3. Verify Git State
+      ```bash
+      PROJECT_NAME=$(basename "$(pwd)")
+      for id in <task-ids>; do
+        WORKTREE="../''${PROJECT_NAME}-task-''${id}"
+        git -C "$WORKTREE" log --oneline -3
+        git fetch origin "task-''${id}" 2>/dev/null && echo "Pushed" || echo "Not pushed"
+      done
+      ```
+
+      ### 4. Queue Reviews
+      For tasks with `ready_for_review: true`, proceed to /review-and-merge.
+
+      ### 5. Summary
+      Report status of all tasks.
+    '';
+
+    # Review and merge completed work
+    "review-and-merge" = ''
+      # Review and Merge
+
+      Review completed work and merge approved changes: $ARGUMENTS
+
+      ## Steps
+
+      ### 1. Identify Tasks
+      Use provided task IDs or find ready worktrees:
+      ```bash
+      PROJECT_NAME=$(basename "$(pwd)")
+      for wt in ../''${PROJECT_NAME}-task-*; do
+        TASK_ID=$(echo "$wt" | grep -oE '[0-9]+$')
+        AHEAD=$(git -C "$wt" rev-list main..HEAD --count 2>/dev/null)
+        [ "$AHEAD" -gt 0 ] && echo "Task $TASK_ID: $AHEAD commits"
+      done
+      ```
+
+      ### 2. Review Each Task
+
+      ```bash
+      task-master show <id>
+      git -C "../project-task-<id>" diff main...HEAD --stat
+      ```
+
+      Spawn review agent:
+      ```
+      Task(subagent_type="general-purpose", prompt="
+      REVIEW AGENT - Task <id>
+
+      cd <worktree>
+
+      ## Requirements
+      <from task-master>
+
+      ## Review Checklist
+      - [ ] Implements requirements
+      - [ ] No bugs
+      - [ ] Follows style
+      - [ ] Tests pass
+
+      Output: APPROVE | CHANGES_REQUESTED
+      ")
+      ```
+
+      ### 3. Process Verdict
+
+      **If APPROVED:**
+      ```bash
+      git fetch "../project-task-<id>" HEAD:task-<id>
+      git merge task-<id> --no-ff -m "Merge task-<id>: <summary>"
+      task-master set-status --id=<id> --status=done
+      worktree-remove task-<id>
+      ```
+
+      **If CHANGES_REQUESTED:**
+      Spawn fix agent with feedback, then re-review.
+
+      ### 4. Summary
+      ```bash
+      git log --oneline -10
+      task-master list
+      ```
+    '';
+
+    # Iteration loop for review-fix cycles
+    "iteration-loop" = ''
+      # Iteration Loop
+
+      Run review-fix iterations until approved: $ARGUMENTS
+
+      ## Flow
+
+      ```
+      CODING ──▶ REVIEW ──▶ APPROVED? ──▶ EXIT
+         ▲         │
+         │         │ CHANGES_REQUESTED
+         └─────────┘
+      ```
+
+      ## Steps
+
+      ### 1. Initialize
+      ```bash
+      task-master show $ARGUMENTS
+      iteration=1
+      max_iterations=3
+      ```
+
+      ### 2. Code Phase
+      ```
+      Task(subagent_type="general-purpose", prompt="
+      CODING AGENT - Iteration {iteration}
+      Task: $ARGUMENTS
+      Previous feedback: <if any>
+      Implement fixes based on feedback.
+      ")
+      ```
+
+      ### 3. Review Phase
+      ```
+      Task(subagent_type="general-purpose", prompt="
+      REVIEW AGENT - Iteration {iteration}
+      Check if issues resolved. Find new issues.
+      Output: APPROVE or CHANGES_REQUESTED
+      ")
+      ```
+
+      ### 4. Decision
+      - **APPROVE**: Mark done, exit
+      - **CHANGES_REQUESTED + iteration < max**: Loop back
+      - **CHANGES_REQUESTED + iteration >= max**: Mark blocked, alert user
+
+      ### 5. Logging
+      ```bash
+      task-master update-subtask --id=$ARGUMENTS --prompt="Iteration {n}: <verdict>"
+      ```
+    '';
+  };
+
   # Generate orchestrator CLAUDE.md content
   generateOrchestratorClaudeMd = ''
     # Orchestrator Agent
@@ -431,6 +764,7 @@
     };
     sharedClaudeMd = generateSharedClaudeMd;
     orchestratorClaudeMd = generateOrchestratorClaudeMd;
+    orchestratorSkills = generateOrchestratorSkills;
   in ''
     # Worktree mode setup (sibling pattern)
     _setup_worktree_mode() {
@@ -494,6 +828,31 @@
         echo "  Keeping existing CLAUDE.md (not overwriting user content)"
       fi
 
+      # Generate orchestrator skills in .claude/commands/
+      mkdir -p .claude/commands
+
+      cat > .claude/commands/hybrid-orchestrate.md << 'SKILL_EOF'
+    ${orchestratorSkills."hybrid-orchestrate"}
+    SKILL_EOF
+
+      cat > .claude/commands/spawn-workers.md << 'SKILL_EOF'
+    ${orchestratorSkills."spawn-workers"}
+    SKILL_EOF
+
+      cat > .claude/commands/collect-results.md << 'SKILL_EOF'
+    ${orchestratorSkills."collect-results"}
+    SKILL_EOF
+
+      cat > .claude/commands/review-and-merge.md << 'SKILL_EOF'
+    ${orchestratorSkills."review-and-merge"}
+    SKILL_EOF
+
+      cat > .claude/commands/iteration-loop.md << 'SKILL_EOF'
+    ${orchestratorSkills."iteration-loop"}
+    SKILL_EOF
+
+      echo "  Generated .claude/commands/ (orchestrator skills)"
+
       # Create symlink from root to orchestrator config
       if [ ! -L ".mcp.json" ] && [ ! -f ".mcp.json" ]; then
         ln -sf .orchestrator/.mcp.json .mcp.json
@@ -524,6 +883,7 @@
     _setup_worktree_mode
 
     echo "  Worktree commands: worktree-new, worktree-status, worktree-remove"
+    echo "  Orchestrator skills: /hybrid-orchestrate, /spawn-workers, /collect-results, /review-and-merge"
   '';
 
   # Shell hook for subtree mode (worker agents)
