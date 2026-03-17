@@ -117,11 +117,11 @@
   # Generate orchestrator skill commands for .claude/commands/
   # These enable the hybrid orchestration workflow
   generateOrchestratorSkills = {
-    # Hybrid orchestration - main entry point
-    "hybrid-orchestrate" = ''
-      # Hybrid Orchestrator
+    # Main orchestration entry point
+    "orchestrate" = ''
+      # Orchestrator
 
-      Orchestrate tasks using worktree isolation with single-session control.
+      Orchestrate tasks using worktree isolation with parallel agents.
 
       Tasks to orchestrate: $ARGUMENTS
 
@@ -131,11 +131,11 @@
       ┌─────────────────────────────────────────────────────────────┐
       │  ORCHESTRATOR (this session, main worktree)                 │
       │                                                             │
-      │  1. Create worktrees for isolation                          │
-      │  2. Spawn background agents (one per worktree)              │
-      │  3. Monitor progress via TaskOutput                         │
-      │  4. Run review agents on completed work                     │
-      │  5. Merge approved changes back to main                     │
+      │  Phase 1: Setup worktrees                                   │
+      │  Phase 2: Spawn coding agents (parallel)                    │
+      │  Phase 3: Collect results                                   │
+      │  Phase 4: Spawn review agents (parallel)                    │
+      │  Phase 5: Process verdicts → merge or iterate               │
       │                                                             │
       │         │              │              │                     │
       │         ▼              ▼              ▼                     │
@@ -146,6 +146,14 @@
       └─────────────────────────────────────────────────────────────┘
       ```
 
+      ## Worktree Naming
+
+      Worktrees are created as **siblings** of the main project:
+      - Main project: `/path/to/myproject/`
+      - Worktree for task 3: `/path/to/myproject-task-3/`
+
+      Pattern: `../<project>-task-<id>/`
+
       ## Workflow
 
       ### Phase 1: Setup Worktrees
@@ -154,11 +162,17 @@
 
       For each task ID:
       ```bash
-      task-master show <id>  # Get task details
-      worktree-new task-<id> # Create isolated worktree
+      task-master set-status --id=<id> --status=in-progress
+      task-master show <id>  # Get task details, save for agent prompt
+      worktree-new task-<id> # Creates ../<project>-task-<id>/
       ```
 
-      ### Phase 2: Spawn Coding Agents
+      Record:
+      - Task ID
+      - Task title and description
+      - Worktree absolute path
+
+      ### Phase 2: Spawn Coding Agents (Parallel)
 
       **CRITICAL**: Spawn ALL agents in a SINGLE message for true parallelism.
 
@@ -166,67 +180,241 @@
 
       ```
       Task(subagent_type="general-purpose", run_in_background=true, prompt="
-      CODING AGENT - Task <id>
+      CODING AGENT - Task <id>: <title>
 
       ## Working Directory
-      FIRST: cd <absolute-path-to-worktree>
+      FIRST COMMAND: cd <absolute-path-to-worktree>
+      You MUST cd before any other operation.
 
-      ## Task
-      <task details>
+      ## Task Requirements
+      <full description from task-master>
+
+      ## Instructions
+      1. cd to working directory (MANDATORY FIRST STEP)
+      2. Implement the required changes
+      3. Run tests/linting if available
+      4. Stage and commit: git add <specific-files> && git commit -m '<type>: <summary>'
+      5. Push: git push -u origin task-<id>
+
+      ## Commit Message Format
+      - feat: new feature
+      - fix: bug fix
+      - refactor: code restructuring
+      - test: adding tests
+
+      ## Output Format (REQUIRED)
+      Respond with ONLY this JSON:
+      {
+        \"task_id\": \"<id>\",
+        \"status\": \"complete\" | \"blocked\",
+        \"files_changed\": [\"path/to/file1\", \"path/to/file2\"],
+        \"summary\": \"Brief description of changes made\",
+        \"tests_passed\": true | false | \"no tests\",
+        \"blocked_reason\": \"Only if status is blocked\"
+      }
+      ")
+      ```
+
+      Record agent IDs for each task.
+
+      ### Phase 3: Collect Results
+
+      Wait for all coding agents to complete:
+      ```
+      TaskOutput(task_id="<agent-id>", block=true, timeout=600000)
+      ```
+
+      For each completed agent, verify git state:
+      ```bash
+      PROJECT_NAME=$(basename "$(pwd)")
+      WORKTREE="../''${PROJECT_NAME}-task-<id>"
+
+      # Check for uncommitted changes (should be empty)
+      git -C "$WORKTREE" status --porcelain
+
+      # Check branch was pushed
+      git fetch origin task-<id> 2>/dev/null && echo "Pushed" || echo "NOT PUSHED"
+
+      # Show commits for review context
+      git -C "$WORKTREE" log main..HEAD --oneline
+      ```
+
+      Categorize tasks:
+      - **Ready for review**: status=complete, no uncommitted changes, branch pushed
+      - **Blocked**: status=blocked or uncommitted changes or not pushed
+
+      For blocked tasks:
+      ```bash
+      task-master update-subtask --id=<id> --prompt="Blocked: <reason>"
+      ```
+
+      ### Phase 4: Spawn Review Agents (Parallel)
+
+      **CRITICAL**: Spawn ALL review agents in a SINGLE message for true parallelism.
+
+      Only review tasks that are "ready for review".
+
+      ```
+      Task(subagent_type="general-purpose", run_in_background=true, prompt="
+      REVIEW AGENT - Task <id>: <title>
+
+      ## Working Directory
+      FIRST COMMAND: cd <absolute-path-to-worktree>
+
+      ## Task Requirements
+      <full description from task-master>
+
+      ## Changes to Review
+      Files changed: <list from coding agent output>
+      Summary: <summary from coding agent output>
+
+      ## Review Checklist
+      1. **Requirements**: Does implementation match task requirements?
+      2. **Correctness**: Are there obvious bugs or logic errors?
+      3. **Code Quality**: Does it follow existing patterns in the codebase?
+      4. **Safety**: Any security issues, resource leaks, or error handling gaps?
+      5. **Tests**: If tests exist, do they pass? If new code, are tests needed?
+
+      ## Review Process
+      1. cd to working directory
+      2. Read the changed files
+      3. Check git diff: git diff main..HEAD
+      4. Run tests if available
+      5. Evaluate against checklist
+
+      ## Output Format (REQUIRED)
+      Respond with ONLY this JSON:
+      {
+        \"task_id\": \"<id>\",
+        \"verdict\": \"APPROVE\" | \"CHANGES_REQUESTED\",
+        \"checklist\": {
+          \"requirements_met\": true | false,
+          \"no_bugs\": true | false,
+          \"follows_patterns\": true | false,
+          \"no_safety_issues\": true | false,
+          \"tests_ok\": true | false | \"not applicable\"
+        },
+        \"issues\": [
+          {\"file\": \"path/to/file\", \"line\": 42, \"issue\": \"Description of problem\"}
+        ],
+        \"summary\": \"Brief overall assessment\"
+      }
+      ")
+      ```
+
+      Record review agent IDs.
+
+      ### Phase 5: Process Verdicts
+
+      Wait for all review agents:
+      ```
+      TaskOutput(task_id="<review-agent-id>", block=true, timeout=300000)
+      ```
+
+      #### For APPROVED tasks:
+
+      ```bash
+      PROJECT_NAME=$(basename "$(pwd)")
+
+      # Merge from worktree
+      git fetch "../''${PROJECT_NAME}-task-<id>" HEAD:task-<id>
+      git merge task-<id> --no-ff -m "Merge task-<id>: <summary>"
+
+      # Verify merge succeeded
+      if [ $? -eq 0 ]; then
+        task-master set-status --id=<id> --status=done
+        worktree-remove task-<id>
+        echo "Task <id> merged and cleaned up"
+      else
+        echo "MERGE CONFLICT - requires manual resolution"
+        task-master update-subtask --id=<id> --prompt="Merge conflict - needs manual resolution"
+      fi
+      ```
+
+      #### For CHANGES_REQUESTED tasks:
+
+      Track iteration count (max 3).
+
+      If iterations < 3:
+      ```bash
+      task-master update-subtask --id=<id> --prompt="Review iteration <n>: <issues summary>"
+      ```
+
+      Then spawn fix agents (parallel) - see Phase 6.
+
+      If iterations >= 3:
+      ```bash
+      task-master set-status --id=<id> --status=blocked
+      task-master update-subtask --id=<id> --prompt="Blocked: max iterations (3) exceeded. Issues: <summary>"
+      echo "Task <id> blocked - requires manual intervention"
+      # Keep worktree for manual inspection
+      ```
+
+      ### Phase 6: Fix Iteration (if needed)
+
+      For tasks with CHANGES_REQUESTED and iterations < 3:
+
+      **Spawn fix agents in parallel:**
+
+      ```
+      Task(subagent_type="general-purpose", run_in_background=true, prompt="
+      FIX AGENT - Task <id>: <title> (Iteration <n>)
+
+      ## Working Directory
+      FIRST COMMAND: cd <absolute-path-to-worktree>
+
+      ## Original Requirements
+      <full description from task-master>
+
+      ## Issues to Fix
+      <issues array from review agent, formatted as list>
 
       ## Instructions
       1. cd to working directory
-      2. Implement the required changes
-      3. Run tests if applicable
-      4. Commit: git add -A && git commit -m 'feat: <summary>'
-      5. Push: git push -u origin task-<id>
+      2. Address each issue listed above
+      3. Do NOT change unrelated code
+      4. Commit fixes: git add <files> && git commit -m 'fix: address review feedback'
+      5. Push: git push origin task-<id>
 
-      ## Output
-      Report: files changed, summary, ready for review (yes/no)
+      ## Output Format (REQUIRED)
+      {
+        \"task_id\": \"<id>\",
+        \"iteration\": <n>,
+        \"status\": \"complete\" | \"blocked\",
+        \"fixes_applied\": [\"Description of fix 1\", \"Description of fix 2\"],
+        \"issues_unresolved\": [\"Any issues that could not be fixed\"]
+      }
       ")
       ```
 
-      Record agent IDs for later retrieval.
+      After fix agents complete → return to Phase 3 (collect) → Phase 4 (review).
 
-      ### Phase 3: Monitor Progress
+      ## Error Handling
 
-      Check agents periodically:
-      ```
-      TaskOutput(task_id="<agent-id>", block=false)
-      ```
+      | Situation | Action |
+      |-----------|--------|
+      | Coding agent fails/crashes | Mark task `blocked`, keep worktree, log error |
+      | Review agent fails/crashes | Retry once, then mark `blocked` |
+      | Merge conflict | Do NOT auto-resolve, mark `blocked`, alert user |
+      | Agent timeout (10min) | Mark task `blocked`, keep worktree |
+      | Max iterations exceeded | Mark `blocked`, keep worktree for inspection |
 
-      Or wait for completion:
-      ```
-      TaskOutput(task_id="<agent-id>", block=true)
-      ```
+      ## Cleanup Summary
 
-      ### Phase 4: Review Completed Work
+      | Verdict | Worktree | Branch | Task Status |
+      |---------|----------|--------|-------------|
+      | APPROVED + merged | Remove | Keep (merged) | `done` |
+      | BLOCKED | Keep | Keep | `blocked` |
+      | CHANGES_REQUESTED (iterating) | Keep | Keep | `in-progress` |
 
-      For each completed task, spawn review agent:
-      ```
-      Task(subagent_type="general-purpose", prompt="
-      REVIEW AGENT - Task <id>
+      ## Final Report
 
-      cd <worktree-path>
-
-      Check:
-      - Correctness: implements requirements?
-      - Quality: follows patterns?
-      - Safety: no bugs?
-
-      Output: APPROVE or CHANGES_REQUESTED with specifics
-      ")
-      ```
-
-      ### Phase 5: Iterate or Merge
-
-      **If CHANGES_REQUESTED**: Spawn fix agent, then re-review.
-
-      **If APPROVED**:
+      After all tasks processed:
       ```bash
-      git merge origin/task-<id> --no-ff
-      task-master set-status --id=<id> --status=done
-      worktree-remove task-<id>
+      echo "=== Orchestration Complete ==="
+      task-master list
+      git log --oneline -10
+      worktree-status
       ```
     '';
 
@@ -831,8 +1019,8 @@
       # Generate orchestrator skills in .claude/commands/
       mkdir -p .claude/commands
 
-      cat > .claude/commands/hybrid-orchestrate.md << 'SKILL_EOF'
-    ${orchestratorSkills."hybrid-orchestrate"}
+      cat > .claude/commands/orchestrate.md << 'SKILL_EOF'
+    ${orchestratorSkills."orchestrate"}
     SKILL_EOF
 
       cat > .claude/commands/spawn-workers.md << 'SKILL_EOF'
@@ -883,7 +1071,7 @@
     _setup_worktree_mode
 
     echo "  Worktree commands: worktree-new, worktree-status, worktree-remove"
-    echo "  Orchestrator skills: /hybrid-orchestrate, /spawn-workers, /collect-results, /review-and-merge"
+    echo "  Orchestrator skills: /orchestrate, /spawn-workers, /collect-results, /review-and-merge"
   '';
 
   # Shell hook for subtree mode (worker agents)
