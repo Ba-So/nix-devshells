@@ -51,6 +51,9 @@
     paper-search-mcp = pkgs.callPackage ../pkgs/paper-search-mcp.nix {
       inherit (inputs) pyproject-nix uv2nix pyproject-build-systems;
     };
+    rtk = pkgs-with-rust.callPackage ../pkgs/rtk.nix {
+      inherit (pkgs-with-rust) rust-bin;
+    };
 
     # Deprecated/legacy packages
     mcp-shrimp-task-manager = pkgs.callPackage ../pkgs/shrimp.nix {};
@@ -78,7 +81,7 @@
       import ../modules/tools
       {
         pkgs = pkgs-with-rust;
-        inherit lib;
+        inherit lib devPkgs;
       }
     else {};
 

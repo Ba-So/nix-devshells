@@ -2,6 +2,7 @@
 {
   pkgs,
   lib,
+  devPkgs,
 }: {
   meta = {
     name = "utilities";
@@ -24,6 +25,7 @@
     pkgs.nodePackages.markdownlint-cli
     pkgs.direnv
     pkgs.just
+    devPkgs.rtk # Token compression for LLM CLI tools
   ];
 
   shellHook = ''
