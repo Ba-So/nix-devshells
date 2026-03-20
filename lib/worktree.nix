@@ -759,7 +759,7 @@
 
   # Create worktree helper scripts as actual executables
   # Uses sibling worktree pattern: worktrees are created as siblings of the main repo
-  mkWorktreeScripts = {}:
+  mkWorktreeScripts = _:
     pkgs.stdenvNoCC.mkDerivation {
       name = "worktree-scripts";
       dontUnpack = true;
