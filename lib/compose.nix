@@ -52,10 +52,18 @@
     else if builtins.isAttrs tools && tools ? preset
     then tools.preset
     else "standard";
+  # RTK initialization hook (transparent token compression for LLM CLI tools)
+  rtkInitHook = ''
+    # Initialize RTK for transparent token compression
+    if command -v rtk &> /dev/null; then
+      eval "$(rtk init 2>/dev/null)" || true
+    fi
+  '';
 in rec {
   # High-level composition API
   # Usage: composeShell { languages = ["rust" "python"]; mcps = ["cargo"]; tools = "standard"; }
   # type: "standard" (default), "worktree" (orchestrator), or "subtree" (worker)
+  # enableRtk: when true, automatically initializes RTK hooks for token compression
   composeShell = {
     languages ? [],
     mcps ? [],
@@ -64,6 +72,7 @@ in rec {
     extraPackages ? [],
     extraShellHook ? "",
     devshellsUrl ? "github:Ba-So/nix-devshells",
+    enableRtk ? false,
     ...
   }: let
     # Resolve language modules
@@ -96,11 +105,11 @@ in rec {
       if type == "worktree"
       then
         composeWorktreeShell {
-          inherit allModules languages mcps tools devshellsUrl;
+          inherit allModules languages mcps tools devshellsUrl enableRtk;
         }
       else if type == "subtree"
-      then composeSubtreeShell allModules
-      else composeShellFromModules allModules;
+      then composeSubtreeShell {inherit allModules enableRtk;}
+      else composeShellFromModules {inherit allModules enableRtk;};
   in
     # Extend with extra packages and hooks
     baseShell.overrideAttrs (old: {
@@ -117,6 +126,7 @@ in rec {
     mcps,
     tools,
     devshellsUrl,
+    enableRtk ? false,
   }: let
     # Validate all modules
     validatedModules = validateModules allModules;
@@ -144,6 +154,12 @@ in rec {
       tools = toolsToString tools;
     };
 
+    # RTK hook if enabled
+    rtkHook =
+      if enableRtk
+      then rtkInitHook
+      else "";
+
     # Combine all shellHooks with worktree setup
     finalShellHook = ''
       ${combinedShellHooks}
@@ -151,6 +167,7 @@ in rec {
       # Worktree mode setup
       echo "Setting up worktree mode..."
       ${worktreeHook}
+      ${rtkHook}
     '';
   in
     # Create the devShell using pkgs.mkShell
@@ -162,9 +179,12 @@ in rec {
 
   # Compose shell for subtree mode (worker agents)
   # Minimal setup - just sets CODANNA_INDEX_DIR
-  composeSubtreeShell = moduleList: let
+  composeSubtreeShell = {
+    allModules,
+    enableRtk ? false,
+  }: let
     # Validate all modules
-    validatedModules = validateModules moduleList;
+    validatedModules = validateModules allModules;
 
     # Collect packages from all modules
     allPackages = flattenPackages validatedModules;
@@ -189,6 +209,12 @@ in rec {
       then mcpLib.mcpConfigShellHook mcpConfigFile
       else "";
 
+    # RTK hook if enabled
+    rtkHook =
+      if enableRtk
+      then rtkInitHook
+      else "";
+
     # Combine all shellHooks with subtree setup
     finalShellHook = ''
       ${combinedShellHooks}
@@ -197,6 +223,7 @@ in rec {
       ${worktreeLib.subtreeShellHook}
 
       ${mcpSetupHook}
+      ${rtkHook}
     '';
   in
     # Create the devShell using pkgs.mkShell
@@ -207,10 +234,13 @@ in rec {
       // envVars);
 
   # Low-level composition API
-  # Usage: composeShellFromModules [ module1 module2 module3 ]
-  composeShellFromModules = moduleList: let
+  # Usage: composeShellFromModules { allModules = [ module1 module2 module3 ]; }
+  composeShellFromModules = {
+    allModules,
+    enableRtk ? false,
+  }: let
     # Validate all modules
-    validatedModules = validateModules moduleList;
+    validatedModules = validateModules allModules;
 
     # Collect packages from all modules
     allPackages = flattenPackages validatedModules;
@@ -235,11 +265,18 @@ in rec {
       then mcpLib.mcpConfigShellHook mcpConfigFile
       else "";
 
+    # RTK hook if enabled
+    rtkHook =
+      if enableRtk
+      then rtkInitHook
+      else "";
+
     # Combine all shellHooks with MCP setup
     finalShellHook = ''
       ${combinedShellHooks}
 
       ${mcpSetupHook}
+      ${rtkHook}
     '';
   in
     # Create the devShell using pkgs.mkShell
