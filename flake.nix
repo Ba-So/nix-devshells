@@ -8,7 +8,7 @@
     rust-overlay.url = "github:oxalica/rust-overlay";
     serena = {
       # pin to last-working commit, there is no release with a flake.nix yet
-      url = "github:oraios/serena?ref=eb54e834b6da7a5e11f51c27afbcf55be92ae066";
+      url = "github:oraios/serena?ref=0c915bd18d51e2225508b6dccc8ae3bd9c20be1e";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     codanna = {
