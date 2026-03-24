@@ -3,28 +3,16 @@
   pkgs,
   lib,
   devPkgs,
-}: {
-  meta = {
-    name = "gitlab";
-    description = "GitLab API integration";
-    category = "mcp";
+  mkMcpModule,
+}:
+mkMcpModule {
+  name = "gitlab";
+  description = "GitLab API integration";
+  package = devPkgs.mcp-gitlab;
+  command = "mcp-gitlab";
+  env = {
+    GITLAB_PERSONAL_ACCESS_TOKEN = "";
+    GITLAB_API_URL = "https://gitlab.com/api/v4";
   };
-
-  packages = [devPkgs.mcp-gitlab];
-
-  mcpConfig = {
-    gitlab = {
-      type = "stdio";
-      command = "mcp-gitlab";
-      args = [];
-      env = {
-        GITLAB_PERSONAL_ACCESS_TOKEN = "";
-        GITLAB_API_URL = "https://gitlab.com/api/v4";
-      };
-    };
-  };
-
-  shellHook = ''
-    echo "  🦊 gitlab: GitLab API integration"
-  '';
+  emoji = "🦊";
 }

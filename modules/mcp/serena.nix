@@ -3,26 +3,14 @@
   pkgs,
   lib,
   serena,
-}: {
-  meta = {
-    name = "serena";
-    description = "Project analysis MCP server";
-    category = "mcp";
-    languages = ["python" "cpp" "rust"];
-  };
-
-  packages = [serena];
-
-  mcpConfig = {
-    serena = {
-      type = "stdio";
-      command = "serena";
-      args = ["start-mcp-server" "--transport" "stdio" "--project" "."];
-      env = {};
-    };
-  };
-
-  shellHook = ''
-    echo "  🔍 serena: Project analysis and code intelligence"
-  '';
+  mkMcpModule,
+}:
+mkMcpModule {
+  name = "serena";
+  description = "Project analysis MCP server";
+  package = serena;
+  args = ["start-mcp-server" "--transport" "stdio" "--project" "."];
+  env = {};
+  languages = ["python" "cpp" "rust"];
+  emoji = "🔍";
 }

@@ -3,24 +3,12 @@
   pkgs,
   lib,
   devPkgs,
-}: {
-  meta = {
-    name = "codanna";
-    description = "Code intelligence and semantic search for LLMs";
-    category = "mcp";
-  };
-
-  packages = [devPkgs.codanna];
-
-  mcpConfig = {
-    codanna = {
-      type = "stdio";
-      command = "codanna";
-      args = ["serve" "--watch" "--watch-interval" "5"];
-    };
-  };
-
-  shellHook = ''
-    echo "  🧠 codanna: Code intelligence and semantic search"
-  '';
+  mkMcpModule,
+}:
+mkMcpModule {
+  name = "codanna";
+  description = "Code intelligence and semantic search for LLMs";
+  package = devPkgs.codanna;
+  args = ["serve" "--watch" "--watch-interval" "5"];
+  emoji = "🧠";
 }

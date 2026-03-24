@@ -3,25 +3,12 @@
   pkgs,
   lib,
   devPkgs,
-}: {
-  meta = {
-    name = "cratedocs";
-    description = "Rust documentation MCP server";
-    category = "mcp";
-    languages = ["rust"];
-  };
-
-  packages = [devPkgs.cratedocs-mcp];
-
-  mcpConfig = {
-    cratedocs = {
-      type = "stdio";
-      command = "cratedocs";
-      args = [];
-    };
-  };
-
-  shellHook = ''
-    echo "  📚 cratedocs: Rust documentation search"
-  '';
+  mkMcpModule,
+}:
+mkMcpModule {
+  name = "cratedocs";
+  description = "Rust documentation MCP server";
+  package = devPkgs.cratedocs-mcp;
+  languages = ["rust"];
+  emoji = "📚";
 }

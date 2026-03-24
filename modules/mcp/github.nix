@@ -3,27 +3,15 @@
   pkgs,
   lib,
   devPkgs,
-}: {
-  meta = {
-    name = "github";
-    description = "GitHub API integration";
-    category = "mcp";
+  mkMcpModule,
+}:
+mkMcpModule {
+  name = "github";
+  description = "GitHub API integration";
+  package = pkgs.github-mcp-server;
+  command = "github-mcp-server";
+  args = ["stdio"];
+  env = {
+    GITHUB_PERSONAL_ACCESS_TOKEN = "";
   };
-
-  packages = [pkgs.github-mcp-server];
-
-  mcpConfig = {
-    github = {
-      type = "stdio";
-      command = "github-mcp-server";
-      args = ["stdio"];
-      env = {
-        GITHUB_PERSONAL_ACCESS_TOKEN = "";
-      };
-    };
-  };
-
-  shellHook = ''
-    echo "  GitHub: GitHub API integration"
-  '';
 }
