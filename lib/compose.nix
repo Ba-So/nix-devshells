@@ -21,7 +21,7 @@
   };
 
   # Import worktree support
-  worktreeLib = import ./worktree.nix {
+  worktreeLib = import ./worktree {
     inherit pkgs lib system;
   };
 

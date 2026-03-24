@@ -176,9 +176,9 @@
 
   # Import worktree support
   worktree =
-    if builtins.pathExists ./worktree.nix
+    if builtins.pathExists ./worktree/default.nix
     then
-      import ./worktree.nix
+      import ./worktree
       {
         inherit pkgs lib system;
       }
