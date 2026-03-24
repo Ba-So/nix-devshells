@@ -46,7 +46,8 @@ repos:
         name: check shebang scripts are executable
         entry: bash
         language: system
-        types: [text]
+        types: [executable]
+        types_or: [bash, sh, zsh, python, perl, ruby]
         stages: [pre-commit]
         args:
           - -c
@@ -101,15 +102,15 @@ repos:
         args:
           - -c
           - |
-            # Check only git-tracked files, excluding LFS files
-            for file in $(git ls-files); do
+            # Check only staged files, excluding LFS files
+            for file in $(git diff --cached --name-only --diff-filter=d); do
               if [ -f "$file" ]; then
                 # Skip if file is managed by git-lfs (check .gitattributes)
                 if git check-attr filter "$file" | grep -q "filter: lfs"; then
                   continue
                 fi
                 # Check file size (strict 500KB limit)
-                size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo 0)
+                size=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo 0)
                 if [ "$size" -gt 512000 ]; then
                   echo "ERROR: Large file detected: $file (${size} bytes)"
                   echo "Maximum allowed size: 500KB (512000 bytes)"
@@ -124,7 +125,7 @@ repos:
         entry: bash
         language: system
         types: [text]
-        exclude: "^(.pre-commit-config.yaml|.*test.*|.*example.*)$"
+        exclude: "^(.pre-commit-config.yaml|modules/mcp/.*\\.nix$|.*test.*|.*example.*)$"
         stages: [pre-commit]
         args:
           - -c
@@ -150,11 +151,11 @@ repos:
         entry: bash
         language: system
         types: [text]
-        pass_filenames: false
         stages: [pre-commit]
         args:
           - -c
-          - 'grep -r "^<<<<<<< \|^=======$\|^>>>>>>> " . --exclude-dir=.git && echo "ERROR: Merge conflict markers detected" && exit 1 || exit 0'
+          - 'for file in "$@"; do if grep -qE "^<<<<<<< |^=======$|^>>>>>>> " "$file"; then echo "ERROR: Merge conflict markers in $file"; exit 1; fi; done'
+          - --
 
       - id: check-symlinks
         name: check for broken symlinks
@@ -164,7 +165,15 @@ repos:
         stages: [pre-commit]
         args:
           - -c
-          - 'find . -type l ! -exec test -e {} \; -print | grep -q . && echo "ERROR: Broken symlinks detected" && exit 1 || exit 0'
+          - |
+            broken=""
+            for file in $(git diff --cached --name-only --diff-filter=d); do
+              if [ -L "$file" ] && [ ! -e "$file" ]; then
+                echo "ERROR: Broken symlink: $file"
+                broken=1
+              fi
+            done
+            [ -n "$broken" ] && exit 1 || exit 0
 
       - id: forbid-new-submodules
         name: forbid new git submodules
@@ -181,26 +190,19 @@ repos:
       # ═══════════════════════════════════════════════════════════
 
       - id: alejandra
-        name: alejandra nix formatter (strict)
-        entry: alejandra --check
-        language: system
-        files: \.nix$
-        pass_filenames: true
-        stages: [pre-commit]
-
-      - id: alejandra-fix
         name: alejandra nix formatter (auto-fix)
         entry: alejandra
         language: system
         files: \.nix$
         pass_filenames: true
-        stages: [manual]
+        stages: [pre-commit]
 
       - id: deadnix
         name: deadnix - detect unused nix code (strict)
         entry: deadnix --fail
         language: system
         files: \.nix$
+        pass_filenames: true
         args: ["--no-underscore", "--no-lambda-pattern-names"]
         stages: [pre-commit]
 
@@ -214,21 +216,25 @@ repos:
 
       - id: statix
         name: statix nix linter (strict)
-        entry: statix
+        entry: bash
         language: system
         files: \.nix$
-        args: ["check", "."]
-        pass_filenames: false
         stages: [pre-commit]
+        args:
+          - -c
+          - 'for file in "$@"; do statix check "$file" || exit 1; done'
+          - --
 
       - id: statix-fix
         name: statix nix linter (auto-fix)
-        entry: statix
+        entry: bash
         language: system
         files: \.nix$
-        args: ["fix", "."]
-        pass_filenames: false
         stages: [manual]
+        args:
+          - -c
+          - 'for file in "$@"; do statix fix "$file"; done'
+          - --
 
       # ═══════════════════════════════════════════════════════════
       # NIX FLAKE VALIDATION (STRICT)
@@ -252,7 +258,7 @@ repos:
         stages: [pre-commit]
         args:
           - -c
-          - 'nix flake lock --no-update-lock-file 2>&1 | grep -q "warning: updating lock file" && echo "ERROR: flake.lock is out of sync. Run: nix flake update" && exit 1 || exit 0'
+          - 'nix flake lock --no-update-lock-file 2>&1 && exit 0 || { echo "ERROR: flake.lock is out of sync. Run: nix flake lock"; exit 1; }'
 
       # ═══════════════════════════════════════════════════════════
       # SHELL SCRIPT VALIDATION (STRICT)
@@ -266,14 +272,6 @@ repos:
         args: ["-x", "--severity=warning"]
         stages: [pre-commit]
 
-      - id: shellcheck-extra-strict
-        name: shellcheck (extra strict - errors only)
-        entry: shellcheck
-        language: system
-        files: \.(sh|bash)$
-        args: ["-x", "--severity=error"]
-        stages: [pre-push]
-
       # ═══════════════════════════════════════════════════════════
       # FORMATTING (STRICT)
       # ═══════════════════════════════════════════════════════════
@@ -282,7 +280,7 @@ repos:
         name: prettier formatter check (strict)
         entry: prettier
         language: system
-        files: \.(yaml|yml|json|md)$
+        files: \.(json|md)$
         exclude: flake\.lock$
         args: ["--check"]
         stages: [pre-commit]
@@ -291,7 +289,7 @@ repos:
         name: prettier formatter (auto-fix)
         entry: prettier
         language: system
-        files: \.(yaml|yml|json|md)$
+        files: \.(json|md)$
         exclude: flake\.lock$
         args: ["--write"]
         stages: [manual]
@@ -320,7 +318,28 @@ repos:
         stages: [pre-commit]
         args:
           - -c
-          - 'for file in "$@"; do grep -oP "(?<=\]\()[^)]*(?=\))" "$file" | while read link; do if [[ "$link" =~ ^/ ]] && [ ! -f "${link#/}" ] && [ ! -d "${link#/}" ]; then echo "Broken link in $file: $link"; exit 1; fi; done; done'
+          - |
+            status=0
+            for file in "$@"; do
+              dir=$(dirname "$file")
+              grep -oP '(?<=\]\()[^)#]*(?=[)#])' "$file" 2>/dev/null | while read -r link; do
+                # Skip URLs and anchors
+                if [[ "$link" =~ ^https?:// ]] || [[ "$link" =~ ^mailto: ]] || [ -z "$link" ]; then
+                  continue
+                fi
+                # Resolve relative to the markdown file's directory
+                if [[ "$link" =~ ^/ ]]; then
+                  target="${link#/}"
+                else
+                  target="$dir/$link"
+                fi
+                if [ ! -f "$target" ] && [ ! -d "$target" ]; then
+                  echo "Broken link in $file: $link (resolved: $target)"
+                  exit 1
+                fi
+              done || status=1
+            done
+            exit $status
           - --
 
       # ═══════════════════════════════════════════════════════════

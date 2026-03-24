@@ -28,13 +28,11 @@ CODE ──► REVIEW ──► APPROVED ──► MERGE ──► DONE
    Each agent: cd to worktree, implement, commit, push. Returns JSON with task_id, status, files_changed, summary.
 
 3. **Process each task as it completes**:
-
    - Verify committed and pushed
    - Spawn review agent for THIS task (not batch - per task!)
    - Review agent returns: `{task_id, verdict: APPROVE|CHANGES_REQUESTED, issues[], summary}`
 
 4. **On verdict**:
-
    - **APPROVE**: Merge immediately (`git fetch .. && git merge`), set status=done, remove worktree
    - **CHANGES_REQUESTED**: Increment iteration counter for this task
      - If iteration ≤ 3: Spawn fix agent, then back to review
@@ -54,18 +52,36 @@ Just the raw JSON on one line.
 ```
 
 **Coding agent returns:**
+
 ```json
-{"task_id":"X","status":"done|failed","files_changed":["path"],"summary":"<20 words max>"}
+{
+  "task_id": "X",
+  "status": "done|failed",
+  "files_changed": ["path"],
+  "summary": "<20 words max>"
+}
 ```
 
 **Review agent returns:**
+
 ```json
-{"task_id":"X","verdict":"APPROVE|CHANGES_REQUESTED","issues":["short issue"],"summary":"<20 words max>"}
+{
+  "task_id": "X",
+  "verdict": "APPROVE|CHANGES_REQUESTED",
+  "issues": ["short issue"],
+  "summary": "<20 words max>"
+}
 ```
 
 **Fix agent returns:**
+
 ```json
-{"task_id":"X","status":"done|failed","fixes_applied":["short desc"],"summary":"<20 words max>"}
+{
+  "task_id": "X",
+  "status": "done|failed",
+  "fixes_applied": ["short desc"],
+  "summary": "<20 words max>"
+}
 ```
 
 ## Constraints
@@ -92,11 +108,13 @@ Display a progress table after each state change:
 ```
 
 **Columns:**
+
 - **Agent**: Short task ID from Task tool (first 7 chars)
 - **Task**: Task number + brief description (include "Fix" or "Review" for iterations)
 - **Status**: Emoji + state + current activity
 
 **Status icons:**
+
 - ✅ Completed
 - 🔄 Running
 - ⏳ Pending
