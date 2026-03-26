@@ -9,5 +9,6 @@ mkMcpModule {
   name = "computer-use";
   description = "Desktop automation MCP server (screenshots, mouse, keyboard)";
   package = devPkgs.computer-use-mcp;
+  command = "computer-use-mcp";
   emoji = "🖥️ ";
 }
