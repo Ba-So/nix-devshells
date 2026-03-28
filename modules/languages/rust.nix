@@ -10,14 +10,14 @@ let
 
   # Use rust-overlay to create unified toolchain for RustRover
   # pkgs already has rust-overlay applied from default.nix
-  # Specify Rust version 1.90.0
-  rustToolchain = pkgs.rust-bin.stable."1.90.0".default.override {
+  # Specify Rust version 1.92.0
+  rustToolchain = pkgs.rust-bin.stable."1.92.0".default.override {
     extensions = ["rust-src" "rust-analyzer" "clippy" "rustfmt"];
   };
 in {
   meta = {
     name = "rust";
-    description = "Rust 1.90.0 development environment";
+    description = "Rust 1.92.0 development environment";
     category = "language";
   };
 
