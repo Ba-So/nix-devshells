@@ -33,6 +33,13 @@
         echo "  Initialize git first: git init"
       fi
 
+      # Ensure .shared and .orchestrator are in .gitignore
+      for entry in .shared .orchestrator; do
+        if ! grep -qxF "$entry" .gitignore 2>/dev/null; then
+          echo "$entry" >> .gitignore
+        fi
+      done
+
       # Create .shared directory
       if [ ! -d ".shared" ]; then
         mkdir -p .shared/.codanna
@@ -43,6 +50,9 @@
       cat > .shared/flake.nix << 'SUBTREE_FLAKE_EOF'
     ${subtreeFlakeContent}
     SUBTREE_FLAKE_EOF
+
+      # Initialize .shared as its own git repo so nix flake can see the files
+      (cd .shared && git init -q && git add flake.nix) 2>/dev/null
       echo "  Generated .shared/flake.nix"
 
       # Copy shared MCP config (without task-master)
