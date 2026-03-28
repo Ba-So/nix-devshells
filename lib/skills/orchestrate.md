@@ -9,86 +9,35 @@ Tasks: $ARGUMENTS
 Each task runs INDEPENDENTLY. A task is NEVER merged until its review passes.
 
 ```
-CODE ──► REVIEW ──► APPROVED ──► MERGE ──► DONE
-           │
-           │ CHANGES_REQUESTED
-           ▼
-          FIX ──► REVIEW  (max 3 iterations)
+CODE ──► SYNC ──► REVIEW ──► APPROVED ──► MERGE ──► DONE
                     │
+                    │ CHANGES_REQUESTED
                     ▼
-           iteration > 3 ──► BLOCK + REPORT
+                   FIX ──► SYNC ──► REVIEW  (max 3 iterations)
+                                      │
+                                      ▼
+                             iteration > 3 ──► BLOCK + REPORT
 ```
 
 ## Workflow
 
-1. **Setup**: For each task, run `task-master set-status --id=<id> --status=in-progress`,
-   then `worktree-new task-<id>` to create `../<project>-task-<id>/`
+1. **Plan**: For each task, run `task-master set-status --id=<id> --status=in-progress`
 
-2. **Spawn coding agents** in parallel using Task tool with `run_in_background=true`.
-   Each agent: cd to worktree, implement, commit, push. Returns JSON with task_id, status, files_changed, summary.
+2. **Spawn**: Invoke `/spawn-workers <task-ids>` to create worktrees and launch coding agents
 
-3. **Process each task as it completes**:
-   - Verify committed and pushed
-   - Spawn review agent for THIS task (not batch - per task!)
-   - Review agent returns: `{task_id, verdict: APPROVE|CHANGES_REQUESTED, issues[], summary}`
+3. **Collect**: Invoke `/collect-results <agent-ids>` to poll and track progress
 
-4. **On verdict**:
-   - **APPROVE**: Merge immediately (`git fetch .. && git merge`), set status=done, remove worktree
-   - **CHANGES_REQUESTED**: Increment iteration counter for this task
-     - If iteration ≤ 3: Spawn fix agent, then back to review
-     - If iteration > 3: Set status=blocked, report failure, keep worktree
+4. **Review & Merge**: Invoke `/review-and-merge <task-ids>` for each completed task.
+   This handles: sync with main, code review, fix iterations, and final merge.
 
-5. **Report** final status with `task-master list`
-
-## Agent Output Format (CRITICAL)
-
-All spawned agents MUST return minimal output to prevent context bloat.
-Include this instruction in EVERY agent prompt:
-
-```
-OUTPUT CONSTRAINT: Your ENTIRE final response must be a single JSON object.
-No explanations, no reasoning, no file contents, no markdown formatting.
-Just the raw JSON on one line.
-```
-
-**Coding agent returns:**
-
-```json
-{
-  "task_id": "X",
-  "status": "done|failed",
-  "files_changed": ["path"],
-  "summary": "<20 words max>"
-}
-```
-
-**Review agent returns:**
-
-```json
-{
-  "task_id": "X",
-  "verdict": "APPROVE|CHANGES_REQUESTED",
-  "issues": ["short issue"],
-  "summary": "<20 words max>"
-}
-```
-
-**Fix agent returns:**
-
-```json
-{
-  "task_id": "X",
-  "status": "done|failed",
-  "fixes_applied": ["short desc"],
-  "summary": "<20 words max>"
-}
-```
+5. **Report**: Final status with `task-master list`
 
 ## Constraints
 
 - Review BEFORE merge — never skip
+- Sync with main BEFORE review — never skip
 - Max 3 fix iterations per task — then block and report
-- On merge conflict: block, do NOT auto-resolve
+- On unresolvable merge conflict: block, do NOT auto-resolve
 - On timeout/crash: block, keep worktree for inspection
 
 ## User Experience
@@ -110,7 +59,7 @@ Display a progress table after each state change:
 **Columns:**
 
 - **Agent**: Short task ID from Task tool (first 7 chars)
-- **Task**: Task number + brief description (include "Fix" or "Review" for iterations)
+- **Task**: Task number + brief description (include "Fix", "Sync", or "Review" for iterations)
 - **Status**: Emoji + state + current activity
 
 **Status icons:**
@@ -120,3 +69,4 @@ Display a progress table after each state change:
 - ⏳ Pending
 - ❌ Failed/Blocked
 - 🔍 In Review
+- 🔀 Syncing with main
