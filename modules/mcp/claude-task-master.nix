@@ -12,6 +12,7 @@
     command = "task-master-mcp";
     env = {
       TASKMASTER_DIR = ".taskmaster";
+      TASK_MASTER_TOOLS = "get_tasks,set_task_status,update_task,parse_prd,add_task,add_tag,list_tags,add_dependency,remove_dependency";
     };
     emoji = "🎯";
   };
