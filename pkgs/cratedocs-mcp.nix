@@ -1,9 +1,9 @@
-{
-  pkgs,
-  fetchFromGitHub ? pkgs.fetchFromGitHub,
-  rustPlatform ? pkgs.rustPlatform,
-  pkg-config ? pkgs.pkg-config,
-  openssl ? pkgs.openssl,
+{ pkgs
+, fetchFromGitHub ? pkgs.fetchFromGitHub
+, rustPlatform ? pkgs.rustPlatform
+, pkg-config ? pkgs.pkg-config
+, openssl ? pkgs.openssl
+,
 }:
 rustPlatform.buildRustPackage rec {
   pname = "cratedocs-mcp";
@@ -13,17 +13,17 @@ rustPlatform.buildRustPackage rec {
     owner = "promptexecution";
     repo = "cratedocs-mcp";
     rev = "main";
-    hash = "sha256-U79pgp2WCgrzOcQzx9rDsqmGXKIA+I26qW5jYGuZcyA="; # Nix will provide the correct hash in error message
+    hash = "sha256-dbHL6NYrbngXViYl3q4gRQvlOR2OBZvT/GLttK/fxVk="; # Nix will provide the correct hash in error message
   };
 
-  cargoHash = "sha256-4n09BgpjacRNNSUCNMAL2obK7/YAgX9WZuTBtBl9R7U="; # Nix will provide the correct hash in error message
+  cargoHash = "sha256-m39S9KmPiFqYSyUqc1IJujiWLx3DQJSTjxPiUSfbplI="; # Nix will provide the correct hash in error message
 
   # Optimize build for faster compilation
   doCheck = false; # Skip tests to speed up build
   auditable = false; # Disable auditable builds for faster compilation
 
-  nativeBuildInputs = [pkg-config];
-  buildInputs = [openssl];
+  nativeBuildInputs = [ pkg-config ];
+  buildInputs = [ openssl ];
 
   # The binary is named 'cratedocs' according to Cargo.toml
   postInstall = ''
@@ -62,7 +62,7 @@ rustPlatform.buildRustPackage rec {
     description = "Rust Documentation MCP Server for LLM crate assistance";
     homepage = "https://github.com/promptexecution/cratedocs-mcp";
     license = licenses.mit;
-    maintainers = [];
+    maintainers = [ ];
     mainProgram = "cratedocs";
     platforms = platforms.all;
   };
