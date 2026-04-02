@@ -5,6 +5,5 @@
 }: let
   mkAgentModule = import ../../lib/mkAgentModule.nix {inherit pkgs;};
 in {
-  # Agent modules will be added here, e.g.:
-  # rust-developer = import ./rust-developer.nix { inherit mkAgentModule; };
+  code-reviewer = import ./code-reviewer.nix {inherit mkAgentModule;};
 }
