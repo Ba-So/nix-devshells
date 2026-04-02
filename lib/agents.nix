@@ -1,37 +1,38 @@
 # Agent configuration deployment
-# Syncs agent markdown definitions from lib/agents/ into .claude/agents/
+# Filters agents by MCP dependencies and syncs to .claude/agents/
 {
   pkgs,
   lib,
 }: rec {
-  # Collect all agent markdown files from a directory
-  # Returns a list of { name, path } attrsets
-  collectAgents = agentDir: let
-    contents = builtins.readDir agentDir;
-    mdFiles =
-      lib.filterAttrs
-      (name: type: type == "regular" && lib.hasSuffix ".md" name)
-      contents;
-  in
-    lib.mapAttrsToList
-    (name: _: {
-      name = lib.removeSuffix ".md" name;
-      path = agentDir + "/${name}";
-    })
-    mdFiles;
+  # Filter agent modules to only those whose mcpDeps are satisfied
+  # agentModules: list of agent module attrsets
+  # activeMcpNames: list of MCP module name strings currently active
+  filterAgentsByMcps = agentModules: activeMcpNames:
+    builtins.filter
+    (agent:
+      builtins.all
+      (dep: builtins.elem dep activeMcpNames)
+      (agent.mcpDeps or []))
+    agentModules;
 
-  # Generate a derivation containing agent files ready for deployment
-  # agents: list of { name, path } attrsets
+  # Generate a derivation containing agent markdown files ready for deployment
+  # agents: list of agent module attrsets (with agentFile derivations)
   generateAgentConfig = agents:
     pkgs.runCommand "claude-agents" {} (
       ''
         mkdir -p $out
       ''
       + lib.concatMapStringsSep "\n" (agent: ''
-        cp ${agent.path} $out/${agent.name}.md
+        cp ${agent.agentFile} $out/${agent.meta.name}.md
       '')
       agents
     );
+
+  # Convenience: generate shell hook from a list of agent modules (handles empty case)
+  mkAgentShellHook = agents:
+    if agents != []
+    then agentConfigShellHook (generateAgentConfig agents)
+    else "";
 
   # Generate shellHook snippet for agent deployment
   # Syncs agent files into .claude/agents/, tracking managed agents

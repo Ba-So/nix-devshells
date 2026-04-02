@@ -96,11 +96,22 @@
       }
     else {};
 
+  agentModules =
+    if builtins.pathExists ../modules/agents
+    then
+      import ../modules/agents
+      {
+        pkgs = pkgs-with-rust;
+        inherit lib;
+      }
+    else {};
+
   # Consolidated modules attrset (without presets first to avoid circular dependency)
   modulesWithoutPresets = {
     languages = languageModules;
     tools = toolModules;
     mcp = mcpModules;
+    agents = agentModules;
     presets = {};
   };
 
@@ -183,7 +194,7 @@
         inherit pkgs lib;
       }
     else {
-      collectAgents = _: [];
+      filterAgentsByMcps = _: _: [];
       generateAgentConfig = _: null;
       agentConfigShellHook = _: "";
     };
@@ -211,7 +222,7 @@ in {
   inherit (mcp) generateMcpConfig generateMcpConfigFiltered generateWorktreeMcpConfigs;
 
   # Agent deployment
-  inherit (agents) collectAgents generateAgentConfig agentConfigShellHook;
+  inherit (agents) filterAgentsByMcps generateAgentConfig agentConfigShellHook mkAgentShellHook;
 
   # Worktree support
   inherit (worktree) generateSubtreeFlakeContent worktreeShellHook subtreeShellHook worktreeScripts mkWorktreeScripts mkWorktreeSource;

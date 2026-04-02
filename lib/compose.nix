@@ -72,7 +72,6 @@ in rec {
   composeShell = {
     languages ? [],
     mcps ? [],
-    agents ? [],
     tools ? "standard",
     type ? "standard",
     extraPackages ? [],
@@ -106,16 +105,22 @@ in rec {
     # (e.g., when an MCP is in both the explicit list and a preset)
     allModules = deduplicateModules (langModules ++ mcpModules ++ toolModules);
 
+    # Include all agent modules by default, filtered by active MCP dependencies
+    activeMcpNames = map (m: m.meta.name or "") mcpModules;
+    allAgentModules = builtins.attrValues (modules.agents or {});
+    filteredAgents = agentLib.filterAgentsByMcps allAgentModules activeMcpNames;
+
     # Compose base shell from modules with type-specific behavior
     baseShell =
       if type == "worktree"
       then
         composeWorktreeShell {
-          inherit allModules languages mcps agents tools devshellsUrl enableRtk;
+          inherit allModules languages mcps tools devshellsUrl enableRtk;
+          agents = filteredAgents;
         }
       else if type == "subtree"
-      then composeSubtreeShell {inherit allModules agents enableRtk;}
-      else composeShellFromModules {inherit allModules agents enableRtk;};
+      then composeSubtreeShell {inherit allModules enableRtk; agents = filteredAgents;}
+      else composeShellFromModules {inherit allModules enableRtk; agents = filteredAgents;};
   in
     # Extend with extra packages and hooks
     baseShell.overrideAttrs (old: {
@@ -161,16 +166,8 @@ in rec {
       tools = toolsToString tools;
     };
 
-    # Agent deployment hook
-    hasAgents = agents != [];
-    agentConfigDir =
-      if hasAgents
-      then agentLib.generateAgentConfig agents
-      else null;
-    agentHook =
-      if hasAgents
-      then agentLib.agentConfigShellHook agentConfigDir
-      else "";
+    # Agent deployment hook (agents are pre-filtered module attrsets)
+    agentHook = agentLib.mkAgentShellHook agents;
 
     # RTK hook if enabled
     rtkHook =
@@ -229,21 +226,13 @@ in rec {
       then mcpLib.mcpConfigShellHook mcpConfigFile
       else "";
 
+    # Agent deployment hook (agents are pre-filtered module attrsets)
+    agentHook = agentLib.mkAgentShellHook agents;
+
     # RTK hook if enabled
     rtkHook =
       if enableRtk
       then rtkInitHook
-      else "";
-
-    # Agent deployment hook
-    hasAgents = agents != [];
-    agentConfigDir =
-      if hasAgents
-      then agentLib.generateAgentConfig agents
-      else null;
-    agentHook =
-      if hasAgents
-      then agentLib.agentConfigShellHook agentConfigDir
       else "";
 
     # Combine all shellHooks with subtree setup
@@ -298,21 +287,13 @@ in rec {
       then mcpLib.mcpConfigShellHook mcpConfigFile
       else "";
 
+    # Agent deployment hook (agents are pre-filtered module attrsets)
+    agentHook = agentLib.mkAgentShellHook agents;
+
     # RTK hook if enabled
     rtkHook =
       if enableRtk
       then rtkInitHook
-      else "";
-
-    # Agent deployment hook
-    hasAgents = agents != [];
-    agentConfigDir =
-      if hasAgents
-      then agentLib.generateAgentConfig agents
-      else null;
-    agentHook =
-      if hasAgents
-      then agentLib.agentConfigShellHook agentConfigDir
       else "";
 
     # Combine all shellHooks with MCP setup
