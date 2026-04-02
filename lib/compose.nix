@@ -20,6 +20,11 @@
     inherit pkgs lib filterByCategory;
   };
 
+  # Import agent deployment
+  agentLib = import ./agents.nix {
+    inherit pkgs lib;
+  };
+
   # Import worktree support
   worktreeLib = import ./worktree {
     inherit pkgs lib system;
@@ -67,6 +72,7 @@ in rec {
   composeShell = {
     languages ? [],
     mcps ? [],
+    agents ? [],
     tools ? "standard",
     type ? "standard",
     extraPackages ? [],
@@ -105,11 +111,11 @@ in rec {
       if type == "worktree"
       then
         composeWorktreeShell {
-          inherit allModules languages mcps tools devshellsUrl enableRtk;
+          inherit allModules languages mcps agents tools devshellsUrl enableRtk;
         }
       else if type == "subtree"
-      then composeSubtreeShell {inherit allModules enableRtk;}
-      else composeShellFromModules {inherit allModules enableRtk;};
+      then composeSubtreeShell {inherit allModules agents enableRtk;}
+      else composeShellFromModules {inherit allModules agents enableRtk;};
   in
     # Extend with extra packages and hooks
     baseShell.overrideAttrs (old: {
@@ -124,6 +130,7 @@ in rec {
     allModules,
     languages,
     mcps,
+    agents ? [],
     tools,
     devshellsUrl,
     enableRtk ? false,
@@ -154,6 +161,17 @@ in rec {
       tools = toolsToString tools;
     };
 
+    # Agent deployment hook
+    hasAgents = agents != [];
+    agentConfigDir =
+      if hasAgents
+      then agentLib.generateAgentConfig agents
+      else null;
+    agentHook =
+      if hasAgents
+      then agentLib.agentConfigShellHook agentConfigDir
+      else "";
+
     # RTK hook if enabled
     rtkHook =
       if enableRtk
@@ -167,6 +185,7 @@ in rec {
       # Worktree mode setup
       echo "Setting up worktree mode..."
       ${worktreeHook}
+      ${agentHook}
       ${rtkHook}
     '';
   in
@@ -181,6 +200,7 @@ in rec {
   # Minimal setup - just sets CODANNA_INDEX_DIR
   composeSubtreeShell = {
     allModules,
+    agents ? [],
     enableRtk ? false,
   }: let
     # Validate all modules
@@ -215,6 +235,17 @@ in rec {
       then rtkInitHook
       else "";
 
+    # Agent deployment hook
+    hasAgents = agents != [];
+    agentConfigDir =
+      if hasAgents
+      then agentLib.generateAgentConfig agents
+      else null;
+    agentHook =
+      if hasAgents
+      then agentLib.agentConfigShellHook agentConfigDir
+      else "";
+
     # Combine all shellHooks with subtree setup
     finalShellHook = ''
       ${combinedShellHooks}
@@ -223,6 +254,7 @@ in rec {
       ${worktreeLib.subtreeShellHook}
 
       ${mcpSetupHook}
+      ${agentHook}
       ${rtkHook}
     '';
   in
@@ -237,6 +269,7 @@ in rec {
   # Usage: composeShellFromModules { allModules = [ module1 module2 module3 ]; }
   composeShellFromModules = {
     allModules,
+    agents ? [],
     enableRtk ? false,
   }: let
     # Validate all modules
@@ -271,11 +304,23 @@ in rec {
       then rtkInitHook
       else "";
 
+    # Agent deployment hook
+    hasAgents = agents != [];
+    agentConfigDir =
+      if hasAgents
+      then agentLib.generateAgentConfig agents
+      else null;
+    agentHook =
+      if hasAgents
+      then agentLib.agentConfigShellHook agentConfigDir
+      else "";
+
     # Combine all shellHooks with MCP setup
     finalShellHook = ''
       ${combinedShellHooks}
 
       ${mcpSetupHook}
+      ${agentHook}
       ${rtkHook}
     '';
   in

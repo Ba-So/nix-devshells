@@ -174,6 +174,20 @@
       generateMcpConfig = _: throw "mcp.nix not yet implemented (Task 2)";
     };
 
+  # Import agent deployment functions
+  agents =
+    if builtins.pathExists ./agents.nix
+    then
+      import ./agents.nix
+      {
+        inherit pkgs lib;
+      }
+    else {
+      collectAgents = _: [];
+      generateAgentConfig = _: null;
+      agentConfigShellHook = _: "";
+    };
+
   # Import worktree support
   worktree =
     if builtins.pathExists ./worktree/default.nix
@@ -195,6 +209,9 @@ in {
 
   # MCP configuration
   inherit (mcp) generateMcpConfig generateMcpConfigFiltered generateWorktreeMcpConfigs;
+
+  # Agent deployment
+  inherit (agents) collectAgents generateAgentConfig agentConfigShellHook;
 
   # Worktree support
   inherit (worktree) generateSubtreeFlakeContent worktreeShellHook subtreeShellHook worktreeScripts mkWorktreeScripts mkWorktreeSource;
