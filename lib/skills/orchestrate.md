@@ -1,8 +1,8 @@
 # Orchestrator
 
-Orchestrate tasks using worktree isolation with parallel agents.
+Orchestrate tasks by tag using worktree isolation with parallel agents.
 
-Tasks: $ARGUMENTS
+Tag: $ARGUMENTS
 
 ## Available Agents
 
@@ -35,20 +35,32 @@ CODE --> SYNC --> REVIEW --> APPROVED --> MERGE --> DONE
 
 ## Workflow
 
-### Phase 1: Plan
+### Phase 1: Plan Waves
 
-For each task, run `task-master set-status --id=<id> --status=in-progress`
+1. Run `task-master list --tag=<tag>` to get all tasks for the given tag.
+2. Analyze task dependencies to group them into **waves**:
+   - **Wave 1**: tasks with no pending dependencies (or dependencies already done)
+   - **Wave 2**: tasks whose dependencies are all in wave 1
+   - **Wave N**: tasks whose dependencies are all in earlier waves
+3. Execute waves sequentially. Within each wave, all tasks run in parallel.
+4. A wave is complete when every task in it is either `done` or `blocked`.
+   Only then does the next wave begin.
 
-### Phase 2: Spawn Workers
+### Phase 2: Execute Wave
 
-1. **Setup worktrees**: For each task:
-   - `task-master show <id>` to get task details
+For each wave, repeat phases 2a-2d, then advance to the next wave.
+
+#### 2a. Spawn Workers
+
+1. **Setup worktrees**: For each task in the current wave:
+   - `task-master show <id> --tag=<tag>` to get task details
+   - `task-master set-status --id=<id> --status=in-progress --tag=<tag>`
    - `worktree-new task-<id>` to create `../<project>-task-<id>/`
    - If worktree creation fails, report and skip this task
 
 2. **Spawn ALL coder agents** in ONE message using the Agent tool with `run_in_background=true`.
-   For tasks that are primarily about tests, use the **test-specialist** agent instead.
-   For tasks that require non-trivial design decisions, instruct the coder to spawn a
+   For test-focused tasks, use the **test-specialist** agent instead.
+   For tasks requiring non-trivial design decisions, instruct the coder to spawn a
    **software-designer** sub-agent before implementing.
 
    Each agent prompt MUST include:
@@ -85,7 +97,7 @@ For each task, run `task-master set-status --id=<id> --status=in-progress`
 
 3. **Record** agent IDs and their task mapping for tracking.
 
-### Phase 3: Collect Results
+#### 2b. Collect Results
 
 1. **Poll each agent** with `TaskOutput(block=false)`
 
@@ -101,14 +113,14 @@ For each task, run `task-master set-status --id=<id> --status=in-progress`
 
 4. If agents are still running, wait and re-poll. Display the progress table at each check.
 
-### Phase 4: Review and Merge
+#### 2c. Review and Merge
 
 For each completed task, process sequentially:
 
-#### 4a. Sync with main
+**Step 1 — Sync main into feature branch**
 
-Before any review, the feature branch MUST be up-to-date with main.
-Spawn a sync agent with `run_in_background=true`:
+Before any review, the feature branch MUST incorporate the latest main.
+Spawn a sync agent in the worktree with `run_in_background=true`:
 
 ```
 You are a sync agent. Your task:
@@ -134,13 +146,13 @@ Just the raw JSON on one line.
 }
 ```
 
-- If `status: "blocked"`: skip review, set task status=blocked, keep worktree, report conflict details
+- If `status: "blocked"`: skip review, run `task-master set-status --id=<id> --status=blocked --tag=<tag>`, keep worktree, report conflict details
 - If `status: "synced"`: proceed to review
 
-#### 4b. Code review
+**Step 2 — Code review**
 
 Spawn the **code-reviewer** agent with `run_in_background=true`.
-The code-reviewer has codanna for semantic analysis -- it can trace callers, assess
+The code-reviewer has codanna for semantic analysis — it can trace callers, assess
 impact, and verify that changes don't leak across boundaries.
 
 ```
@@ -170,14 +182,14 @@ Just the raw JSON on one line.
 }
 ```
 
-#### 4c. On verdict
+**Step 3 — On verdict**
 
-- **APPROVE**: Merge into main, run `task-master set-status --id=<id> --status=done`, remove worktree with `worktree-remove task-<id>`
+- **APPROVE**: Merge the feature branch into main, run `task-master set-status --id=<id> --status=done --tag=<tag>`, remove worktree with `worktree-remove task-<id>`
 - **CHANGES_REQUESTED**: Increment iteration counter for this task
-  - If iteration <= 3: spawn fix agent (below), then loop back to 4a (sync + review)
-  - If iteration > 3: set status=blocked, report failure, keep worktree
+  - If iteration <= 3: spawn fix agent (below), then loop back to Step 1 (sync + review)
+  - If iteration > 3: run `task-master set-status --id=<id> --status=blocked --tag=<tag>`, report failure, keep worktree
 
-#### 4d. Fix agent
+**Fix agent**
 
 Spawn the **coder** agent to apply fixes. The coder has serena for precise,
 symbol-aware edits.
@@ -204,36 +216,60 @@ Just the raw JSON on one line.
 }
 ```
 
-### Phase 5: Report
+#### 2d. Wave Complete
 
-Display final status with `task-master list`.
+When all tasks in the wave are `done` or `blocked`, the wave is complete.
+Proceed to the next wave. Tasks in later waves whose dependencies are `blocked`
+should also be set to `blocked` via `task-master set-status --id=<id> --status=blocked --tag=<tag>`.
+
+### Phase 3: Report
+
+Display final status with `task-master list --tag=<tag>`.
 
 ## Constraints
 
-- Review BEFORE merge -- never skip
-- Sync with main BEFORE review -- never skip
-- Max 3 fix iterations per task -- then block and report
+- Tasks are selected by **tag**, not by individual IDs
+- Tasks execute in **dependency waves** — never start a task before its dependencies are done
+- **Sync main into branch** before every review — never skip, never reverse the direction
+- Review BEFORE merge — never skip
+- Max 3 fix iterations per task — then block and report
 - On unresolvable merge conflict: block, do NOT auto-resolve
 - On timeout/crash: block, keep worktree for inspection
 
-## User Experience
+## Progress Table
 
-Display a progress table after each state change:
+Maintain a single progress table and **reprint it every time any task changes state**.
+This includes: agent spawned, agent completed, sync started/finished, review verdict
+received, fix spawned, task merged, task blocked, wave advanced.
+
+The table is the user's primary view into the orchestration — keep it current.
 
 ```
-+---------+----------------------------+---------------------------------+
-|  Agent  |            Task            |             Status              |
-+---------+----------------------------+---------------------------------+
-| aec6d88 | Task 1 Fix (short desc)    | Done - summary                  |
-+---------+----------------------------+---------------------------------+
-| a2f1c72 | Task 2 (short desc)        | Running - current step           |
-+---------+----------------------------+---------------------------------+
-| a1c091f | Task 4 (short desc)        | Pending                          |
-+---------+----------------------------+---------------------------------+
++---------+----------------------------+------------------------------------------+
+|  Wave   |            Task            |             Status                       |
++---------+----------------------------+------------------------------------------+
+|    1    | Task 3 (auth middleware)    | ✅ Done - added JWT validation            |
++---------+----------------------------+------------------------------------------+
+|    1    | Task 5 (db migrations)     | 🔍 Review - awaiting verdict              |
++---------+----------------------------+------------------------------------------+
+|    1    | Task 7 (config parsing)    | 🔄 Running - Fix #2, applying fixes      |
++---------+----------------------------+------------------------------------------+
+|    2    | Task 9 (API endpoints)     | ⏳ Pending - waiting on 3, 5              |
++---------+----------------------------+------------------------------------------+
+|    2    | Task 11 (error handling)   | ❌ Blocked - dependency 7 blocked         |
++---------+----------------------------+------------------------------------------+
 ```
+
+**Status icons:**
+
+- ✅ Done
+- 🔄 Running (coding, fixing, syncing)
+- 🔍 Review (awaiting or processing verdict)
+- ⏳ Pending (waiting on dependencies)
+- ❌ Blocked (failed after 3 iterations or unresolvable conflict)
 
 **Columns:**
 
-- **Agent**: Short task ID from Task tool (first 7 chars)
-- **Task**: Task number + brief description (include "Fix", "Sync", or "Review" for iterations)
-- **Status**: State + current activity
+- **Wave**: Wave number the task belongs to
+- **Task**: Task number + brief description (include "Fix #N", "Sync", or "Review" for iterations)
+- **Status**: Emoji + state + context. For pending tasks, show which dependencies they await.
