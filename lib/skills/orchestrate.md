@@ -87,7 +87,7 @@ For each wave:
    - cd to <worktree-path>
    - Implement: <task description>
    - Use serena for all code modifications (replace_symbol_body, insert_after_symbol, etc.)
-   - Stage, commit, and push your changes
+   - Stage and commit your changes (do NOT push — worktrees share the local repo)
    - Use clear commit messages (feat:, fix:, refactor:, etc.)
 
    OUTPUT CONSTRAINT: Your ENTIRE final response must be a single JSON object.
@@ -120,7 +120,7 @@ Spawn a sync agent in the worktree with `run_in_background=true`:
 ```
 You are a sync agent. Your task:
 - cd to <worktree-path>
-- Run: git fetch origin main && git merge origin/main
+- Run: git merge main
 - If merge succeeds cleanly: commit if needed, report success
 - If merge conflicts occur: attempt to resolve them sensibly, then commit
 - If conflicts cannot be resolved: report blocked with conflict details
@@ -194,7 +194,7 @@ You are the coder agent fixing review issues. Your task:
 - cd to <worktree-path>
 - Fix these issues: <issues from review>
 - Use serena for all code modifications (replace_symbol_body, insert_after_symbol, etc.)
-- Stage, commit, and push your fixes
+- Stage and commit your fixes (do NOT push — worktrees share the local repo)
 
 OUTPUT CONSTRAINT: Your ENTIRE final response must be a single JSON object.
 Just the raw JSON on one line.
