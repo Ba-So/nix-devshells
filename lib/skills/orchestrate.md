@@ -20,7 +20,10 @@ as sub-agents within a coder/reviewer prompt when the task requires it.
 
 ## Per-Task Lifecycle
 
-Each task runs INDEPENDENTLY. A task is NEVER merged until its review passes.
+Each task progresses through this chain **independently and asynchronously**.
+Within a wave, do NOT wait for all tasks to finish a step before advancing others.
+As soon as one task's coder finishes, start its sync/review immediately — even while
+other tasks in the same wave are still coding.
 
 ```
 CODE --> SYNC --> REVIEW --> APPROVED --> MERGE --> DONE
@@ -42,15 +45,23 @@ CODE --> SYNC --> REVIEW --> APPROVED --> MERGE --> DONE
    - **Wave 1**: tasks with no pending dependencies (or dependencies already done)
    - **Wave 2**: tasks whose dependencies are all in wave 1
    - **Wave N**: tasks whose dependencies are all in earlier waves
-3. Execute waves sequentially. Within each wave, all tasks run in parallel.
+3. Execute waves sequentially. Within each wave, all tasks run **asynchronously**.
 4. A wave is complete when every task in it is either `done` or `blocked`.
    Only then does the next wave begin.
 
 ### Phase 2: Execute Wave
 
-For each wave, repeat phases 2a-2d, then advance to the next wave.
+For each wave:
 
-#### 2a. Spawn Workers
+1. **Spawn all coders** for the wave (see Spawn Workers below).
+2. **Poll continuously.** Each time a coder completes, immediately advance that task
+   to sync → review → merge (or fix → sync → review loop). Do not wait for other
+   coders in the wave.
+3. Multiple tasks may be in different lifecycle stages simultaneously (one coding,
+   another in review, another merging). This is expected and desired.
+4. The wave is complete when every task is `done` or `blocked`.
+
+### Spawn Workers
 
 1. **Setup worktrees**: For each task in the current wave:
    - `task-master show <id> --tag=<tag>` to get task details
@@ -95,29 +106,13 @@ For each wave, repeat phases 2a-2d, then advance to the next wave.
    }
    ```
 
-3. **Record** agent IDs and their task mapping for tracking.
+### Per-Task: Sync, Review, Merge
 
-#### 2b. Collect Results
+As soon as a coder (or fix agent) completes for a task, advance it through the
+following steps. Each task progresses independently — don't batch or serialize
+across tasks.
 
-1. **Poll each agent** with `TaskOutput(block=false)`
-
-2. **Categorize** results:
-   - **Completed**: Agent returned JSON with `status: "done"`
-   - **Running**: Agent still in progress (no output yet)
-   - **Failed**: Agent returned JSON with `status: "failed"`, or errored out
-
-3. **Verify git state** for completed agents:
-   - Check the worktree has committed changes: `git -C <worktree> log --oneline -1`
-   - Check changes are pushed: `git -C <worktree> status` (no unpushed commits)
-   - If not committed/pushed, flag as incomplete
-
-4. If agents are still running, wait and re-poll. Display the progress table at each check.
-
-#### 2c. Review and Merge
-
-For each completed task, process sequentially:
-
-**Step 1 — Sync main into feature branch**
+#### Sync main into feature branch
 
 Before any review, the feature branch MUST incorporate the latest main.
 Spawn a sync agent in the worktree with `run_in_background=true`:
@@ -146,10 +141,10 @@ Just the raw JSON on one line.
 }
 ```
 
-- If `status: "blocked"`: skip review, run `task-master set-status --id=<id> --status=blocked --tag=<tag>`, keep worktree, report conflict details
+- If `status: "blocked"`: run `task-master set-status --id=<id> --status=blocked --tag=<tag>`, keep worktree, report conflict details
 - If `status: "synced"`: proceed to review
 
-**Step 2 — Code review**
+#### Code review
 
 Spawn the **code-reviewer** agent with `run_in_background=true`.
 The code-reviewer has codanna for semantic analysis — it can trace callers, assess
@@ -182,14 +177,14 @@ Just the raw JSON on one line.
 }
 ```
 
-**Step 3 — On verdict**
+#### On verdict
 
 - **APPROVE**: Merge the feature branch into main, run `task-master set-status --id=<id> --status=done --tag=<tag>`, remove worktree with `worktree-remove task-<id>`
 - **CHANGES_REQUESTED**: Increment iteration counter for this task
-  - If iteration <= 3: spawn fix agent (below), then loop back to Step 1 (sync + review)
+  - If iteration <= 3: spawn fix agent (below), then loop back to Sync (sync + review again)
   - If iteration > 3: run `task-master set-status --id=<id> --status=blocked --tag=<tag>`, report failure, keep worktree
 
-**Fix agent**
+#### Fix agent
 
 Spawn the **coder** agent to apply fixes. The coder has serena for precise,
 symbol-aware edits.
@@ -216,7 +211,7 @@ Just the raw JSON on one line.
 }
 ```
 
-#### 2d. Wave Complete
+### Wave Complete
 
 When all tasks in the wave are `done` or `blocked`, the wave is complete.
 Proceed to the next wave. Tasks in later waves whose dependencies are `blocked`
@@ -230,6 +225,7 @@ Display final status with `task-master list --tag=<tag>`.
 
 - Tasks are selected by **tag**, not by individual IDs
 - Tasks execute in **dependency waves** — never start a task before its dependencies are done
+- **Within a wave, tasks progress asynchronously** — never wait for all tasks to finish coding before starting reviews
 - **Sync main into branch** before every review — never skip, never reverse the direction
 - Review BEFORE merge — never skip
 - Max 3 fix iterations per task — then block and report
