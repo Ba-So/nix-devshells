@@ -101,23 +101,7 @@
     ${orchestratorSkills."orchestrate"}
     SKILL_EOF
 
-      cat > .claude/commands/spawn-workers.md << 'SKILL_EOF'
-    ${orchestratorSkills."spawn-workers"}
-    SKILL_EOF
-
-      cat > .claude/commands/collect-results.md << 'SKILL_EOF'
-    ${orchestratorSkills."collect-results"}
-    SKILL_EOF
-
-      cat > .claude/commands/review-and-merge.md << 'SKILL_EOF'
-    ${orchestratorSkills."review-and-merge"}
-    SKILL_EOF
-
-      cat > .claude/commands/iteration-loop.md << 'SKILL_EOF'
-    ${orchestratorSkills."iteration-loop"}
-    SKILL_EOF
-
-      echo "  Generated .claude/commands/ (orchestrator skills)"
+      echo "  Generated .claude/commands/orchestrate.md"
 
       # Create symlink from root to orchestrator config
       if [ ! -L ".mcp.json" ] && [ ! -f ".mcp.json" ]; then
@@ -149,7 +133,7 @@
     _setup_worktree_mode
 
     echo "  Worktree commands: worktree-new, worktree-status, worktree-remove"
-    echo "  Orchestrator skills: /orchestrate, /spawn-workers, /collect-results, /review-and-merge"
+    echo "  Orchestrator skill: /orchestrate"
   '';
 
   # Shell hook for subtree mode (worker agents)
