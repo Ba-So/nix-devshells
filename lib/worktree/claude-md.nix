@@ -6,6 +6,7 @@ _: rec {
   # Generate orchestrator skill commands for .claude/commands/
   generateOrchestratorSkills = {
     "orchestrate" = builtins.readFile (skillsDir + "/orchestrate.md");
+    "prd" = builtins.readFile (skillsDir + "/prd.md");
   };
 
   # Generate shared CLAUDE.md content for worker agents

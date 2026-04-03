@@ -103,6 +103,12 @@
 
       echo "  Generated .claude/commands/orchestrate.md"
 
+      cat > .claude/commands/prd.md << 'SKILL_EOF'
+    ${orchestratorSkills."prd"}
+    SKILL_EOF
+
+      echo "  Generated .claude/commands/prd.md"
+
       # Create symlink from root to orchestrator config
       if [ ! -L ".mcp.json" ] && [ ! -f ".mcp.json" ]; then
         ln -sf .orchestrator/.mcp.json .mcp.json
@@ -133,7 +139,7 @@
     _setup_worktree_mode
 
     echo "  Worktree commands: worktree-new, worktree-status, worktree-remove"
-    echo "  Orchestrator skill: /orchestrate"
+    echo "  Orchestrator skills: /orchestrate, /prd"
   '';
 
   # Shell hook for subtree mode (worker agents)
