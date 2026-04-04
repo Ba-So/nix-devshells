@@ -8,6 +8,7 @@ in {
   code-reviewer = import ./code-reviewer.nix {inherit mkAgentModule;};
   coder = import ./coder.nix {inherit mkAgentModule;};
   codebase-researcher = import ./codebase-researcher.nix {inherit mkAgentModule;};
+  complexity-analyzer = import ./complexity-analyzer.nix {inherit mkAgentModule;};
   software-designer = import ./software-designer.nix {inherit mkAgentModule;};
   test-specialist = import ./test-specialist.nix {inherit mkAgentModule;};
 }
