@@ -507,6 +507,8 @@ checkpoint reached, user responds, PRD written).
 +-------+---------------------------+-------------------------------------------------+
 |   1   | Research: Domain          | ✅ Done                                         |
 +-------+---------------------------+-------------------------------------------------+
+|   1   | Specialist: SQL/UI/etc    | ✅ Done (or N/A if not spawned)                 |
++-------+---------------------------+-------------------------------------------------+
 |   2   | Scope Clarification       | 💬 Waiting on User                              |
 +-------+---------------------------+-------------------------------------------------+
 |   3   | Solution Design           | ⏳ Pending                                      |
@@ -533,4 +535,5 @@ checkpoint reached, user responds, PRD written).
 - Designer uses codanna to ground design in actual codebase structure
 - Final PRD must be parseable by `task-master parse-prd`
 - No worktrees needed -- this is a document generation workflow
-- Max 3 agents total (2 researchers + 1 designer)
+- Max 6 agents total (2 researchers + up to 3 domain specialists + 1 designer)
+- Domain specialists are optional -- only spawn when the feature clearly involves their domain
