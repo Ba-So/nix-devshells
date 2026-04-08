@@ -11,4 +11,6 @@ in {
   complexity-analyzer = import ./complexity-analyzer.nix {inherit mkAgentModule;};
   software-designer = import ./software-designer.nix {inherit mkAgentModule;};
   test-specialist = import ./test-specialist.nix {inherit mkAgentModule;};
+  design-assistant = import ./design-assistant.nix {inherit mkAgentModule;};
+  sql-assistant = import ./sql-assistant.nix {inherit mkAgentModule;};
 }
