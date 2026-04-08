@@ -13,10 +13,14 @@ Tag: $ARGUMENTS
 | **codebase-researcher** | Deep codebase exploration when coder/reviewer need context          | sonnet |
 | **software-designer**   | Consulted for non-trivial design decisions before implementation    | opus   |
 | **test-specialist**     | Writes and improves tests as part of implementation or review fixes | sonnet |
+| **sql-assistant**       | Consulted for schema design, query optimization, indexing strategy  | opus   |
+| **design-assistant**    | Consulted for UI/UX design, accessibility, and interaction patterns | opus   |
+| **complexity-analyzer** | Analyzes code complexity and identifies architectural smells        | opus   |
 
 **Primary workflow agents**: `coder` (CODE, FIX phases) and `code-reviewer` (REVIEW phase).
-**Supporting agents**: spawn `codebase-researcher`, `software-designer`, or `test-specialist`
-as sub-agents within a coder/reviewer prompt when the task requires it.
+**Supporting agents**: spawn `codebase-researcher`, `software-designer`, `test-specialist`,
+`sql-assistant`, `design-assistant`, or `complexity-analyzer` as sub-agents within a
+coder/reviewer prompt when the task requires it.
 
 ## Per-Task Lifecycle
 
@@ -73,6 +77,10 @@ For each wave:
    For test-focused tasks, use the **test-specialist** agent instead.
    For tasks requiring non-trivial design decisions, instruct the coder to spawn a
    **software-designer** sub-agent before implementing.
+   For tasks involving database schema, migrations, or query work, instruct the coder to
+   spawn the **sql-assistant** sub-agent for schema review and indexing guidance.
+   For tasks involving UI components or user-facing interfaces, instruct the coder to
+   spawn the **design-assistant** sub-agent for layout, accessibility, and interaction review.
 
    Each agent prompt MUST include:
    - The task description and details from task-master
@@ -160,6 +168,10 @@ You are the code-reviewer agent reviewing a feature branch. Your task:
   - semantic_search_with_context for broader context
 - Check: correctness, test coverage, code quality, no regressions
 - Apply the design red flags and anti-pattern checks from your agent definition
+- For changes touching SQL/database code: apply sql-assistant diagnostic questions
+  (schema design, indexing strategy, query antipatterns, NULL handling, FK constraints)
+- For changes touching UI/frontend code: apply design-assistant diagnostic questions
+  (visual hierarchy, accessibility, forms, cognitive load, responsive design)
 - Verdict: APPROVE if ready to merge, CHANGES_REQUESTED if issues found
 
 OUTPUT CONSTRAINT: Your ENTIRE final response must be a single JSON object.

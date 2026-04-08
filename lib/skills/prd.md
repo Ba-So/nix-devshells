@@ -6,10 +6,18 @@ Description: $ARGUMENTS
 
 ## Available Agents
 
-| Agent                   | Role in Workflow                                              | Model  |
-| ----------------------- | ------------------------------------------------------------- | ------ |
-| **codebase-researcher** | Deep codebase exploration to inform PRD design                | sonnet |
-| **software-designer**   | Full RPG design: capabilities, structure, dependencies, risks | opus   |
+| Agent                   | Role in Workflow                                                   | Model  |
+| ----------------------- | ------------------------------------------------------------------ | ------ |
+| **codebase-researcher** | Deep codebase exploration to inform PRD design                     | sonnet |
+| **software-designer**   | Full RPG design: capabilities, structure, dependencies, risks      | opus   |
+| **sql-assistant**       | Schema design, query strategy, indexing — for DB-touching features | opus   |
+| **design-assistant**    | UI/UX design, accessibility, interaction — for UI-facing features  | opus   |
+| **complexity-analyzer** | Complexity analysis and architectural smell detection              | opus   |
+
+**Core agents**: `codebase-researcher` (Phase 1) and `software-designer` (Phase 3).
+**Domain specialists**: spawn `sql-assistant`, `design-assistant`, or `complexity-analyzer`
+in Phase 1 (alongside researchers) when the feature description indicates database work,
+UI work, or touches complex existing code. Their output feeds into the designer prompt.
 
 ## Workflow
 
@@ -23,6 +31,20 @@ Description: $ARGUMENTS
 
 Spawn **two codebase-researcher agents** in a **single message** using the Agent tool
 with `run_in_background=true`. Both run in parallel.
+
+**Additionally**, if the feature description involves:
+
+- **Database/SQL work** (schema, migrations, queries, data models): also spawn the
+  **sql-assistant** agent to audit existing schema patterns, identify antipatterns, and
+  recommend indexing/normalization strategies. Include its output in the Phase 3 designer prompt.
+- **UI/frontend work** (pages, forms, components, user flows): also spawn the
+  **design-assistant** agent to assess existing UI patterns, accessibility gaps, and
+  interaction design concerns. Include its output in the Phase 3 designer prompt.
+- **Complex existing code** being extended or refactored: also spawn the
+  **complexity-analyzer** agent to identify architectural smells and coupling risks.
+  Include its output in the Phase 3 designer prompt.
+
+All specialist agents run in parallel with the researchers in the same spawn message.
 
 **Researcher A (Architecture) prompt:**
 
@@ -111,9 +133,90 @@ No explanations, no reasoning, no markdown formatting. Just the raw JSON on one 
 }
 ```
 
+**SQL Assistant prompt** (spawn only when feature involves database work):
+
+```
+You are the sql-assistant agent auditing a codebase for database design quality.
+
+Feature request: <description>
+
+Codebase context: This feature will involve database work. Audit the existing
+database-related code and report on:
+1. Existing schema patterns -- tables, relationships, constraints found in code
+2. Schema antipatterns -- Jaywalking, EAV, Polymorphic Associations, missing FKs, etc.
+3. Indexing assessment -- missing indexes, over-indexing, wrong column order
+4. Query antipatterns -- SELECT *, Spaghetti Queries, NULL mishandling, LIKE abuse
+5. Data type issues -- FLOAT for money, ENUM for variable sets, etc.
+6. Recommendations -- specific schema/query improvements for the new feature
+
+Use your 9-aspect diagnostic framework. Focus on what's relevant to the feature.
+
+OUTPUT CONSTRAINT: Your ENTIRE final response must be a single JSON object.
+No explanations, no reasoning, no markdown formatting. Just the raw JSON on one line.
+```
+
+**SQL Assistant output format:**
+
+```json
+{
+  "existing_schema": [
+    { "table": "", "columns": "", "constraints": "", "issues": [] }
+  ],
+  "antipatterns_found": [
+    { "aspect": "", "antipattern": "", "location": "", "severity": "" }
+  ],
+  "indexing_assessment": [
+    { "table": "", "current_indexes": [], "recommendations": [] }
+  ],
+  "query_issues": [{ "location": "", "issue": "", "fix": "" }],
+  "recommendations_for_feature": [
+    "specific recommendation for the new feature"
+  ],
+  "summary": "<50 words max>"
+}
+```
+
+**Design Assistant prompt** (spawn only when feature involves UI work):
+
+```
+You are the design-assistant agent auditing a codebase for UI/UX quality.
+
+Feature request: <description>
+
+Audit the existing UI-related code and report on:
+1. Existing UI patterns -- component structure, layout conventions, design system
+2. Accessibility gaps -- contrast, keyboard nav, screen reader support, ARIA usage
+3. Form patterns -- validation, error handling, label placement
+4. Interaction patterns -- feedback, loading states, affordances
+5. Responsive design -- mobile support, breakpoints, touch targets
+6. Recommendations -- specific UI/UX improvements for the new feature
+
+Use your 12-aspect diagnostic framework. Focus on what's relevant to the feature.
+
+OUTPUT CONSTRAINT: Your ENTIRE final response must be a single JSON object.
+No explanations, no reasoning, no markdown formatting. Just the raw JSON on one line.
+```
+
+**Design Assistant output format:**
+
+```json
+{
+  "existing_patterns": [{ "pattern": "", "location": "", "quality": "" }],
+  "accessibility_gaps": [
+    { "aspect": "", "issue": "", "location": "", "severity": "" }
+  ],
+  "form_issues": [{ "location": "", "issue": "", "fix": "" }],
+  "interaction_issues": [{ "location": "", "issue": "", "fix": "" }],
+  "recommendations_for_feature": [
+    "specific recommendation for the new feature"
+  ],
+  "summary": "<50 words max>"
+}
+```
+
 ### Phase 2: Interactive Checkpoint -- Scope Clarification
 
-Once both researchers complete, the orchestrator:
+Once all research agents complete (researchers + any domain specialists), the orchestrator:
 
 1. Synthesizes the research findings into a concise summary.
 2. Presents its understanding of the user's request in light of the codebase.
@@ -134,6 +237,12 @@ Once both researchers complete, the orchestrator:
 
 ### Relevant Existing Code
 [Key findings from Researcher B -- what already exists]
+
+### Database Assessment (if sql-assistant was spawned)
+[Key findings -- schema patterns, antipatterns, indexing, recommendations]
+
+### UI/UX Assessment (if design-assistant was spawned)
+[Key findings -- patterns, accessibility gaps, interaction issues, recommendations]
 
 ### My Understanding of Your Request
 [Orchestrator's interpretation of $ARGUMENTS in light of research]
@@ -167,6 +276,10 @@ User clarifications: <answers from checkpoint>
 Codebase architecture: <JSON from Researcher A>
 
 Domain research: <JSON from Researcher B>
+
+Database assessment: <JSON from sql-assistant, if spawned -- otherwise omit>
+
+UI/UX assessment: <JSON from design-assistant, if spawned -- otherwise omit>
 
 Your task: Design the solution using the RPG (Repository Planning Graph) dual-semantics
 method. Separate WHAT (functional capabilities) from HOW (code structure), then connect
