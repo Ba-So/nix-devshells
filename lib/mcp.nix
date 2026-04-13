@@ -58,7 +58,14 @@
     else
       # Create new config file
       cp ${mcpConfigFile} .mcp.json
+      chmod u+w .mcp.json
       echo "✓ Generated .mcp.json with MCP servers: $(${pkgs.jq}/bin/jq -r '.mcpServers | keys | join(", ")' ${mcpConfigFile})"
+    fi
+
+    # Normalize formatting to match prettier (pre-commit hook) so the
+    # generated file doesn't dirty the working tree on every shell entry.
+    if [ -f .mcp.json ]; then
+      ${pkgs.nodePackages.prettier}/bin/prettier --write --log-level=warn .mcp.json >/dev/null 2>&1 || true
     fi
   '';
 }

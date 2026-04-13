@@ -151,6 +151,9 @@
             inherit pyproject-nix uv2nix pyproject-build-systems;
           };
 
+          # MCP-Libre - LibreOffice document MCP server
+          mcp-libre = pkgs.callPackage ./pkgs/mcp-libre.nix {};
+
           # Serena - MCP server for project analysis
           serena = serena.packages.${system}.default or serena.defaultPackage.${system};
 
@@ -207,6 +210,7 @@
         paper-search-mcp = final.callPackage ./pkgs/paper-search-mcp.nix {
           inherit pyproject-nix uv2nix pyproject-build-systems;
         };
+        mcp-libre = final.callPackage ./pkgs/mcp-libre.nix {};
 
         # Deprecated/legacy packages
         mcp-shrimp-task-manager = final.callPackage ./pkgs/shrimp.nix {};

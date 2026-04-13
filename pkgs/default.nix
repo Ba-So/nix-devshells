@@ -20,4 +20,6 @@
   computer-use-mcp = pkgs.callPackage ./computer-use-mcp.nix {};
 
   claude-task-master = pkgs.callPackage ./claude-task-master {};
+
+  mcp-libre = pkgs.callPackage ./mcp-libre.nix {};
 }

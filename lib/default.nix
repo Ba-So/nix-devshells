@@ -51,6 +51,7 @@
     paper-search-mcp = pkgs.callPackage ../pkgs/paper-search-mcp.nix {
       inherit (inputs) pyproject-nix uv2nix pyproject-build-systems;
     };
+    mcp-libre = pkgs.callPackage ../pkgs/mcp-libre.nix {};
     rtk = pkgs-with-rust.callPackage ../pkgs/rtk.nix {
       inherit (pkgs-with-rust) rust-bin;
     };
