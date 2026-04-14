@@ -26,6 +26,11 @@
     ];
   };
 
+  # Create pkgs from unstable for packages requiring newer toolchains
+  pkgs-unstable = import inputs.nixpkgs-unstable {
+    inherit system;
+  };
+
   # Create pkgs with unfree packages allowed for claude-task-master
   pkgs-unfree = import inputs.nixpkgs {
     inherit system;
@@ -52,6 +57,7 @@
       inherit (inputs) pyproject-nix uv2nix pyproject-build-systems;
     };
     mcp-libre = pkgs.callPackage ../pkgs/mcp-libre.nix {};
+    mcp-grafana = pkgs-unstable.callPackage ../pkgs/mcp-grafana.nix {};
     rtk = pkgs-with-rust.callPackage ../pkgs/rtk.nix {
       inherit (pkgs-with-rust) rust-bin;
     };

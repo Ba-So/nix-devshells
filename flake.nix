@@ -71,6 +71,11 @@
           ];
         };
 
+        # Create pkgs from unstable for packages requiring newer toolchains
+        pkgs-unstable = import nixpkgs-unstable {
+          inherit system;
+        };
+
         # Create pkgs with unfree packages allowed for specific packages
         pkgs-unfree = import nixpkgs {
           inherit system;
@@ -154,6 +159,9 @@
           # MCP-Libre - LibreOffice document MCP server
           mcp-libre = pkgs.callPackage ./pkgs/mcp-libre.nix {};
 
+          # MCP-Grafana - MCP server for Grafana observability platform
+          mcp-grafana = pkgs-unstable.callPackage ./pkgs/mcp-grafana.nix {};
+
           # Serena - MCP server for project analysis
           serena = serena.packages.${system}.default or serena.defaultPackage.${system};
 
@@ -211,6 +219,7 @@
           inherit pyproject-nix uv2nix pyproject-build-systems;
         };
         mcp-libre = final.callPackage ./pkgs/mcp-libre.nix {};
+        mcp-grafana = (import nixpkgs-unstable {inherit (final) system;}).callPackage ./pkgs/mcp-grafana.nix {};
 
         # Deprecated/legacy packages
         mcp-shrimp-task-manager = final.callPackage ./pkgs/shrimp.nix {};
