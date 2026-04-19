@@ -22,4 +22,6 @@
   claude-task-master = pkgs.callPackage ./claude-task-master {};
 
   mcp-libre = pkgs.callPackage ./mcp-libre.nix {};
+
+  tod = pkgs.callPackage ./tod.nix {};
 }

@@ -21,6 +21,7 @@ in {
   paper-search = import ./paper-search.nix {inherit pkgs lib devPkgs mkMcpModule;};
   mcp-libre = import ./libre.nix {inherit pkgs lib devPkgs mkMcpModule;};
   mcp-grafana = import ./grafana.nix {inherit pkgs lib devPkgs mkMcpModule;};
+  onedev = import ./onedev.nix {inherit pkgs lib devPkgs mkMcpModule;};
 
   # Deprecated/legacy MCPs
   shrimp = import ./shrimp.nix {inherit pkgs lib devPkgs mkMcpModule;};

@@ -162,6 +162,9 @@
           # MCP-Grafana - MCP server for Grafana observability platform
           mcp-grafana = pkgs-unstable.callPackage ./pkgs/mcp-grafana.nix {};
 
+          # Tod - CLI tool and MCP server for OneDev
+          tod = pkgs.callPackage ./pkgs/tod.nix {};
+
           # Serena - MCP server for project analysis
           serena = serena.packages.${system}.default or serena.defaultPackage.${system};
 
@@ -220,6 +223,7 @@
         };
         mcp-libre = final.callPackage ./pkgs/mcp-libre.nix {};
         mcp-grafana = (import nixpkgs-unstable {inherit (final) system;}).callPackage ./pkgs/mcp-grafana.nix {};
+        tod = final.callPackage ./pkgs/tod.nix {};
 
         # Deprecated/legacy packages
         mcp-shrimp-task-manager = final.callPackage ./pkgs/shrimp.nix {};
