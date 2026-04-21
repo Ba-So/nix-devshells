@@ -85,7 +85,7 @@ For each wave:
    Each agent prompt MUST include:
    - The task description and details from task-master
    - The worktree path to `cd` into
-   - Instructions to implement, commit, and push
+   - Instructions to implement and commit
    - The OUTPUT CONSTRAINT below
 
    **Coder prompt template:**
