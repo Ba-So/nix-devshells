@@ -130,7 +130,7 @@
         # Expose lib for module composition
         # Usage: devshells.lib.${system}.composeShell { languages = ["rust"]; tools = "minimal"; }
         lib = {
-          inherit (libSystem) composeShell composeShellFromModules modules;
+          inherit (libSystem) composeShell composeShellFromModules modules harnesses;
         };
 
         # Expose custom packages

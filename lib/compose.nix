@@ -15,17 +15,29 @@
   validateModules,
   deduplicateModules,
 }: let
-  # Import MCP config generation
-  mcpLib = import ./mcp.nix {
-    inherit pkgs lib filterByCategory;
+  # Import harness adapters (per-AI-CLI conventions for MCP/agent layout).
+  harnesses = import ./harness {inherit pkgs lib;};
+
+  resolveHarness = name:
+    harnesses.${
+      name
+    }
+    or (throw ''
+      Unknown harness '${name}'.
+      Available: ${lib.concatStringsSep ", " (builtins.attrNames harnesses)}
+    '');
+
+  # Build per-harness libs. Cached lazily — only the requested harness is built.
+  mkLibsFor = harness: {
+    mcpLib = import ./mcp.nix {
+      inherit pkgs lib filterByCategory harness;
+    };
+    agentLib = import ./agents.nix {
+      inherit pkgs lib harness;
+    };
   };
 
-  # Import agent deployment
-  agentLib = import ./agents.nix {
-    inherit pkgs lib;
-  };
-
-  # Import worktree support
+  # Import worktree support (claude-specific; see composeWorktreeShell).
   worktreeLib = import ./worktree {
     inherit pkgs lib system;
   };
@@ -74,12 +86,15 @@ in rec {
     mcps ? [],
     tools ? "standard",
     type ? "standard",
+    harness ? "claude",
     extraPackages ? [],
     extraShellHook ? "",
     devshellsUrl ? "github:Ba-So/nix-devshells",
     enableRtk ? false,
     ...
   }: let
+    harnessAdapter = resolveHarness harness;
+    inherit (mkLibsFor harnessAdapter) agentLib;
     # Resolve language modules
     langModules =
       if languages != []
@@ -115,12 +130,20 @@ in rec {
       if type == "worktree"
       then
         composeWorktreeShell {
-          inherit allModules languages mcps tools devshellsUrl enableRtk;
+          inherit allModules languages mcps tools devshellsUrl enableRtk harness;
           agents = filteredAgents;
         }
       else if type == "subtree"
-      then composeSubtreeShell {inherit allModules enableRtk; agents = filteredAgents;}
-      else composeShellFromModules {inherit allModules enableRtk; agents = filteredAgents;};
+      then
+        composeSubtreeShell {
+          inherit allModules enableRtk harness;
+          agents = filteredAgents;
+        }
+      else
+        composeShellFromModules {
+          inherit allModules enableRtk harness;
+          agents = filteredAgents;
+        };
   in
     # Extend with extra packages and hooks
     baseShell.overrideAttrs (old: {
@@ -139,7 +162,10 @@ in rec {
     tools,
     devshellsUrl,
     enableRtk ? false,
+    harness ? "claude",
   }: let
+    harnessAdapter = resolveHarness harness;
+    inherit (mkLibsFor harnessAdapter) mcpLib agentLib;
     # Validate all modules
     validatedModules = validateModules allModules;
 
@@ -199,7 +225,10 @@ in rec {
     allModules,
     agents ? [],
     enableRtk ? false,
+    harness ? "claude",
   }: let
+    harnessAdapter = resolveHarness harness;
+    inherit (mkLibsFor harnessAdapter) mcpLib agentLib;
     # Validate all modules
     validatedModules = validateModules allModules;
 
@@ -260,7 +289,10 @@ in rec {
     allModules,
     agents ? [],
     enableRtk ? false,
+    harness ? "claude",
   }: let
+    harnessAdapter = resolveHarness harness;
+    inherit (mkLibsFor harnessAdapter) mcpLib agentLib;
     # Validate all modules
     validatedModules = validateModules allModules;
 

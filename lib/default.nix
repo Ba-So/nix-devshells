@@ -182,6 +182,11 @@
       composeShellFromModules = _: throw "compose.nix not yet implemented (Task 2)";
     };
 
+  # Import harness adapters and pick claude as the default for top-level exports.
+  # composeShell can override per-call via the `harness` parameter.
+  harnesses = import ./harness {inherit pkgs lib;};
+  defaultHarness = harnesses.claude;
+
   # Import MCP config generation (will be created in Task 2)
   mcp =
     if builtins.pathExists ./mcp.nix
@@ -190,6 +195,7 @@
       {
         inherit pkgs lib;
         inherit (utils) filterByCategory;
+        harness = defaultHarness;
       }
     else {
       # Placeholder until mcp.nix is created
@@ -203,6 +209,7 @@
       import ./agents.nix
       {
         inherit pkgs lib;
+        harness = defaultHarness;
       }
     else {
       filterAgentsByMcps = _: _: [];
@@ -225,6 +232,7 @@
 in {
   # Public API exports
   inherit modules;
+  inherit harnesses;
 
   # Composition functions
   inherit (compose) composeShell composeShellFromModules;

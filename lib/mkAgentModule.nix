@@ -1,44 +1,32 @@
-# Factory function for creating agent modules with minimal boilerplate
+# Factory function for creating agent modules with minimal boilerplate.
+#
+# Produces a canonical agent attrset; the active harness adapter is responsible
+# for rendering it into the harness-specific markdown/frontmatter format.
 #
 # Usage:
 #   mkAgentModule {
 #     name = "rust-developer";
 #     description = "Rust development specialist";
-#     model = "sonnet";                        # haiku | sonnet | opus
-#     tools = ["Write" "Read" "Bash" "Grep"];  # Claude Code tools
+#     model = "sonnet";                        # bare alias or "provider/id"
+#     tools = ["Write" "Read" "Bash" "Grep"];  # canonical (Claude-style) names
 #     mcpDeps = ["cargo-mcp"];                 # required MCP module names
 #     body = ''
 #       You are a Rust specialist...
 #     '';
 #   }
-{pkgs}: {
+_: {
   name,
   description,
   model ? "sonnet",
   tools ? ["Write" "Read" "Edit" "Bash" "Grep" "Glob"],
   mcpDeps ? [],
   body ? "",
-}: let
-  toolsString = builtins.concatStringsSep ", " tools;
-
-  # Generate markdown with YAML frontmatter
-  agentMarkdown = ''
-    ---
-    name: ${name}
-    description: ${description}
-    model: ${model}
-    tools: ${toolsString}
-    ---
-
-    ${body}
-  '';
-
-  agentFile = pkgs.writeText "${name}.md" agentMarkdown;
-in {
+}: {
   meta = {
     inherit name description;
     category = "agent";
   };
 
-  inherit mcpDeps agentFile;
+  # Canonical fields — consumed by lib/harness/<harness>.nix renderAgent.
+  inherit name description model tools body mcpDeps;
 }
