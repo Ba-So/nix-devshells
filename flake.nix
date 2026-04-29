@@ -156,6 +156,11 @@
             inherit pyproject-nix uv2nix pyproject-build-systems;
           };
 
+          # MemPalace - Local-first AI memory (CLI + MCP server)
+          mempalace = pkgs.callPackage ./pkgs/mempalace.nix {
+            inherit pyproject-nix uv2nix pyproject-build-systems;
+          };
+
           # MCP-Libre - LibreOffice document MCP server
           mcp-libre = pkgs.callPackage ./pkgs/mcp-libre.nix {};
 
@@ -219,6 +224,9 @@
           inherit pyproject-nix uv2nix pyproject-build-systems;
         };
         paper-search-mcp = final.callPackage ./pkgs/paper-search-mcp.nix {
+          inherit pyproject-nix uv2nix pyproject-build-systems;
+        };
+        mempalace = final.callPackage ./pkgs/mempalace.nix {
           inherit pyproject-nix uv2nix pyproject-build-systems;
         };
         mcp-libre = final.callPackage ./pkgs/mcp-libre.nix {};

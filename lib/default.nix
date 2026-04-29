@@ -56,6 +56,9 @@
     paper-search-mcp = pkgs.callPackage ../pkgs/paper-search-mcp.nix {
       inherit (inputs) pyproject-nix uv2nix pyproject-build-systems;
     };
+    mempalace = pkgs.callPackage ../pkgs/mempalace.nix {
+      inherit (inputs) pyproject-nix uv2nix pyproject-build-systems;
+    };
     mcp-libre = pkgs.callPackage ../pkgs/mcp-libre.nix {};
     mcp-grafana = pkgs-unstable.callPackage ../pkgs/mcp-grafana.nix {};
     tod = pkgs.callPackage ../pkgs/tod.nix {};
