@@ -167,6 +167,9 @@
           # MCP-Grafana - MCP server for Grafana observability platform
           mcp-grafana = pkgs-unstable.callPackage ./pkgs/mcp-grafana.nix {};
 
+          # Obsidian MCP - MCP server for Obsidian vaults via Local REST API
+          obsidian-mcp = pkgs.callPackage ./pkgs/obsidian-mcp.nix {};
+
           # Tod - CLI tool and MCP server for OneDev
           tod = pkgs.callPackage ./pkgs/tod.nix {};
 
@@ -231,6 +234,7 @@
         };
         mcp-libre = final.callPackage ./pkgs/mcp-libre.nix {};
         mcp-grafana = (import nixpkgs-unstable {inherit (final) system;}).callPackage ./pkgs/mcp-grafana.nix {};
+        obsidian-mcp = final.callPackage ./pkgs/obsidian-mcp.nix {};
         tod = final.callPackage ./pkgs/tod.nix {};
 
         # Deprecated/legacy packages

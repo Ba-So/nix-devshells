@@ -61,6 +61,7 @@
     };
     mcp-libre = pkgs.callPackage ../pkgs/mcp-libre.nix {};
     mcp-grafana = pkgs-unstable.callPackage ../pkgs/mcp-grafana.nix {};
+    obsidian-mcp = pkgs.callPackage ../pkgs/obsidian-mcp.nix {};
     tod = pkgs.callPackage ../pkgs/tod.nix {};
     rtk = pkgs-with-rust.callPackage ../pkgs/rtk.nix {
       inherit (pkgs-with-rust) rust-bin;
