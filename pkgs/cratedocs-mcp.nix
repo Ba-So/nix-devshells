@@ -1,9 +1,9 @@
-{ pkgs
-, fetchFromGitHub ? pkgs.fetchFromGitHub
-, rustPlatform ? pkgs.rustPlatform
-, pkg-config ? pkgs.pkg-config
-, openssl ? pkgs.openssl
-,
+{
+  pkgs,
+  fetchFromGitHub ? pkgs.fetchFromGitHub,
+  rustPlatform ? pkgs.rustPlatform,
+  pkg-config ? pkgs.pkg-config,
+  openssl ? pkgs.openssl,
 }:
 rustPlatform.buildRustPackage rec {
   pname = "cratedocs-mcp";
@@ -22,8 +22,8 @@ rustPlatform.buildRustPackage rec {
   doCheck = false; # Skip tests to speed up build
   auditable = false; # Disable auditable builds for faster compilation
 
-  nativeBuildInputs = [ pkg-config ];
-  buildInputs = [ openssl ];
+  nativeBuildInputs = [pkg-config];
+  buildInputs = [openssl];
 
   # The binary is named 'cratedocs' according to Cargo.toml
   postInstall = ''
@@ -62,7 +62,7 @@ rustPlatform.buildRustPackage rec {
     description = "Rust Documentation MCP Server for LLM crate assistance";
     homepage = "https://github.com/promptexecution/cratedocs-mcp";
     license = licenses.mit;
-    maintainers = [ ];
+    maintainers = [];
     mainProgram = "cratedocs";
     platforms = platforms.all;
   };
