@@ -159,7 +159,6 @@ The `tools` list uses Claude-style names. The Opencode adapter translates `Write
 | `computer-use`         | System interaction via screenshots                   |
 | `qdrant`               | Semantic doc search (requires Qdrant)                |
 | `paper-search`         | arXiv, PubMed, bioRxiv search                        |
-| `mempalace`            | Local-first AI memory                                |
 | `mcp-grafana`          | Grafana / Prometheus / Loki / Pyroscope              |
 | `mcp-libre`            | LibreOffice document operations                      |
 | `obsidian`             | Obsidian vault access (needs `OBSIDIAN_API_KEY`)     |
@@ -285,7 +284,7 @@ The worker shell (`type = "subtree"`) finds the shared index by scanning sibling
 
 ## Packages and Overlay
 
-`packages.<system>` and `overlays.default` expose: `cargo-mcp`, `cratedocs-mcp`, `codanna`, `claude-task-master`, `mcp-gitlab`, `puppeteer-mcp-server`, `universal-screenshot-mcp`, `computer-use-mcp`, `qdrant-mcp`, `paper-search-mcp`, `mempalace`, `mcp-libre`, `mcp-grafana`, `obsidian-mcp`, `tod`, `serena`, `mcp-shrimp-task-manager`. `packages.<system>.default` is `cargo-mcp`.
+`packages.<system>` and `overlays.default` expose: `cargo-mcp`, `cratedocs-mcp`, `codanna`, `claude-task-master`, `mcp-gitlab`, `puppeteer-mcp-server`, `universal-screenshot-mcp`, `computer-use-mcp`, `qdrant-mcp`, `paper-search-mcp`, `mcp-libre`, `mcp-grafana`, `obsidian-mcp`, `tod`, `serena`, `mcp-shrimp-task-manager`. `packages.<system>.default` is `cargo-mcp`.
 
 ```nix
 nixpkgs.overlays = [ inputs.devshells.overlays.default ];

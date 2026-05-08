@@ -50,13 +50,10 @@
     universal-screenshot-mcp = pkgs.callPackage ../pkgs/universal-screenshot-mcp.nix {};
     computer-use-mcp = pkgs.callPackage ../pkgs/computer-use-mcp.nix {};
     cratedocs-mcp = pkgs.callPackage ../pkgs/cratedocs-mcp.nix {};
-    qdrant-mcp = pkgs.callPackage ../pkgs/qdrant-mcp.nix {
+    qdrant-mcp = pkgs.callPackage ../pkgs/qdrant-mcp {
       inherit (inputs) pyproject-nix uv2nix pyproject-build-systems;
     };
-    paper-search-mcp = pkgs.callPackage ../pkgs/paper-search-mcp.nix {
-      inherit (inputs) pyproject-nix uv2nix pyproject-build-systems;
-    };
-    mempalace = pkgs.callPackage ../pkgs/mempalace.nix {
+    paper-search-mcp = pkgs.callPackage ../pkgs/paper-search-mcp {
       inherit (inputs) pyproject-nix uv2nix pyproject-build-systems;
     };
     mcp-libre = pkgs.callPackage ../pkgs/mcp-libre.nix {};
