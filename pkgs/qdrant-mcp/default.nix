@@ -6,7 +6,6 @@
   uv2nix,
   pyproject-build-systems,
 }: let
-  # Load the mcp-server-qdrant workspace
   src = fetchFromGitHub {
     owner = "qdrant";
     repo = "mcp-server-qdrant";
@@ -14,33 +13,34 @@
     hash = "sha256-xbHCnOJLvCyTl/ZwhBtMmSd3TZ9o59SGI7/tgql5jg8=";
   };
 
-  workspace = uv2nix.lib.workspace.loadWorkspace {workspaceRoot = src;};
+  workspace = uv2nix.lib.workspace.loadWorkspace {workspaceRoot = ./.;};
 
-  # Select Python interpreter
   python = pkgs.python3;
 
-  # Create base Python package set
   pythonBase = pkgs.callPackage pyproject-nix.build.packages {
     inherit python;
   };
 
-  # Create overlay from uv.lock
   overlay = workspace.mkPyprojectOverlay {
-    sourcePreference = "wheel"; # Prefer binary wheels
+    sourcePreference = "wheel";
   };
 
-  # Compose into final Python set with build systems
+  srcOverlay = _final: prev: {
+    mcp-server-qdrant = prev.mcp-server-qdrant.overrideAttrs (_old: {
+      inherit src;
+    });
+  };
+
   pythonSet = pythonBase.overrideScope (
     lib.composeManyExtensions [
       pyproject-build-systems.overlays.wheel
       overlay
+      srcOverlay
     ]
   );
 
-  # Build virtual environment with all dependencies
   venv = pythonSet.mkVirtualEnv "mcp-server-qdrant-env" workspace.deps.default;
 in
-  # Wrap the venv to isolate PYTHONPATH - prevents pollution of other Python environments
   pkgs.runCommand "mcp-server-qdrant" {
     nativeBuildInputs = [pkgs.makeWrapper];
     meta = {

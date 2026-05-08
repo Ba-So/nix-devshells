@@ -6,7 +6,6 @@
   uv2nix,
   pyproject-build-systems,
 }: let
-  # Load the paper-search-mcp workspace
   src = fetchFromGitHub {
     owner = "openags";
     repo = "paper-search-mcp";
@@ -14,22 +13,18 @@
     hash = "sha256-xnNvIcGHNe7L9OSRwCExQMnBJGbpSA5iUZZ/CVd1XGA=";
   };
 
-  workspace = uv2nix.lib.workspace.loadWorkspace {workspaceRoot = src;};
+  workspace = uv2nix.lib.workspace.loadWorkspace {workspaceRoot = ./.;};
 
-  # Select Python interpreter
   python = pkgs.python3;
 
-  # Create base Python package set
   pythonBase = pkgs.callPackage pyproject-nix.build.packages {
     inherit python;
   };
 
-  # Create overlay from uv.lock
   overlay = workspace.mkPyprojectOverlay {
-    sourcePreference = "wheel"; # Prefer binary wheels
+    sourcePreference = "wheel";
   };
 
-  # Fix for sgmllib3k which needs setuptools as build dependency
   buildSystemOverlay = final: prev: {
     sgmllib3k = prev.sgmllib3k.overrideAttrs (old: {
       nativeBuildInputs =
@@ -40,19 +35,23 @@
     });
   };
 
-  # Compose into final Python set with build systems
+  srcOverlay = _final: prev: {
+    paper-search-mcp = prev.paper-search-mcp.overrideAttrs (_old: {
+      inherit src;
+    });
+  };
+
   pythonSet = pythonBase.overrideScope (
     lib.composeManyExtensions [
       pyproject-build-systems.overlays.wheel
       overlay
       buildSystemOverlay
+      srcOverlay
     ]
   );
 
-  # Build virtual environment with all dependencies
   venv = pythonSet.mkVirtualEnv "paper-search-mcp-env" workspace.deps.default;
 in
-  # Create wrapper script since package doesn't expose console_scripts
   pkgs.runCommand "paper-search-mcp" {
     nativeBuildInputs = [pkgs.makeWrapper];
     meta = {

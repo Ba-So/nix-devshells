@@ -147,17 +147,17 @@
           computer-use-mcp = pkgs.callPackage ./pkgs/computer-use-mcp.nix {};
 
           # Qdrant MCP - MCP server for semantic documentation search
-          qdrant-mcp = pkgs.callPackage ./pkgs/qdrant-mcp.nix {
+          qdrant-mcp = pkgs.callPackage ./pkgs/qdrant-mcp {
             inherit pyproject-nix uv2nix pyproject-build-systems;
           };
 
           # Paper Search MCP - Academic paper search across multiple sources
-          paper-search-mcp = pkgs.callPackage ./pkgs/paper-search-mcp.nix {
+          paper-search-mcp = pkgs.callPackage ./pkgs/paper-search-mcp {
             inherit pyproject-nix uv2nix pyproject-build-systems;
           };
 
           # MemPalace - Local-first AI memory (CLI + MCP server)
-          mempalace = pkgs.callPackage ./pkgs/mempalace.nix {
+          mempalace = pkgs.callPackage ./pkgs/mempalace {
             inherit pyproject-nix uv2nix pyproject-build-systems;
           };
 
@@ -223,13 +223,13 @@
         puppeteer-mcp-server = final.callPackage ./pkgs/puppeteer-mcp.nix {};
         universal-screenshot-mcp = final.callPackage ./pkgs/universal-screenshot-mcp.nix {};
         computer-use-mcp = final.callPackage ./pkgs/computer-use-mcp.nix {};
-        qdrant-mcp = final.callPackage ./pkgs/qdrant-mcp.nix {
+        qdrant-mcp = final.callPackage ./pkgs/qdrant-mcp {
           inherit pyproject-nix uv2nix pyproject-build-systems;
         };
-        paper-search-mcp = final.callPackage ./pkgs/paper-search-mcp.nix {
+        paper-search-mcp = final.callPackage ./pkgs/paper-search-mcp {
           inherit pyproject-nix uv2nix pyproject-build-systems;
         };
-        mempalace = final.callPackage ./pkgs/mempalace.nix {
+        mempalace = final.callPackage ./pkgs/mempalace {
           inherit pyproject-nix uv2nix pyproject-build-systems;
         };
         mcp-libre = final.callPackage ./pkgs/mcp-libre.nix {};
